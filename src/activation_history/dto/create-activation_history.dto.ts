@@ -8,11 +8,11 @@ export class CreateActivationHistoryDto {
 
   @IsNumber()
   @IsNotEmpty()
-  initial_zem_longitude: number;
+  longitude: number;
 
   @IsNumber()
   @IsNotEmpty()
-  initial_zem_latitude: number;
+  latitude: number;
 
   @IsDateString()
   created_at: Date;

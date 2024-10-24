@@ -7,10 +7,10 @@ export class ActivationHistory {
   zem: Zems;
 
   @Prop({ required: true })
-  initial_zem_longitude: number;
+  longitude: number;
 
   @Prop({ required: true })
-  initial_zem_latitude: number;
+  latitude: number;
 
   @Prop({ default: new Date() })
   created_at: Date;

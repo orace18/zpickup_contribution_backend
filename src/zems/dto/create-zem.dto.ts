@@ -1,6 +1,4 @@
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { StatusService } from '../../Schemas/zems_schema/Zems.schema';
-
 export class CreateZemDto {
   @IsNotEmpty()
   @IsString()
@@ -10,9 +8,9 @@ export class CreateZemDto {
   @IsString()
   plate_picture: string
 
-  @IsEnum(StatusService)
+  @IsBoolean()
   @IsNotEmpty()
-  status_service: StatusService.UNAVAILABLE
+  status_service: boolean
 
   @IsDateString()
   created_at: Date;
