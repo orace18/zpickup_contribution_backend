@@ -1,4 +1,13 @@
-import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Customers } from '../../Schemas/customers_schema/customers.schema';
 import { Zems } from '../../Schemas/zems_schema/Zems.schema';
 import { Type } from 'class-transformer';
@@ -15,47 +24,47 @@ export class CreateCourseDto {
 
   @IsNumber()
   @IsNotEmpty()
-  initialLongitude: number;
+  initial_longitude: number;
 
   @IsNumber()
   @IsNotEmpty()
-  initialLatitude: number;
+  initial_latitude: number;
 
   @IsDate()
   @Type(() => Date)
   @IsNotEmpty()
-  initialDateTime: Date;
+  initial_datetime: Date;
 
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  dateTimeCourse?: Date;
+  datetime_course?: Date;
 
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  dateTimeDebut?: Date;
+  datetime_debut?: Date;
 
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  dateTimeFin?: Date;
+  datetime_fin?: Date;
 
   @IsOptional()
   @IsNumber()
-  longitudeStart?: number;
+  longitude_start?: number;
 
   @IsOptional()
   @IsNumber()
-  latitudeStart?: number;
+  latitude_start?: number;
 
   @IsOptional()
   @IsNumber()
-  longitudeEnd?: number;
+  longitude_end?: number;
 
   @IsOptional()
   @IsNumber()
-  latitudeEnd?: number;
+  latitude_end?: number;
 
   @IsString()
   @IsNotEmpty()
@@ -63,9 +72,15 @@ export class CreateCourseDto {
 
   @IsNumber()
   @IsNotEmpty()
-  distanceTraveled: number;
+  distance_traveled: number;
 
   @IsEnum(CoursesStatus)
   @IsNotEmpty()
   status: CoursesStatus;
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

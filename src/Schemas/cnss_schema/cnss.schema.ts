@@ -7,10 +7,16 @@ export class Cnss {
   zem: Zems
 
   @Prop({ required: true })
-  activationReason: string
+  activation_reason: string
 
   @Prop({ default: false })
   status: boolean;
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const CnssSchema = SchemaFactory.createForClass(Cnss)

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 import { Zems } from '../../Schemas/zems_schema/Zems.schema';
 import { Courses } from '../../Schemas/courses_schema/courses.schema';
 
@@ -13,9 +13,15 @@ export class CreatePenaltyDto {
 
   @IsOptional()
   @IsNumber()
-  penaltiesNumber?: number
+  penalties_number?: number
 
   @IsOptional()
   @IsString()
-  penaltyReason?: string
+  penalty_reason?: string
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

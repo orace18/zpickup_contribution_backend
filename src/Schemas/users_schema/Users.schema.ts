@@ -16,10 +16,10 @@ export class Users {
   address: string;
 
   @Prop({ required: true, unique: true })
-  phoneNumber: string;
+  phone_number: string;
 
   @Prop({ unique: true })
-  emailAddress: string;
+  email_address: string;
 
   @Prop({ required: true })
   password: string;
@@ -28,13 +28,19 @@ export class Users {
   birthday: Date;
 
   @Prop()
-  sponsorshipCode: string;
+  sponsorship_code: string;
 
   @Prop({ required: true })
-  photoPieceIdentity: string;
+  photoPiece_identity: string;
 
   @Prop()
-  profilePicture: string;
+  profile_picture: string;
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);

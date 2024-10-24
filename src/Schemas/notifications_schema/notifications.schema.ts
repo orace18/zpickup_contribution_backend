@@ -10,7 +10,10 @@ export class Notification {
   notificationsHistory: string[]
 
   @Prop({ default: new Date() })
-  createdAt: Date;
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

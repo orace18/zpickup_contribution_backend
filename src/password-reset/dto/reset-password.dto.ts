@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsDateString, IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class ResetPasswordDto {
   @IsNotEmpty()
@@ -11,9 +11,15 @@ export class ResetPasswordDto {
 
   @IsNotEmpty()
   @IsString()
-  newPassword: string;
+  new_password: string;
 
   @IsNotEmpty()
   @IsString()
-  confirmPassword: string;
+  confirm_password: string;
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

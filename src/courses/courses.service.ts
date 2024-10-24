@@ -11,10 +11,10 @@ export class CoursesService {
   async create(createCourseDto: CreateCourseDto) {
     const course = new this.courseModel({
       ...createCourseDto,
-      initialDateTime: new Date(createCourseDto.initialDateTime),
-      dateTimeCourse: createCourseDto.dateTimeCourse ? new Date(createCourseDto.dateTimeCourse) : undefined,
-      dateTimeDebut: createCourseDto.dateTimeDebut ? new Date(createCourseDto.dateTimeDebut) : undefined,
-      dateTimeFin: createCourseDto.dateTimeFin ? new Date(createCourseDto.dateTimeFin) : undefined,
+      initialDateTime: new Date(createCourseDto.initial_datetime),
+      dateTimeCourse: createCourseDto.datetime_course ? new Date(createCourseDto.datetime_course) : undefined,
+      dateTimeDebut: createCourseDto.datetime_debut ? new Date(createCourseDto.datetime_debut) : undefined,
+      dateTimeFin: createCourseDto.datetime_fin ? new Date(createCourseDto.datetime_fin) : undefined,
     });
     return await course.save();
   }

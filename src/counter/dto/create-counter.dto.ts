@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsObject } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsObject } from 'class-validator';
 import { Zems } from '../../Schemas/zems_schema/Zems.schema';
 
 export class CreateCounterDto {
@@ -8,5 +8,11 @@ export class CreateCounterDto {
 
   @IsNotEmpty()
   @IsNumber()
-  availableKilometers: number
+  available_kilometers: number
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

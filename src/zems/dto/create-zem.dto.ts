@@ -1,35 +1,41 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateZemDto {
   @IsNotEmpty()
   @IsString()
-  numberPlate: string
+  number_plate: string
 
   @IsNotEmpty()
   @IsString()
-  platePicture: string
+  plate_picture: string
 
   @IsNumber()
-  zemWallet: number
+  zem_wallet: number
 
   @IsNumber()
-  ZemInsuranceWallet: number
+  zem_insurance_wallet: number
 
   @IsNumber()
-  CNSSWallet: number
+  CNSS_wallet: number
 
   @IsNumber()
-  counterKilometer: number
+  counter_kilometer: number
 
   @IsBoolean()
-  acceptCourse: boolean
+  accept_course: boolean
 
   @IsBoolean()
   status: boolean
 
   @IsNumber()
-  longitudeZemInitial: number
+  longitude_zem_initial: number
 
   @IsNumber()
-  latitudeZemInitial: number
+  latitude_zem_initial: number
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

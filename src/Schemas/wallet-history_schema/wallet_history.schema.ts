@@ -15,7 +15,13 @@ export class WalletHistory {
   amount: number
 
   @Prop({ required: true, enum: WalletType })
-  walletType: WalletType
+  wallet_type: WalletType
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const WalletHistorySchema = SchemaFactory.createForClass(WalletHistory)

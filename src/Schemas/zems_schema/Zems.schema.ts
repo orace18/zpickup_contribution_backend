@@ -4,34 +4,40 @@ import { Users } from '../users_schema/Users.schema';
 @Schema()
 export class Zems extends Users {
   @Prop({ required: true })
-  numberPlate: string;
+  number_plate: string;
 
   @Prop({ required: true })
-  platePicture: string;
+  plate_picture: string;
 
   @Prop()
-  zemWallet: number;
+  zem_wallet: number;
 
   @Prop()
-  ZemInsuranceWallet: number;
+  zem_insurance_wallet: number;
 
   @Prop()
-  CNSSWallet: number;
+  CNSS_wallet: number;
 
   @Prop()
-  counterKilometer: number;
+  counter_kilometer: number;
 
   @Prop({ default: false })
-  acceptCourse: boolean;
+  accept_course: boolean;
 
   @Prop({ default: true })
   status: boolean;
 
   @Prop()
-  longitudeZemInitial: number;
+  longitude_zem_initial: number;
 
   @Prop()
-  latitudeZemInitial: number;
+  latitude_zem_initial: number;
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const ZemsSchema = SchemaFactory.createForClass(Zems)

@@ -20,13 +20,13 @@ export class AuthService {
 
   // Service pour la connexion
   async login(loginUserDto: LoginUserDto): Promise<{ access_token: string }> {
-    const user = await this.userModel.findOne({ email: loginUserDto.emailAddress }).exec();
+    const user = await this.userModel.findOne({ email: loginUserDto.email_address }).exec();
 
     if (!user || !(await bcrypt.compare(loginUserDto.password, user.password))) {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
-    const payload = { email: user.emailAddress, sub: user._id };
+    const payload = { email: user.email_address, sub: user._id };
     return {
       access_token: this.jwtService.sign(payload),  // Génère un token JWT
     };

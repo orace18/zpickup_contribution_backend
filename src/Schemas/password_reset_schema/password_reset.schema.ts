@@ -8,8 +8,11 @@ export class PasswordReset {
   @Prop({ required: true })
   token: string;
 
-  @Prop({ required: true })
-  createdAt: Date;
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const PasswordResetSchema = SchemaFactory.createForClass(PasswordReset);

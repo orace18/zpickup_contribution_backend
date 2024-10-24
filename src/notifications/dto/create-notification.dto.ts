@@ -6,9 +6,12 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   user: Users
 
-  @IsArray()
-  notificationsHistory: string[]
+  @IsString()
+  message: string
 
   @IsDateString()
-  createdAt: Date
+  created_at: Date
+
+  @IsDateString()
+  updated_at: Date
 }

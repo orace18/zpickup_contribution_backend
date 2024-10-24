@@ -7,7 +7,13 @@ export class Wallet {
   user: Users
 
   @Prop({ required: true })
-  walletAmount: number
+  wallet_amount: number
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const WalletSchema = SchemaFactory.createForClass(Wallet)

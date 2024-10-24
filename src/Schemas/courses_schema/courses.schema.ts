@@ -19,10 +19,10 @@ export class Courses {
   zem: Zems;
 
   @Prop({ required: true })
-  initialLongitude: number;
+  initial_longitude: number;
 
   @Prop({ required: true })
-  initialLatitude: number;
+  initial_latitude: number;
 
   @Prop({
     required: true,
@@ -30,49 +30,55 @@ export class Courses {
     transform: (value: Date) => new Date(value),
   })
   @Type(() => Date)
-  initialDateTime: Date;
+  initial_datetime: Date;
 
   @Prop({
     type: Date,
     transform: (value: Date) => value ? new Date(value) : undefined,
   })
   @Type(() => Date)
-  dateTimeCourse?: Date;
+  datetime_course?: Date;
 
   @Prop({
     type: Date,
     transform: (value: Date) => value ? new Date(value) : undefined,
   })
   @Type(() => Date)
-  dateTimeDebut?: Date;
+  datetime_debut?: Date;
 
   @Prop({
     type: Date,
     transform: (value: Date) => value ? new Date(value) : undefined,
   })
   @Type(() => Date)
-  dateTimeFin?: Date;
+  datetime_fin?: Date;
 
   @Prop()
-  longitudeStart?: number;
+  longitude_start?: number;
 
   @Prop()
-  latitudeStart?: number;
+  latitude_start?: number;
 
   @Prop()
-  longitudeEnd?: number;
+  longitude_end?: number;
 
   @Prop()
-  latitudeEnd?: number;
+  latitude_end?: number;
 
   @Prop({ required: true })
   reference: string;
 
   @Prop({ required: true })
-  distanceTraveled: number;
+  distance_traveled: number;
 
   @Prop({ required: true, enum: CoursesStatus })
   status: CoursesStatus;
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const CoursesSchema = SchemaFactory.createForClass(Courses);

@@ -1,5 +1,5 @@
 import {
-  IsDate,
+  IsDate, IsDateString,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -21,12 +21,12 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
-  phoneNumber: string;
+  phone_number: string;
 
   @IsOptional()
   @IsString()
   @IsEmail()
-  emailAddress?: string;
+  email_address?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -38,13 +38,19 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  sponsorshipCode?: string;
+  sponsorship_code?: string;
 
   @IsNotEmpty()
   @IsString()
-  photoPieceIdentity: string;
+  photo_piece_identity: string;
 
   @IsOptional()
   @IsString()
-  profilePicture?: string;
+  profile_picture?: string;
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

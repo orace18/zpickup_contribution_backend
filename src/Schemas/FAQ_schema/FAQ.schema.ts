@@ -18,7 +18,13 @@ export class FAQ {
     required: true,
     unique: true,
   })
-  youtubeVideoLink: string;
+  youtube_video_link: string;
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
-export const FAQSchema = SchemaFactory.createForClass(FAQ)
+export const FAQSchema = SchemaFactory.createForClass(FAQ);
