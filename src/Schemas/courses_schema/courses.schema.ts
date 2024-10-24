@@ -4,10 +4,10 @@ import { Zems } from '../zems_schema/Zems.schema';
 import { Type } from 'class-transformer';
 
 export enum CoursesStatus {
-  PENDING = 'En attente',
-  IN_PROGRESS = 'En cours',
-  COMPLETED = 'Terminé',
-  CANCELED = 'Annulé'
+  PENDING = 'Pending',
+  IN_PROGRESS = 'Progress',
+  COMPLETED = 'completed',
+  CANCELED = 'cancel'
 }
 
 @Schema()

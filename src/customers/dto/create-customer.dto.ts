@@ -1,13 +1,13 @@
 import { IsDateString, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateCustomerDto {
-  @IsNotEmpty()
+  /*@IsNotEmpty()
   @IsNumber()
   customer_wallet: number;
 
   @IsNotEmpty()
   @IsNumber()
-  insurance_wallet: number;
+  insurance_wallet: number;*/
 
   @IsDateString()
   created_at: Date;

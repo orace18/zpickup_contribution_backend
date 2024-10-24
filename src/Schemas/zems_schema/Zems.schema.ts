@@ -9,11 +9,11 @@ export class Zems extends Users {
   @Prop({ required: true })
   plate_picture: string;
 
-  @Prop()
+  /*@Prop()
   zem_wallet: number;
 
   @Prop()
-  zem_insurance_wallet: number;
+  zem_insurance_wallet: number;*/
 
   @Prop()
   CNSS_wallet: number;

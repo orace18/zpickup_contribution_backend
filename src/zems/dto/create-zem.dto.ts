@@ -9,11 +9,11 @@ export class CreateZemDto {
   @IsString()
   plate_picture: string
 
-  @IsNumber()
+  /*@IsNumber()
   zem_wallet: number
 
   @IsNumber()
-  zem_insurance_wallet: number
+  zem_insurance_wallet: number*/
 
   @IsNumber()
   CNSS_wallet: number
