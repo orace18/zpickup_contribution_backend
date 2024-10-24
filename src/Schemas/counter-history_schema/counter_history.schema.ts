@@ -2,8 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Counter } from '../counter_schema/counter.schema';
 
 export enum CounterType {
-  INPUT = "Input",
-  OUTPUT = "Output"
+  INPUT = "input",
+  OUTPUT = "output"
 }
 
 @Schema()
