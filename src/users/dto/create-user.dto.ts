@@ -1,10 +1,12 @@
 import {
   IsDate, IsDateString,
-  IsEmail,
-  IsNotEmpty,
+  IsEmail, IsEnum,
+  IsNotEmpty, IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { UserType } from '../../Schemas/users_schema/Users.schema';
+import { Zems } from '../../Schemas/zems_schema/Zems.schema';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -47,6 +49,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   profile_picture?: string;
+
+  @IsEnum(UserType)
+  @IsNotEmpty()
+  user_type: UserType.CUSTOMER;
+
+  @IsOptional()
+  @IsObject()
+  zem: Zems
 
   @IsDateString()
   created_at: Date;

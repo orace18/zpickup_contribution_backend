@@ -2,7 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
-export type UsersDocument = HydratedDocument<Users>;
+export enum UserType {
+  CUSTOMER = 'customer',
+  ZEM = 'zem'
+}
 
 @Schema()
 export class Users {
@@ -35,6 +38,9 @@ export class Users {
 
   @Prop()
   profile_picture: string;
+
+  @Prop({ required: true, enum: UserType})
+  user_type: UserType.CUSTOMER;
 
   @Prop({ default: new Date() })
   created_at: Date;
