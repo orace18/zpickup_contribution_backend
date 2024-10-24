@@ -8,17 +8,11 @@ export class FAQ {
   })
   title: string;
 
-  @Prop({
-    required: true,
-    unique: true,
-  })
-  description: string;
+  @Prop()
+  description?: string;
 
-  @Prop({
-    required: true,
-    unique: true,
-  })
-  youtube_video_link: string;
+  @Prop()
+  youtube_video_link?: string;
 
   @Prop({ default: new Date() })
   created_at: Date;

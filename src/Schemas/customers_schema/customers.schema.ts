@@ -4,7 +4,6 @@ import { Users } from '../users_schema/Users.schema';
 @Schema()
 export class Customers extends Users {
 
-
   @Prop({ default: new Date() })
   created_at: Date;
 
