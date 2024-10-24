@@ -18,6 +18,7 @@ import { CounterHistoryModule } from './counter-history/counter-history.module';
 import { WalletHistoryModule } from './wallet-history/wallet-history.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ActivationHistoryModule } from './activation_history/activation_history.module';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     CounterHistoryModule,
     WalletHistoryModule,
     WalletModule,
-    NotificationsModule
+    NotificationsModule,
+    ActivationHistoryModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -4,10 +4,13 @@ import { Users } from '../users_schema/Users.schema';
 @Schema()
 export class Notification {
   @Prop({ required: true })
-  user: Users
+  user: Users;
 
-  @Prop({ type: [String], default: [] })
-  notificationsHistory: string[]
+  @Prop()
+  message: string;
+
+  @Prop({ type: Object, default: null })
+  data: Object;
 
   @Prop({ default: new Date() })
   created_at: Date;

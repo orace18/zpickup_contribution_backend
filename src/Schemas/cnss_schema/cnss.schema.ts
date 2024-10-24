@@ -6,9 +6,6 @@ export class Cnss {
   @Prop({ type: Object })
   zem: Zems
 
-  @Prop({ required: true })
-  activation_reason: string
-
   @Prop({ default: false })
   status: boolean;
 

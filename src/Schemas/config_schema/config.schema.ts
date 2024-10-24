@@ -8,6 +8,9 @@ export class Config {
   @Prop({ required: true })
   value: string
 
+  @Prop({ required: true })
+  description: string
+
   @Prop({ default: new Date() })
   created_at: Date;
 

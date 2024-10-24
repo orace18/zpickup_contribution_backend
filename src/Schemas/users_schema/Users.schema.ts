@@ -31,10 +31,10 @@ export class Users {
   birthday: Date;
 
   @Prop()
-  sponsorship_code: string;
+  sponsorship_code?: string;
 
   @Prop({ required: true })
-  photoPiece_identity: string;
+  photo_piece_identity: string;
 
   @Prop()
   profile_picture: string;

@@ -2,8 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Wallet } from '../wallet_schema/wallet.schema';
 
 export enum WalletType {
-  DEBIT = "Debit",
-  CREDIT = "Credit",
+  DEBIT = "debit",
+  CREDIT = "credit",
 }
 
 @Schema()

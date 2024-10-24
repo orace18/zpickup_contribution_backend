@@ -1,6 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Users } from '../users_schema/Users.schema';
 
+export enum StatusService {
+  AVAILABLE = 'available',
+  UNAVAILABLE = 'unavailable',
+}
+
 @Schema()
 export class Zems extends Users {
   @Prop({ required: true })
@@ -9,24 +14,8 @@ export class Zems extends Users {
   @Prop({ required: true })
   plate_picture: string;
 
-
-  @Prop()
-  CNSS_wallet: number;
-
-  @Prop()
-  counter_kilometer: number;
-
-  @Prop({ default: false })
-  accept_course: boolean;
-
-  @Prop({ default: true })
-  status: boolean;
-
-  @Prop()
-  longitude_zem_initial: number;
-
-  @Prop()
-  latitude_zem_initial: number;
+  @Prop({ required: true, enum: StatusService })
+  status_service: StatusService.UNAVAILABLE;
 
   @Prop({ default: new Date() })
   created_at: Date;

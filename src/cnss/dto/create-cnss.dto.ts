@@ -6,10 +6,6 @@ export class CreateCnssDto {
   @IsNotEmpty()
   zem: Zems;
 
-  @IsNotEmpty()
-  @IsString()
-  activation_reason: string
-
   @IsBoolean()
   status: boolean
 

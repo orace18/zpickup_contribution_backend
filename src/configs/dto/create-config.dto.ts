@@ -9,6 +9,10 @@ export class CreateConfigDto {
   @IsNotEmpty()
   value: string
 
+  @IsString()
+  @IsNotEmpty()
+  description: string
+
   @IsDateString()
   created_at: Date;
 
