@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
-export class PasswordReset extends Document {
+export class PasswordReset {
   @Prop({ required: true })
   email: string;
 
