@@ -22,7 +22,7 @@ import { ActivationHistoryModule } from './activation_history/activation_history
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/zpickup'),
+    MongooseModule.forRoot('mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/'),
     UsersModule,
     CustomersModule,
     ZemsModule,
