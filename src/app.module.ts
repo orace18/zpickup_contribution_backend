@@ -19,10 +19,14 @@ import { WalletHistoryModule } from './wallet-history/wallet-history.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivationHistoryModule } from './activation_history/activation_history.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/'),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     UsersModule,
     CustomersModule,
     ZemsModule,

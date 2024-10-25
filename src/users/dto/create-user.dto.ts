@@ -1,7 +1,7 @@
 import {
   IsDate, IsDateString,
   IsEmail, IsEnum,
-  IsNotEmpty, IsObject,
+  IsNotEmpty, IsNumberString, IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -9,17 +9,17 @@ import { UserType } from '../../Schemas/users_schema/Users.schema';
 import { Zems } from '../../Schemas/zems_schema/Zems.schema';
 
 export class CreateUserDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  lastname: string;
+  lastname?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  firstname: string;
+  firstname?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  address: string;
+  address?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -30,21 +30,25 @@ export class CreateUserDto {
   @IsEmail()
   email_address?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  password: string;
+  password?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
+  @IsNumberString()
+  verification_code?: string;
+
+  @IsOptional()
   @IsDate()
-  birthday: Date;
+  birthday?: Date;
 
   @IsOptional()
   @IsString()
   sponsorship_code?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  photo_piece_identity: string;
+  photo_piece_identity?: string;
 
   @IsOptional()
   @IsString()
@@ -63,4 +67,8 @@ export class CreateUserDto {
 
   @IsDateString()
   updated_at: Date;
+
+  @IsDateString()
+  @IsOptional()
+  validated_at?: Date;
 }
