@@ -26,14 +26,14 @@ export class Users {
   @Prop({ unique: true })
   email_address?: string;
 
-  @Prop({ required: true })
+  @Prop({ default: null })
   password?: string;
 
   @Prop()
   verification_code: string;
 
-  @Prop({ required: true })
-  birthday?: Date;
+  @Prop({ default: null })
+  birthday?: string;
 
   @Prop()
   sponsorship_code?: string;

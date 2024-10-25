@@ -39,8 +39,8 @@ export class CreateUserDto {
   verification_code?: string;
 
   @IsOptional()
-  @IsDate()
-  birthday?: Date;
+  @IsString()
+  birthday?: string;
 
   @IsOptional()
   @IsString()
@@ -62,13 +62,13 @@ export class CreateUserDto {
   @IsObject()
   zem: Zems
 
-  @IsDateString()
+  @IsDate()
   created_at: Date;
 
-  @IsDateString()
+  @IsDate()
   updated_at: Date;
 
-  @IsDateString()
+  @IsDate()
   @IsOptional()
   validated_at?: Date;
 }

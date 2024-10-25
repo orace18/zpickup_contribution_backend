@@ -32,10 +32,10 @@ export class UsersController {
     const verification_code = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Envoie du code par SMS
-    const sms_sent = await this.twilioService.sendVerificationCode(phone_number, verification_code);
+    /*const sms_sent = await this.twilioService.sendVerificationCode(phone_number, verification_code);
     if (!sms_sent) {
       throw new HttpException('Erreur lors de l\'envoi du SMS', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    }*/
 
     // Création d'un utilisateur temporaire avec le minimum d'informations
     const user = await this.usersService.createTemporary({
@@ -62,10 +62,16 @@ export class UsersController {
       throw new HttpException('Code de vérification incorrect', HttpStatus.BAD_REQUEST);
     }
 
+    // Mise à jour de `validated_at` et suppression de `verification_code`
+    await this.usersService.update(user._id.toString(), {
+      validated_at: new Date(),
+      verification_code: null
+    });
+
     return { message: 'Code vérifié avec succès' };
   }
 
-  @Post('complete-registration')
+  /*@Post('complete-registration')
   async completeRegistration(
     @Body() createUserDto: CreateUserDto
   ) {
@@ -82,7 +88,7 @@ export class UsersController {
     });
 
     return updatedUser;
-  }
+  }*/
 
   @Get()
   findAll() {
@@ -94,10 +100,26 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @Patch('complete-registration/:id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto
+  ) {
+    // Vérifiez si l'utilisateur existe
+    const user = this.usersService.findOne(id);
+    if (!user) {
+      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+    }
+
+    // Mettez à jour l'utilisateur avec les informations reçues dans updateUserDto
+    const updatedUser = await this.usersService.update(id, {
+      ...updateUserDto,
+      updated_at: new Date(),
+    });
+
+    return updatedUser;
   }
+
 
   @Delete(':id')
   remove(@Param('id') id: string) {
