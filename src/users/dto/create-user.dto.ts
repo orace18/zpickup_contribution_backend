@@ -71,4 +71,7 @@ export class CreateUserDto {
   @IsDate()
   @IsOptional()
   validated_at?: Date;
+
+  @IsOptional()
+  token_version?: number;
 }

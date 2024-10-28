@@ -59,7 +59,7 @@ export class UsersService {
 
   // Correction de la méthode findOne pour retourner un utilisateur
   async findOne(id: string): Promise<Users | null> {
-    return this.userModel.findById(id).exec();
+    return this.userModel.findById(id).lean().exec();
   }
 
   findAll() {

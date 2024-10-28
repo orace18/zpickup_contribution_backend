@@ -55,6 +55,9 @@ export class Users {
 
   @Prop({ default: null })
   validated_at?: Date;
+
+  @Prop({ default: 0 })
+  token_version: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);
