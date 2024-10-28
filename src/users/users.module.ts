@@ -11,5 +11,6 @@ import { TwilioService } from '../services/twilio.service';
   ],
   controllers: [UsersController],
   providers: [UsersService, TwilioService],
+  exports: [UsersService],
 })
 export class UsersModule {}

@@ -23,7 +23,7 @@ export class Users {
   @Prop({ required: true, unique: true })
   phone_number: string;
 
-  @Prop({ unique: true })
+  @Prop({ unique: true, default: null })
   email_address?: string;
 
   @Prop({ default: null })

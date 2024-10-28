@@ -1,14 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
   Param,
-  Delete, HttpException, HttpStatus,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { TwilioService } from '../services/twilio.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
@@ -21,20 +22,45 @@ export class UsersController {
   ) {}
 
   @Post('register/phone_number')
-  async registerWithPhoneNumber(@Body() {phone_number}: {phone_number: string}) {
+  async registerWithPhoneNumber(
+    @Body() { phone_number }: { phone_number: string },
+  ) {
     // on vérifie si le numéro de téléphone existe déjà
     const existingUser = await this.usersService.findByPhone(phone_number);
     if (existingUser) {
-      throw new HttpException('Ce numéro de téléphone est déjà attribué à un compte', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Ce numéro de téléphone est déjà attribué à un compte',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     // Généreration d'un code de vérification (6 chiffres)
-    const verification_code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    let verification_code: string;
+    let isUnique = false;
+
+    // Boucle pour générer un code unique
+    while (!isUnique) {
+      verification_code = Math.floor(100000 + Math.random() * 900000).toString();
+      const existingCode = await this.usersService.findByVerificationCode(verification_code);
+      if (!existingCode) {
+        isUnique = true; // Si le code n'est pas utilisé, on arrête la boucle
+      }
+    }
+
+
+    /*const verification_code = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();*/
 
     // Envoie du code par SMS
-    /*const sms_sent = await this.twilioService.sendVerificationCode(phone_number, verification_code);
-    if (!sms_sent) {
-      throw new HttpException('Erreur lors de l\'envoi du SMS', HttpStatus.INTERNAL_SERVER_ERROR);
+    /*try {
+      await this.twilioService.sendVerificationCode(phone_number, verification_code);
+    } catch (error) {
+      throw new HttpException(
+        'Erreur lors de l\'envoi du SMS',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }*/
 
     // Création d'un utilisateur temporaire avec le minimum d'informations
@@ -43,7 +69,7 @@ export class UsersController {
       verification_code: verification_code,
       user_type: UserType.CUSTOMER,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     });
 
     return { message: 'Code de vérification envoyé' };
@@ -51,7 +77,14 @@ export class UsersController {
 
   @Post('verify-code')
   async verifyCode(
-    @Body() { phone_number, verification_code }: { phone_number: string; verification_code: string }
+    @Body()
+    {
+      phone_number,
+      verification_code,
+    }: {
+      phone_number: string;
+      verification_code: string;
+    },
   ) {
     const user = await this.usersService.findByPhone(phone_number);
     if (!user) {
@@ -59,36 +92,20 @@ export class UsersController {
     }
 
     if (user.verification_code !== verification_code) {
-      throw new HttpException('Code de vérification incorrect', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Code de vérification incorrect',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     // Mise à jour de `validated_at` et suppression de `verification_code`
     await this.usersService.update(user._id.toString(), {
       validated_at: new Date(),
-      verification_code: null
+      verification_code: null,
     });
 
     return { message: 'Code vérifié avec succès' };
   }
-
-  /*@Post('complete-registration')
-  async completeRegistration(
-    @Body() createUserDto: CreateUserDto
-  ) {
-    const user = await this.usersService.findByPhone(createUserDto.phone_number);
-    if (!user) {
-      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
-    }
-
-    // Mettre à jour l'utilisateur avec toutes les informations
-    const updatedUser = await this.usersService.update(user._id.toString(), {
-      ...createUserDto,
-      validated_at: new Date(),
-      updated_at: new Date()
-    });
-
-    return updatedUser;
-  }*/
 
   @Get()
   findAll() {
@@ -101,23 +118,24 @@ export class UsersController {
   }
 
   @Patch('complete-registration/:id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto
-  ) {
-    // Vérifiez si l'utilisateur existe
-    const user = this.usersService.findOne(id);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    // Utilisez `await` pour récupérer l'utilisateur avant de vérifier `sponsorship_code`
+    const user = await this.usersService.findOne(id);
     if (!user) {
       throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
     }
 
-    // Mettez à jour l'utilisateur avec les informations reçues dans updateUserDto
-    const updatedUser = await this.usersService.update(id, {
+    // Si le code de parrainage n'existe pas, en génère un
+    if (!user.sponsorship_code) {
+      const sponsorship_code = await this.usersService.generateUniqueSponsorshipCode();
+      updateUserDto = { ...updateUserDto, sponsorship_code };
+    }
+
+    // Mettez à jour l'utilisateur avec les informations reçues dans `updateUserDto`
+    return await this.usersService.update(id, {
       ...updateUserDto,
       updated_at: new Date(),
     });
-
-    return updatedUser;
   }
 
 
