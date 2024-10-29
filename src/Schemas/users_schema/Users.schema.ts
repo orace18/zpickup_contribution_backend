@@ -9,6 +9,7 @@ export enum UserType {
 
 @Schema()
 export class Users {
+  @Prop({ type: Types.ObjectId })
   _id: Types.ObjectId;
 
   @Prop()

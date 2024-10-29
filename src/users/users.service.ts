@@ -28,8 +28,10 @@ export class UsersService {
     return sponsorship_code;
   }
 
-  async findByPhone(phone_number: string): Promise<Users | null> {
-    return this.userModel.findOne({ phone_number }).exec();
+  async findByPhone(phone_number: string): Promise<Users> {
+    const user = await this.userModel.findOne({ phone_number }).exec();
+    console.log('Found user:', user); // Pour déboguer
+    return user;
   }
 
   async findByVerificationCode(verification_code: string): Promise<Users | null> {

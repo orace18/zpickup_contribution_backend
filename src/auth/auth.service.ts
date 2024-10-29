@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -33,19 +33,30 @@ export class AuthService {
   }
 
   async login(user: any) {
+
+    console.log('Login user input:', user);
+
+    // Accéder aux données via _doc
+    const userData = user._doc || user;
+    console.log('User data:', userData);
+
+    if (!userData || !userData._id) {
+      throw new HttpException(
+        'Données utilisateur invalides',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
     const payload = {
-      phone: user.phone_number,
-      sub: user._id,
-      type: user.user_type,
+      sub: userData._id.toString(),
+      phone_number: userData.phone_number,
     };
+
+    console.log('Generated payload:', payload);
 
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        id: user._id,
-        phone_number: user.phone_number,
-        user_type: user.user_type,
-      },
+      user: userData
     };
   }
 }

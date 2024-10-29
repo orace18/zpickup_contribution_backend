@@ -112,12 +112,45 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@Request() req) {
-    const user = await this.usersService.findOne(req.user.userId);
-    if (!user) {
-      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+  async getCurrentUser(@Request() req) {
+    try {
+      console.log('Payload du token:', req.user); // Pour déboguer
+
+      const userId = req.user.userId; // Récupère l'ID du payload validé
+      if (!userId) {
+        throw new HttpException(
+          'ID utilisateur manquant dans le token',
+          HttpStatus.UNAUTHORIZED
+        );
+      }
+
+      const user = await this.usersService.findOne(userId);
+      console.log(`user id : ${userId}`);
+      console.log(`user login : ${user}`);
+
+      if (!user) {
+        throw new HttpException(
+          'Utilisateur non trouvé',
+          HttpStatus.NOT_FOUND
+        );
+      }
+
+      const { password, verification_code, ...userWithoutSensitiveInfo } = user;
+
+      return {
+        status: 'success',
+        data: userWithoutSensitiveInfo
+      };
+    } catch (error) {
+      console.error('Erreur dans getCurrentUser:', error);
+      throw new HttpException(
+        {
+          message: error.message || 'Une erreur est survenue',
+          details: error.response || error
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-    return user;
   }
 
   @Get()
