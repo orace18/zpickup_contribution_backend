@@ -14,6 +14,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { TwilioService } from '../services/twilio.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import {use} from "passport";
 
 @Controller('users')
 export class UsersController {
@@ -135,12 +136,7 @@ export class UsersController {
         );
       }
 
-      const { password, verification_code, ...userWithoutSensitiveInfo } = user;
-
-      return {
-        status: 'success',
-        data: userWithoutSensitiveInfo
-      };
+      return user;
     } catch (error) {
       console.error('Erreur dans getCurrentUser:', error);
       throw new HttpException(

@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import { PrimaryGeneratedColumn } from 'typeorm/typeorm-model-shim.js';
+
 
 export enum UserType {
   CUSTOMER = 'customer',
@@ -9,8 +11,8 @@ export enum UserType {
 
 @Schema()
 export class Users {
-  @Prop({ type: Types.ObjectId })
-  _id: Types.ObjectId;
+  @PrimaryGeneratedColumn()
+  _id: number;
 
   @Prop()
   lastname?: string;
@@ -24,7 +26,7 @@ export class Users {
   @Prop({ required: true, unique: true })
   phone_number: string;
 
-  @Prop({ unique: true, default: null })
+  @Prop({ })
   email_address?: string;
 
   @Prop({ default: null })

@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Users } from '../Schemas/users_schema/Users.schema';
-import { Model } from 'mongoose';
+import {HydratedDocument, Model} from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -62,6 +62,11 @@ export class UsersService {
   // Correction de la méthode findOne pour retourner un utilisateur
   async findOne(id: string): Promise<Users | null> {
     return this.userModel.findById(id).lean().exec();
+  }
+
+  async findUserOne(id: string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    console.log("findUserOne",id);
+    return await this.userModel.find({ phone_number: id }).exec();
   }
 
   findAll() {
