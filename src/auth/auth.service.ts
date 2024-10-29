@@ -1,34 +1,62 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import { Users } from '../Schemas/users_schema/Users.schema';
-import { CreateUserDto } from '../users/dto/create-user.dto';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUserDto } from '../users/dto/login-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(Users.name) private userModel: Model<Users>,  private jwtService: JwtService, ) {}
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+  ) {}
 
-  // Service pour l'inscription
-  async register(createUserDto: CreateUserDto): Promise<Users> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);  // Hachage du mot de passe
-    const createdUser = new this.userModel({ ...createUserDto, password: hashedPassword });
-    return createdUser.save();
-  }
+  async validatedUser(phone_number: string, password: string): Promise<any> {
+    const user = await this.usersService.findByPhone(phone_number);
 
-  // Service pour la connexion
-  async login(loginUserDto: LoginUserDto): Promise<{ access_token: string }> {
-    const user = await this.userModel.findOne({ email: loginUserDto.email_address }).exec();
-
-    if (!user || !(await bcrypt.compare(loginUserDto.password, user.password))) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    if (!user) {
+      return null;
     }
 
-    const payload = { email: user.email_address, sub: user._id };
+    // on vérifie si le compte est validé
+    if (!user.validated_at) {
+      throw new UnauthorizedException('Compte non validé');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    const { password: _, verification_code: __, ...result } = user;
+    return result;
+  }
+
+  async login(user: any) {
+
+    console.log('Login user input:', user);
+
+    // Accéder aux données via _doc
+    const userData = user._doc || user;
+    console.log('User data:', userData);
+
+    if (!userData || !userData._id) {
+      throw new HttpException(
+        'Données utilisateur invalides',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const payload = {
+      sub: userData._id.toString(),
+      phone_number: userData.phone_number,
+    };
+
+    console.log('Generated payload:', payload);
+
     return {
-      access_token: this.jwtService.sign(payload),  // Génère un token JWT
+      access_token: this.jwtService.sign(payload),
+      user: userData
     };
   }
 }

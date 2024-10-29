@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import { PrimaryGeneratedColumn } from 'typeorm/typeorm-model-shim.js';
+
 
 export enum UserType {
   CUSTOMER = 'customer',
@@ -9,35 +11,41 @@ export enum UserType {
 
 @Schema()
 export class Users {
-  @Prop({ required: true })
-  lastname: string;
+  @PrimaryGeneratedColumn()
+  _id: number;
 
-  @Prop({ required: true })
-  firstname: string;
+  @Prop()
+  lastname?: string;
 
-  @Prop({ required: true })
-  address: string;
+  @Prop()
+  firstname?: string;
+
+  @Prop()
+  address?: string;
 
   @Prop({ required: true, unique: true })
   phone_number: string;
 
-  @Prop({ unique: true })
-  email_address: string;
+  @Prop({ })
+  email_address?: string;
 
-  @Prop({ required: true })
-  password: string;
+  @Prop({ default: null })
+  password?: string;
 
-  @Prop({ required: true })
-  birthday: Date;
+  @Prop()
+  verification_code: string;
+
+  @Prop({ default: null })
+  birthday?: string;
 
   @Prop()
   sponsorship_code?: string;
 
-  @Prop({ required: true })
-  photo_piece_identity: string;
+  @Prop()
+  photo_piece_identity?: string;
 
   @Prop()
-  profile_picture: string;
+  profile_picture?: string;
 
   @Prop({ required: true, enum: UserType})
   user_type: UserType.CUSTOMER;
@@ -47,6 +55,12 @@ export class Users {
 
   @Prop({ default: new Date() })
   updated_at: Date;
+
+  @Prop({ default: null })
+  validated_at?: Date;
+
+  @Prop({ default: 0 })
+  token_version: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);
