@@ -47,17 +47,17 @@ export class UsersService {
     return user.save();
   }
 
-  async update(id: string, updateData: Partial<CreateUserDto>): Promise<Users | null> {
-
+  async update(id: string, updateData: Partial<Users>): Promise<Users | null> {
     if (updateData.password) {
       const salt = await bcrypt.genSalt();
       updateData.password = await bcrypt.hash(updateData.password, salt);
     }
 
-    return this.userModel
+    return await this.userModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .exec();
   }
+
 
   // Correction de la méthode findOne pour retourner un utilisateur
   async findOne(id: string): Promise<Users | null> {

@@ -47,8 +47,8 @@ export class Users {
   @Prop()
   profile_picture?: string;
 
-  @Prop({ required: true, enum: UserType})
-  user_type: UserType.CUSTOMER;
+  @Prop({ required: true, enum: UserType, default: UserType.CUSTOMER })
+  user_type: UserType;
 
   @Prop({ default: new Date() })
   created_at: Date;

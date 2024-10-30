@@ -56,7 +56,7 @@ export class CreateUserDto {
 
   @IsEnum(UserType)
   @IsNotEmpty()
-  user_type: UserType.CUSTOMER;
+  user_type: UserType;
 
   @IsOptional()
   @IsObject()

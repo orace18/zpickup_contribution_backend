@@ -7,23 +7,23 @@ import {
   HttpStatus,
   Param,
   Patch,
-  Post, UseGuards, Request
+  Post,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { TwilioService } from '../services/twilio.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import {use} from "passport";
+import { use } from 'passport';
 
 @Controller('users')
 export class UsersController {
-
   constructor(
     private readonly usersService: UsersService,
     private readonly twilioService: TwilioService,
   ) {}
-
 
   @Post('register/phone_number')
   async registerWithPhoneNumber(
@@ -45,17 +45,15 @@ export class UsersController {
 
     // Boucle pour générer un code unique
     while (!isUnique) {
-      verification_code = Math.floor(100000 + Math.random() * 900000).toString();
-      const existingCode = await this.usersService.findByVerificationCode(verification_code);
+      verification_code = Math.floor(
+        100000 + Math.random() * 900000,
+      ).toString();
+      const existingCode =
+        await this.usersService.findByVerificationCode(verification_code);
       if (!existingCode) {
         isUnique = true; // Si le code n'est pas utilisé, on arrête la boucle
       }
     }
-
-
-    /*const verification_code = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();*/
 
     // Envoie du code par SMS
     /*try {
@@ -121,7 +119,7 @@ export class UsersController {
       if (!userId) {
         throw new HttpException(
           'ID utilisateur manquant dans le token',
-          HttpStatus.UNAUTHORIZED
+          HttpStatus.UNAUTHORIZED,
         );
       }
 
@@ -130,10 +128,7 @@ export class UsersController {
       console.log(`user login : ${user}`);
 
       if (!user) {
-        throw new HttpException(
-          'Utilisateur non trouvé',
-          HttpStatus.NOT_FOUND
-        );
+        throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
       }
 
       return user;
@@ -142,9 +137,9 @@ export class UsersController {
       throw new HttpException(
         {
           message: error.message || 'Une erreur est survenue',
-          details: error.response || error
+          details: error.response || error,
         },
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -169,7 +164,8 @@ export class UsersController {
 
     // Si le code de parrainage n'existe pas, en génère un
     if (!user.sponsorship_code) {
-      const sponsorship_code = await this.usersService.generateUniqueSponsorshipCode();
+      const sponsorship_code =
+        await this.usersService.generateUniqueSponsorshipCode();
       updateUserDto = { ...updateUserDto, sponsorship_code };
     }
 
@@ -181,7 +177,9 @@ export class UsersController {
   }
 
   @Post('forgot-password/send-code')
-  async sendVerificationCode(@Body() { phone_number }: { phone_number: string }) {
+  async sendVerificationCode(
+    @Body() { phone_number }: { phone_number: string },
+  ) {
     const user = await this.usersService.findByPhone(phone_number);
 
     if (!user) {
@@ -193,8 +191,11 @@ export class UsersController {
     let isUnique = false;
 
     while (!isUnique) {
-      verification_code = Math.floor(100000 + Math.random() * 900000).toString();
-      const existingCode = await this.usersService.findByVerificationCode(verification_code);
+      verification_code = Math.floor(
+        100000 + Math.random() * 900000,
+      ).toString();
+      const existingCode =
+        await this.usersService.findByVerificationCode(verification_code);
       if (!existingCode) {
         isUnique = true;
       }
@@ -205,7 +206,10 @@ export class UsersController {
 
     // Envoi du code par SMS
     try {
-      await this.twilioService.sendVerificationCode(phone_number, verification_code);
+      await this.twilioService.sendVerificationCode(
+        phone_number,
+        verification_code,
+      );
     } catch (error) {
       throw new HttpException(
         'Erreur lors de l’envoi du SMS',
@@ -219,7 +223,7 @@ export class UsersController {
   @Patch('reset-password/:id')
   async resetPassword(
     @Param('id') id: string,
-    @Body() { password }: { password: string }
+    @Body() { password }: { password: string },
   ) {
     const user = await this.usersService.findOne(id);
 
@@ -233,7 +237,6 @@ export class UsersController {
     return { message: 'Mot de passe réinitialisé avec succès.' };
   }
 
-
   @Delete('logout/:id')
   async logout(@Param('id') id: string) {
     const user = await this.usersService.findOne(id);
@@ -242,8 +245,34 @@ export class UsersController {
     }
 
     // Incrémente le token_version pour invalider les anciens tokens
-    await this.usersService.update(id, { token_version: user.token_version + 1 });
+    await this.usersService.update(id, {
+      token_version: user.token_version + 1,
+    });
 
     return { message: 'Déconnexion réussie' };
+  }
+
+  // route pour modifier le user_type
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/update-user-type')
+  async updateUserType(@Param('id') id: string, @Body() { user_type }: {user_type: UserType}) {
+    const user = await this.usersService.findOne(id);
+
+    if (!user) {
+      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+    }
+
+    // Verification de la validité du user_type
+    if (!Object.values(UserType).includes(user_type)) {
+      throw new HttpException(
+        'Type d’utilisateur invalide',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Mettre à jour le user_type
+    await this.usersService.update(id, { user_type, updated_at: new Date()})
+
+    return { message: 'Type d’utilisateur mis à jour avec succès' };
   }
 }
