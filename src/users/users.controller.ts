@@ -106,7 +106,7 @@ export class UsersController {
       verification_code: null,
     });
 
-    return { message: 'Code vérifié avec succès' };
+    return { message: 'Code vérifié avec succès', userId: user._id };
   }
 
   @UseGuards(JwtAuthGuard)
