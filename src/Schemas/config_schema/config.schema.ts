@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
+export type ConfigDocument = Config & Document;
+
 @Schema()
 export class Config {
   @Prop({ required : true })

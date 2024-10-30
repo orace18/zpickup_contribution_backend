@@ -8,9 +8,9 @@ export enum CardType {
 }
 
 export enum ProfileValidationStatus {
-  IN_PROGRESS = 'en_cours',
-  REFUSED = 'refuse',
-  VALID = 'valide',
+  IN_PROGRESS = 'in_progress',
+  REJECTED = 'rejected',
+  VALIDATED = 'validated',
 }
 
 @Schema()
@@ -49,7 +49,7 @@ export class Zems extends Users {
   })
   profile_validation_status: ProfileValidationStatus;
 
-  @Prop({ required: true, default: false })
+  @Prop({ default: false })
   status_service: boolean;
 
   @Prop({ default: new Date() })

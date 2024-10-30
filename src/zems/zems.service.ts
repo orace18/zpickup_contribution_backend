@@ -5,6 +5,7 @@ import { UpdateZemDto } from './dto/update-zem.dto';
 @Injectable()
 export class ZemsService {
   create(createZemDto: CreateZemDto) {
+    console.log("zem",createZemDto);
     return 'This action adds a new zem';
   }
 

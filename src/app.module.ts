@@ -20,6 +20,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivationHistoryModule } from './activation_history/activation_history.module';
 import { ConfigModule } from '@nestjs/config';
+import {SeedsModule} from "./seeds/seed.module";
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ConfigModule } from '@nestjs/config';
     WalletModule,
     NotificationsModule,
     ActivationHistoryModule,
+    SeedsModule
   ],
   controllers: [AppController],
   providers: [AppService],
