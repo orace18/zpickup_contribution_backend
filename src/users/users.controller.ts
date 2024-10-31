@@ -77,6 +77,39 @@ export class UsersController {
     return { message: 'Code de vérification envoyé' };
   }
 
+  @Post('verify-phone/send-code')
+  async verifyPhoneAndSendCode(@Body() { phone_number }: { phone_number: string }) {
+    const user = await this.usersService.findByPhone(phone_number);
+
+    if (!user) {
+      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+    }
+
+    let verification_code: string;
+    let isUnique = false;
+
+    while (!isUnique) {
+      verification_code = Math.floor(100000 + Math.random() * 900000).toString();
+      const existingCode = await this.usersService.findByVerificationCode(verification_code);
+      if (!existingCode) {
+        isUnique = true;
+      }
+    }
+
+    await this.usersService.update(user._id.toString(), { verification_code });
+
+    /*try {
+      await this.twilioService.sendVerificationCode(phone_number, verification_code);
+    } catch (error) {
+      throw new HttpException(
+        'Erreur lors de l’envoi du SMS',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+*/
+    return { message: 'Code de vérification envoyé' };
+  }
+
   @Post('verify-code')
   async verifyCode(
     @Body()
