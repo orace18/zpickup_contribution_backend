@@ -1,7 +1,10 @@
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { CardType, ProfileValidationStatus } from '../../Schemas/zems_schema/Zems.schema';
 import {ApiProperty} from "@nestjs/swagger";
+import {Users} from "../../Schemas/users_schema/Users.schema";
+import {Types} from "mongoose";
 export class CreateZemDto {
+
 
   @IsEnum(CardType)
   @IsNotEmpty()
@@ -15,11 +18,11 @@ export class CreateZemDto {
   card_image: any;
 
   @ApiProperty({ type: 'string', format: 'binary' })
-  zem_profile_image: string;
+  zem_profile_image: any;
 
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
-  image_of_residence_certificate: string;
+  image_of_residence_certificate: any;
 
   @IsOptional()
   @IsString()
@@ -27,7 +30,7 @@ export class CreateZemDto {
 
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
-  ifu_number_image: string;
+  ifu_number_image: any;
 
   @IsNotEmpty()
   @IsString()
@@ -39,6 +42,6 @@ export class CreateZemDto {
 
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
-  plate_picture: string
+  plate_picture: any
 
 }

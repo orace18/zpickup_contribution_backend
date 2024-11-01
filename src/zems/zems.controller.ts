@@ -1,43 +1,101 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile} from '@nestjs/common';
-import { ZemsService } from './zems.service';
-import { CreateZemDto } from './dto/create-zem.dto';
-import { UpdateZemDto } from './dto/update-zem.dto';
-import {FileInterceptor} from "@nestjs/platform-express";
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    UseInterceptors,
+    Request,
+    UploadedFiles, UseGuards, HttpException, HttpStatus
+} from '@nestjs/common';
+import {ZemsService} from './zems.service';
+import {CreateZemDto} from './dto/create-zem.dto';
+import {UpdateZemDto} from './dto/update-zem.dto';
+import {AnyFilesInterceptor, FileInterceptor} from "@nestjs/platform-express";
 import {ApiBody, ApiConsumes} from "@nestjs/swagger";
+import {diskStorage} from "multer";
+import {extname} from 'path';
+import {AuthGuard} from "@nestjs/passport";
+import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
+import {UsersService} from "../users/users.service";
+import {UserType} from "../Schemas/users_schema/Users.schema";
+
 
 @Controller('zems')
 export class ZemsController {
-  constructor(private readonly zemsService: ZemsService) {}
+    constructor(private readonly zemsService: ZemsService, private readonly usersService: UsersService,) {
+    }
 
-  @UseInterceptors(FileInterceptor('card_image'))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Zems with files',
-    type: CreateZemDto,
-  })
-  @Post()
-  create(@Body() createZemDto: CreateZemDto, @UploadedFile() card_image: Express.Multer.File,) {
-    createZemDto.card_image = card_image;
-    return this.zemsService.create(createZemDto);
-  }
+    @UseGuards(JwtAuthGuard)
+    @UseInterceptors(AnyFilesInterceptor({
+        storage: diskStorage({
+            destination: './uploads', // Répertoire où stocker les fichiers
+            filename: (req, file, callback) => {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                callback(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
+            },
+        }),
+    }))
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        description: 'Zems with files',
+        type: CreateZemDto,
+    })
+    @Post()
+    create(@Body() createZemDto: CreateZemDto,
+           @UploadedFiles() files: Array<Express.Multer.File>,
+           @Request() req,
+    ) {
 
-  @Get()
-  findAll() {
-    return this.zemsService.findAll();
-  }
+        files.forEach((file) => {
+            switch (file.fieldname) {
+                case 'card_image':
+                    createZemDto.card_image = file.path;
+                    break;
+                case 'zem_profile_image':
+                    createZemDto.zem_profile_image = file.path;
+                    break;
+                case 'image_of_residence_certificate':
+                    createZemDto.image_of_residence_certificate = file.path;
+                    break;
+                case 'ifu_number_image':
+                    createZemDto.ifu_number_image = file.path;
+                    break;
+                case 'plate_picture':
+                    createZemDto.plate_picture = file.path;
+                    break;
+            }
+        });
+        const user_id = req.user.userId;
+        return this.zemsService.create(createZemDto,req.user.userId).then(zem => {
+            this.usersService.update(user_id,{zem:zem["_id"],user_type:UserType.ZEM});
+            return zem;
+        }).catch(error => {
+            console.error('Erreur lors de la création de Zem :', error);
+            throw new HttpException('Erreur lors de la création du compte', HttpStatus.NOT_FOUND);
+        });
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.zemsService.findOne(id);
-  }
+    @Get()
+    findAll() {
+        return this.zemsService.findAll();
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
-    return this.zemsService.update(id, updateZemDto);
-  }
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.zemsService.findOne(id);
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.zemsService.remove(id);
-  }
+    @UseGuards(JwtAuthGuard)
+    @Patch(':id')
+    update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
+        return this.zemsService.update(id, updateZemDto);
+    }
+
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.zemsService.remove(id);
+    }
 }

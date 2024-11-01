@@ -61,6 +61,10 @@ export class Users {
 
   @Prop({ default: 0 })
   token_version: number;
+
+
+  @Prop({ type: Types.ObjectId, ref: 'Zems', required: false })
+  zem: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);

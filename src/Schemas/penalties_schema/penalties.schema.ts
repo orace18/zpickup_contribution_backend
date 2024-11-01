@@ -1,14 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Zems } from '../zems_schema/Zems.schema';
-import { Courses } from '../courses_schema/courses.schema';
 
 @Schema()
 export class Penalties {
   @Prop({ type: Object })
   zem: Zems
-
+/*
   @Prop({ type: Object })
-  course: Courses
+  course: Courses*/
 
   @Prop()
   penalties_number: number

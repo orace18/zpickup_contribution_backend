@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { UserType } from '../../Schemas/users_schema/Users.schema';
 import { Zems } from '../../Schemas/zems_schema/Zems.schema';
+import {Types} from "mongoose";
 
 export class CreateUserDto {
   @IsOptional()
@@ -59,8 +60,7 @@ export class CreateUserDto {
   user_type: UserType;
 
   @IsOptional()
-  @IsObject()
-  zem: Zems
+  zem: Types.ObjectId
 
   @IsDate()
   created_at: Date;

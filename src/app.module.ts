@@ -6,7 +6,6 @@ import { UsersModule } from './users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomersModule } from './customers/customers.module';
 import { ZemsModule } from './zems/zems.module';
-import { CoursesModule } from './courses/courses.module';
 import { CnssModule } from './cnss/cnss.module';
 import { InsurancesModule } from './insurances/insurances.module';
 import { CounterModule } from './counter/counter.module';
@@ -21,6 +20,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ActivationHistoryModule } from './activation_history/activation_history.module';
 import { ConfigModule } from '@nestjs/config';
 import {SeedsModule} from "./seeds/seed.module";
+import { RacesModule } from './races/races.module';
 
 @Module({
   imports: [
@@ -34,7 +34,6 @@ import {SeedsModule} from "./seeds/seed.module";
     UsersModule,
     CustomersModule,
     ZemsModule,
-    CoursesModule,
     CnssModule,
     InsurancesModule,
     CounterModule,
@@ -47,7 +46,8 @@ import {SeedsModule} from "./seeds/seed.module";
     WalletModule,
     NotificationsModule,
     ActivationHistoryModule,
-    SeedsModule
+    SeedsModule,
+    RacesModule
   ],
   controllers: [AppController],
   providers: [AppService],

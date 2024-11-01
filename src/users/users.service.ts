@@ -61,7 +61,8 @@ export class UsersService {
 
   // Correction de la méthode findOne pour retourner un utilisateur
   async findOne(id: string): Promise<Users | null> {
-    return this.userModel.findById(id).lean().exec();
+    return this.userModel.findById(id)
+        .populate('zem').lean().exec();
   }
 
   async findUserOne(id: string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
