@@ -24,12 +24,8 @@ export class CreateRaceDto {
     @IsOptional()
     @IsDate()
     @Type(() => Date)
-    datetime_debut?: Date;
+    pending_at?: Date;
 
-    @IsOptional()
-    @IsDate()
-    @Type(() => Date)
-    datetime_fin?: Date;
 
     @IsOptional()
     @IsNumber()

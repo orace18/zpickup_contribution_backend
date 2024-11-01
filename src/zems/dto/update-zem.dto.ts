@@ -6,8 +6,24 @@ import {ProfileValidationStatus} from "../../Schemas/zems_schema/Zems.schema";
 
 export class UpdateZemDto extends PartialType(CreateZemDto) {
 
-    @IsEnum(ProfileValidationStatus)
     @IsNotEmpty()
+    type_action: string;
+
+    @IsOptional()
+    validated_at: Date;
+
+    @IsEnum(ProfileValidationStatus)
+    @IsOptional()
     profile_validation_status: ProfileValidationStatus;
+
+    @IsOptional()
+    service: boolean;
+
+    @IsOptional()
+    service_latitude: number;
+
+    @IsOptional()
+    service_longitude: number;
+
 
 }

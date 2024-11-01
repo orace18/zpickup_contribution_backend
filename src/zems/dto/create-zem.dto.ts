@@ -14,6 +14,9 @@ export class CreateZemDto {
   @IsNotEmpty()
   card_number: string;
 
+  @IsOptional()
+  user: Types.ObjectId;
+
   @ApiProperty({ type: 'string', format: 'binary' })
   card_image: any;
 

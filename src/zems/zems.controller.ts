@@ -8,7 +8,7 @@ import {
     Delete,
     UseInterceptors,
     Request,
-    UploadedFiles, UseGuards, HttpException, HttpStatus
+    UploadedFiles, UseGuards, HttpException, HttpStatus, BadRequestException
 } from '@nestjs/common';
 import {ZemsService} from './zems.service';
 import {CreateZemDto} from './dto/create-zem.dto';
@@ -69,7 +69,8 @@ export class ZemsController {
             }
         });
         const user_id = req.user.userId;
-        return this.zemsService.create(createZemDto,req.user.userId).then(zem => {
+        createZemDto.user = user_id;
+        return this.zemsService.create(createZemDto).then(zem => {
             this.usersService.update(user_id,{zem:zem["_id"],user_type:UserType.ZEM});
             return zem;
         }).catch(error => {
@@ -90,7 +91,30 @@ export class ZemsController {
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
+    update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto)
+    {
+        switch (updateZemDto.type_action){
+            case "validated_zem":
+                if (updateZemDto.profile_validation_status){
+                    updateZemDto.validated_at = new  Date();
+                }else{
+                    throw new BadRequestException({"message":"le champs de la validation du profile est requis"});
+                }
+                break;
+
+            case "change_status":
+                if (updateZemDto.service==null){
+                    throw new BadRequestException({"message":"Veuillez renseigner tous les champs pour la mise en service"});
+                }else{
+                    if (updateZemDto.service){
+                        if (!updateZemDto.service_latitude || !updateZemDto.service_longitude){
+                            throw new BadRequestException({"message":"Veuillez renseigner tous les champs pour la mise en service"});
+                        }
+                    }
+                }
+                break;
+        }
+
         return this.zemsService.update(id, updateZemDto);
     }
 
@@ -98,4 +122,6 @@ export class ZemsController {
     remove(@Param('id') id: string) {
         return this.zemsService.remove(id);
     }
+
+
 }

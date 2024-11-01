@@ -52,11 +52,26 @@ export class Zems{
   })
   profile_validation_status: ProfileValidationStatus;
 
+
   @Prop({ default: false })
-  status_service: boolean;
+  service: boolean;
+
+  @Prop({ required:false })
+  service_latitude: number;
+
+  @Prop({ required:false })
+  service_longitude: number;
+
+  @Prop({ type: Number, required: false })
+  service_km: number;
+
 
   @Prop({ default: null })
   validated_at: Date;
+
+
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
+  user: Types.ObjectId;
 
   @Prop({ default: new Date() })
   created_at: Date;

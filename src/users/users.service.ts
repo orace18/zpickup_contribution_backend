@@ -29,8 +29,8 @@ export class UsersService {
   }
 
   async findByPhone(phone_number: string): Promise<Users> {
-    const user = await this.userModel.findOne({ phone_number }).exec();
-    console.log('Found user:', user); // Pour déboguer
+    const user = await this.userModel.findOne({ phone_number })
+        .populate("race").exec();
     return user;
   }
 

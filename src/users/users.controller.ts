@@ -113,19 +113,10 @@ export class UsersController {
   @Get('me')
   async getCurrentUser(@Request() req) {
     try {
-      console.log('Payload du token:', req.user); // Pour déboguer
 
       const userId = req.user.userId; // Récupère l'ID du payload validé
-      if (!userId) {
-        throw new HttpException(
-          'ID utilisateur manquant dans le token',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
 
       const user = await this.usersService.findOne(userId);
-      console.log(`user id : ${userId}`);
-      console.log(`user login : ${user}`);
 
       if (!user) {
         throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);

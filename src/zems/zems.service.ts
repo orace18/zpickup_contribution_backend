@@ -11,7 +11,7 @@ import {Users, UserType} from "../Schemas/users_schema/Users.schema";
 export class ZemsService {
   constructor(@InjectModel(Zems.name) private readonly zemModel: Model<Zems>, ) {}
 
-  create(createZemDto: CreateZemDto, user_id) {
+  create(createZemDto: CreateZemDto) {
     const created = new this.zemModel(createZemDto);
     return created.save();
   }
@@ -21,12 +21,14 @@ export class ZemsService {
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} zem`;
+    return this.zemModel
+        .findById(id)
+        .exec();
   }
 
   update(id: string, updateData: Partial<Zems>) {
     return this.zemModel
-        .findByIdAndUpdate(id, {validated_at:new Date(), ...updateData})
+        .findByIdAndUpdate(id, updateData)
         .exec();
   }
 

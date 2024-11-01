@@ -4,6 +4,7 @@ import {Types} from "mongoose";
 
 export enum CoursesStatus {
   PENDING = 'pending',
+  STOPPED = 'stopped',
   ACCEPTED = 'accepted',
   START = 'start',
   END = 'end'
@@ -32,20 +33,6 @@ export class Races {
   @Type(() => Date)
   initial_datetime: Date;
 
-  @Prop({
-    type: Date,
-    transform: (value: Date) => value ? new Date(value) : undefined,
-  })
-  @Type(() => Date)
-  datetime_start?: Date;
-
-  @Prop({
-    type: Date,
-    transform: (value: Date) => value ? new Date(value) : undefined,
-  })
-  @Type(() => Date)
-  datetime_end?: Date;
-
   @Prop()
   longitude_start?: number;
 
@@ -72,6 +59,21 @@ export class Races {
 
   @Prop({ required: true, enum: CoursesStatus })
   status: CoursesStatus;
+
+  @Prop()
+  stopped_at: Date;
+
+  @Prop()
+  pending_at: Date;
+
+  @Prop()
+  accepted_at: Date;
+
+  @Prop()
+  started_at: Date;
+
+  @Prop()
+  ended_at: Date;
 
   @Prop({ default: new Date() })
   created_at: Date;
