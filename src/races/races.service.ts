@@ -47,6 +47,7 @@ export class RacesService {
 
     async update(id: string, updateRaceDto: UpdateRaceDto, req) {
 
+        console.log("user",req.user);
         switch (updateRaceDto.type_action) {
             case "stopped":
                 updateRaceDto.status = CoursesStatus.STOPPED;
