@@ -111,16 +111,28 @@ export class RacesService {
             validated_at: {$ne: null},
             profile_validation_status: "validated",
             service: true
-        }).populate("user", ["_id", "phone_number", "firstname", "lastname"]).lean().exec();
+        }).populate("user", ["_id", "phone_number", "firstname", "lastname","race"]).lean().exec();
 
         let available_zems = [];
         for (let i = 0; i < zems.length; i++) {
             let zem = zems[i];
-            const km = calculateDistance(race.initial_latitude, race.initial_longitude, zem.service_latitude, zem.service_longitude);
-            if (km <= parseFloat(ray.value)) {
-                zem.service_km = km;
-                available_zems.push(zem);
+            let can_add = false;
+            if(zem.user["race"]==null ){
+                can_add = true;
+            }else{
+                if(zem.user["race"]==race.id){
+                    can_add = true;
+                }
             }
+
+            if(can_add){
+                const km = calculateDistance(race.initial_latitude, race.initial_longitude, zem.service_latitude, zem.service_longitude);
+                if (km <= parseFloat(ray.value)) {
+                    zem.service_km = km;
+                    available_zems.push(zem);
+                }
+            }
+
         }
         available_zems.sort((a, b) => a.service_km - b.service_km);
 
