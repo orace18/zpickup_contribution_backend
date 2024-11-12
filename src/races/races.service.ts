@@ -117,13 +117,9 @@ export class RacesService {
         let available_zems = [];
         for (let i = 0; i < zems.length; i++) {
             let zem = zems[i];
-            let can_add = false;
-            if(zem.user["race"]==null ){
-                can_add = true;
-            }else{
-                if(zem.user["race"]==race.id){
-                    can_add = true;
-                }
+            let can_add = true;
+            if(zem.user["race"]!==null && zem.user["race"]!==race.id ){
+                can_add = false;
             }
 
             if(can_add){

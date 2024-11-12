@@ -17,7 +17,7 @@ export class ZemsService {
   }
 
   findAll() {
-    return `This action returns all zems`;
+    return this.zemModel.find();
   }
 
   findOne(id: string) {
