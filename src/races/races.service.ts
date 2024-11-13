@@ -153,7 +153,7 @@ export class RacesService {
     }
 
     async availableRaces(req) {
-        const zem = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
+        const zem = await this.zemsModel.findOne({user: req.user.userId}).lean().exec();
 
         const ray = await this.configModel.findOne({key: "ray"}).exec();
         const races: Races[] = await this.racesModel.find({
@@ -163,6 +163,7 @@ export class RacesService {
         let availables = [];
         for (let i = 0; i < races.length; i++) {
             let race = races[i];
+
             let can_add = false;
 
             const km = calculateDistance(race.initial_latitude, race.initial_longitude, zem.service_latitude, zem.service_longitude);
