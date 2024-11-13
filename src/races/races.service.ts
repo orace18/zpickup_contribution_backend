@@ -10,6 +10,7 @@ import {Zems} from "../Schemas/zems_schema/Zems.schema";
 import {Config} from "../Schemas/config_schema/config.schema";
 import {Users} from "../Schemas/users_schema/Users.schema";
 import {ZemsService} from "../zems/zems.service";
+import {Race} from "./entities/race.entity";
 
 @Injectable()
 export class RacesService {
@@ -47,7 +48,7 @@ export class RacesService {
 
     async update(id: string, updateRaceDto: UpdateRaceDto, req) {
 
-        console.log("user",req.user);
+        console.log("user", req.user);
         switch (updateRaceDto.type_action) {
             case "stopped":
                 updateRaceDto.status = CoursesStatus.STOPPED;
@@ -66,10 +67,13 @@ export class RacesService {
 
             case "started":
                 const zem_started = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
-                let race = await this.racesModel.findOne({"qrcode_start": updateRaceDto.qrcode_start_value,"zem":zem_started._id})
+                let race = await this.racesModel.findOne({
+                    "qrcode_start": updateRaceDto.qrcode_start_value,
+                    "zem": zem_started._id
+                })
                     .lean().exec();
 
-                if(!race){
+                if (!race) {
                     throw new BadRequestException("Course invalide");
                 }
 
@@ -79,15 +83,18 @@ export class RacesService {
 
             case "ended":
                 const zem_ended = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
-                let race_ended = await this.racesModel.findOne({"qrcode_end": updateRaceDto.qrcode_end_value,"zem":zem_ended._id})
+                let race_ended = await this.racesModel.findOne({
+                    "qrcode_end": updateRaceDto.qrcode_end_value,
+                    "zem": zem_ended._id
+                })
                     .lean().exec();
 
-                if(!race_ended){
+                if (!race_ended) {
                     throw new BadRequestException("Course invalide");
                 }
 
-                console.log("km",calculateDistance(race_ended.latitude_start,race_ended.longitude_start,updateRaceDto.latitude_end,updateRaceDto.longitude_end));
-                updateRaceDto.distance_traveled = calculateDistance(race_ended.latitude_start,race_ended.longitude_start,updateRaceDto.latitude_end,updateRaceDto.longitude_end);
+                console.log("km", calculateDistance(race_ended.latitude_start, race_ended.longitude_start, updateRaceDto.latitude_end, updateRaceDto.longitude_end));
+                updateRaceDto.distance_traveled = calculateDistance(race_ended.latitude_start, race_ended.longitude_start, updateRaceDto.latitude_end, updateRaceDto.longitude_end);
                 updateRaceDto.status = CoursesStatus.END;
                 updateRaceDto.ended_at = new Date();
                 break;
@@ -112,26 +119,26 @@ export class RacesService {
             validated_at: {$ne: null},
             profile_validation_status: "validated",
             service: true
-        }).populate("user", ["_id", "phone_number", "firstname", "lastname","race"]).lean().exec();
+        }).populate("user", ["_id", "phone_number", "firstname", "lastname", "race"]).lean().exec();
 
         let available_zems = [];
         for (let i = 0; i < zems.length; i++) {
             let zem = zems[i];
             let can_add = false;
-            console.log("race",(zem.user["race"]==race._id));
-            if(zem.user["race"]==null){
+            console.log("race", (zem.user["race"] == race._id));
+            if (zem.user["race"] == null) {
                 can_add = true;
-            }else{
-                if(zem.user["race"]==undefined){
+            } else {
+                if (zem.user["race"] == undefined) {
                     can_add = true;
-                }else{
-                    if(zem.user["race"]==race._id){
+                } else {
+                    if (zem.user["race"] == race._id) {
                         can_add = true;
                     }
                 }
             }
 
-            if(can_add){
+            if (can_add) {
                 const km = calculateDistance(race.initial_latitude, race.initial_longitude, zem.service_latitude, zem.service_longitude);
                 if (km <= parseFloat(ray.value)) {
                     zem.service_km = km;
@@ -143,6 +150,30 @@ export class RacesService {
         available_zems.sort((a, b) => a.service_km - b.service_km);
 
         return available_zems;
+    }
+
+    async availableRaces(req) {
+        const zem = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
+
+        const ray = await this.configModel.findOne({key: "ray"}).exec();
+        const races: Races[] = await this.racesModel.find({
+            status: CoursesStatus.PENDING
+        }).populate("user", ["_id", "phone_number", "firstname", "lastname", "race"]).lean().exec();
+
+        let availables = [];
+        for (let i = 0; i < races.length; i++) {
+            let race = races[i];
+            let can_add = false;
+
+            const km = calculateDistance(race.initial_latitude, race.initial_longitude, zem.service_latitude, zem.service_longitude);
+            if (km <= parseFloat(ray.value)) {
+                race.service_km = km;
+                availables.push(race);
+            }
+        }
+        availables.sort((a, b) => a.service_km - b.service_km);
+
+        return availables;
     }
 
 
