@@ -82,7 +82,7 @@ export class RacesService {
                 break;
 
             case "ended":
-                const zem_ended = await this.zemsModel.findOne({user: req.user.userId)).lean().exec();
+                const zem_ended = await this.zemsModel.findOne({user: req.user.userId}).lean().exec();
                 let race_ended = await this.racesModel.findOne({
                     "qrcode_end": updateRaceDto.qrcode_end_value,
                     "zem": zem_ended._id
