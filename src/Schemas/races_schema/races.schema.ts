@@ -75,6 +75,9 @@ export class Races {
   @Prop()
   ended_at: Date;
 
+  @Prop()
+  service_km: number;
+
   @Prop({ default: new Date() })
   created_at: Date;
 

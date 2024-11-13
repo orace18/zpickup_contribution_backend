@@ -41,4 +41,11 @@ export class RacesController {
     availableForRace(@Param('id') id: string) {
         return this.racesService.availableZems(id);
     }
+
+    @Get('available/races')
+    availableRaces(@Request() req,) {
+        return this.racesService.availableRaces(req);
+    }
+
+
 }
