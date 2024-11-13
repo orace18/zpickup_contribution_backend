@@ -59,14 +59,14 @@ export class RacesService {
             case "accepted":
                 updateRaceDto.status = CoursesStatus.ACCEPTED;
                 updateRaceDto.accepted_at = new Date();
-                const zem = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
+                const zem = await this.zemsModel.findOne({user: req.user.userId}).lean().exec();
                 updateRaceDto.zem = new Types.ObjectId(zem._id);
                 const id_object_type = new Types.ObjectId(id);
                 await this.userService.update(req.user.userId, {race: id_object_type});
                 break;
 
             case "started":
-                const zem_started = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
+                const zem_started = await this.zemsModel.findOne({user: req.user.userId}).lean().exec();
                 let race = await this.racesModel.findOne({
                     "qrcode_start": updateRaceDto.qrcode_start_value,
                     "zem": zem_started._id
@@ -82,7 +82,7 @@ export class RacesService {
                 break;
 
             case "ended":
-                const zem_ended = await this.zemsModel.findOne({user: new Types.ObjectId(req.user.userId)}).lean().exec();
+                const zem_ended = await this.zemsModel.findOne({user: req.user.userId)).lean().exec();
                 let race_ended = await this.racesModel.findOne({
                     "qrcode_end": updateRaceDto.qrcode_end_value,
                     "zem": zem_ended._id
