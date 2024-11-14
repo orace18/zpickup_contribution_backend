@@ -125,14 +125,13 @@ export class RacesService {
         for (let i = 0; i < zems.length; i++) {
             let zem = zems[i];
             let can_add = false;
-            console.log("race", (zem.user["race"] == race._id));
             if (zem.user["race"] == null) {
                 can_add = true;
             } else {
                 if (zem.user["race"] == undefined) {
                     can_add = true;
                 } else {
-                    if (zem.user["race"] == race._id) {
+                    if (zem.user["race"].toString() == race._id.toString()) {
                         can_add = true;
                     }
                 }
