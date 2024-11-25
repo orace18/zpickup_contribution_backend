@@ -1,0 +1,78 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
+import { Model, Types } from 'mongoose';
+import { Counter } from '../Schemas/counter_schema/counter.schema';
+import { NotificationService } from '../services/notification.service';
+
+@Injectable()
+export class PaymentService {
+  constructor(
+    @InjectModel(Payment.name) private paymentModel: Model<Payment>,
+    @InjectModel(Counter.name) private counterModel: Model<Counter>,
+    private notificationService: NotificationService,
+  ) {}
+
+  async processPayment(createPaymentDto: CreatePaymentDto) {
+    const counter = await this.counterModel.findOne({
+      zem: new Types.ObjectId(createPaymentDto.zem_id),
+    });
+
+    if (!counter) {
+      throw new NotFoundException('Counter not found for this Zem');
+    }
+
+    // Simulation du traitement du paiement avec un service externe
+    const transactionId = `TR-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    const payment = new this.paymentModel({
+      counter: counter._id,
+      zem: new Types.ObjectId(createPaymentDto.zem_id),
+      amount: createPaymentDto.amount,
+      paymentMethod: createPaymentDto.payment_method,
+      transactionId,
+      status: PaymentStatus.COMPLETED,
+    });
+
+    await payment.save();
+
+    // Mettre à jour le solde du compteur
+    counter.balance += createPaymentDto.amount;
+    await counter.save();
+
+    return payment;
+  }
+
+  async getPaymentHistory(zemId: string) {
+    const payments = await this.paymentModel
+      .find({
+        zem: new Types.ObjectId(zemId),
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return payments;
+  }
+
+  create(createPaymentDto: CreatePaymentDto) {
+    return 'This action adds a new payment';
+  }
+
+  findAll() {
+    return `This action returns all payment`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} payment`;
+  }
+
+  update(id: number, updatePaymentDto: UpdatePaymentDto) {
+    return `This action updates a #${id} payment`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} payment`;
+  }
+}

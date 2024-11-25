@@ -21,6 +21,9 @@ import { ActivationHistoryModule } from './activation_history/activation_history
 import { ConfigModule } from '@nestjs/config';
 import {SeedsModule} from "./seeds/seed.module";
 import { RacesModule } from './races/races.module';
+import { WebsocketGateway } from './websocket/websocket.gateway';
+import { CompteurModule } from './compteur/compteur.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -47,9 +50,11 @@ import { RacesModule } from './races/races.module';
     NotificationsModule,
     ActivationHistoryModule,
     SeedsModule,
-    RacesModule
+    RacesModule,
+    CompteurModule,
+    PaymentModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, WebsocketGateway],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {CreateRaceDto} from './dto/create-race.dto';
 import {UpdateRaceDto} from './dto/update-race.dto';
 import {InjectModel} from "@nestjs/mongoose";
@@ -11,6 +11,8 @@ import {Config} from "../Schemas/config_schema/config.schema";
 import {Users} from "../Schemas/users_schema/Users.schema";
 import {ZemsService} from "../zems/zems.service";
 import {Race} from "./entities/race.entity";
+import { ObjectId } from 'mongoose';
+import { WebsocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class RacesService {
@@ -19,7 +21,8 @@ export class RacesService {
                 @InjectModel(Zems.name) private zemsModel: Model<Zems>,
                 @InjectModel(Config.name) private configModel: Model<Config>,
                 private readonly userService: UsersService,
-                private readonly zemsService: ZemsService,) {
+                private readonly zemsService: ZemsService,
+                private readonly websocketGateway: WebsocketGateway,) {
     }
 
     async create(createRaceDto: CreateRaceDto, req) {
@@ -63,6 +66,11 @@ export class RacesService {
                 updateRaceDto.zem = new Types.ObjectId(zem._id);
                 const id_object_type = new Types.ObjectId(id);
                 await this.userService.update(req.user.userId, {race: id_object_type});
+
+                this.websocketGateway.sendUpdate({
+                    markerId: id,
+                    isAccepted: true,
+                })
                 break;
 
             case "started":
@@ -176,5 +184,39 @@ export class RacesService {
         return availables;
     }
 
+    async findAllRacesByUser(userId: string) {
+        // Recherche des courses liées à cet utilisateur
+        const races = await this.racesModel.find({ user: userId })
+          .populate('zem') // Inclure les informations sur le Zem si nécessaire
+          .lean()
+          .exec();
+
+        if (!races || races.length === 0) {
+            throw new NotFoundException(`Aucune course trouvée pour cet utilisateur.`);
+        }
+
+        return races;
+    }
+
+    async findAllRacesByZem(zemId: string) {
+        console.log(`ZemId reçu : ${zemId}`);
+
+        // Convertir zemId en ObjectId
+        const objectId = new Types.ObjectId(zemId);
+
+        // Requête avec le ObjectId
+        const races = await this.racesModel.find({ zem: objectId })
+          .populate('user') // Facultatif : inclure des infos utilisateur
+          .lean()
+          .exec();
+
+        console.log(`Résultat trouvé pour le zemId ${zemId}:`, races);
+
+        if (!races || races.length === 0) {
+            throw new NotFoundException(`Aucune course trouvée pour ce zem.`);
+        }
+
+        return races;
+    }
 
 }

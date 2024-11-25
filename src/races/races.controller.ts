@@ -1,9 +1,22 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards} from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Req,
+    Request,
+    UnauthorizedException,
+    UseGuards,
+} from '@nestjs/common';
 import {RacesService} from './races.service';
 import {CreateRaceDto} from './dto/create-race.dto';
 import {UpdateRaceDto} from './dto/update-race.dto';
 import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
 import {CoursesStatus} from "../Schemas/races_schema/races.schema";
+import { Race } from './entities/race.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('races')
@@ -47,5 +60,21 @@ export class RacesController {
         return this.racesService.availableRaces(req);
     }
 
+    @Get('user/races/list')
+    @UseGuards(JwtAuthGuard)
+    async findAllByUser(@Request() req: any) {
+        // L'ID de l'utilisateur est extrait du token JWT
+        const userId = req.user.userId;
+
+        // Récupérer toutes les courses associées à cet utilisateur
+        return this.racesService.findAllRacesByUser(userId);
+    }
+
+    @Get('zem/races/:zemId')
+    @UseGuards(JwtAuthGuard)
+    async getRacesByZem(@Param('zemId') zemId: string) {
+        // Appel au service pour récupérer les courses du zem
+        return this.racesService.findAllRacesByZem(zemId);
+    }
 
 }

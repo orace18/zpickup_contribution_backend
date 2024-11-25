@@ -1,4 +1,14 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateCounterDto } from './create-counter.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsOptional } from 'class-validator';
 
-export class UpdateCounterDto extends PartialType(CreateCounterDto) {}
+export class UpdateCounterDto {
+  @ApiProperty({ description: 'Kilometers traveled' })
+  @IsOptional()
+  @IsNumber()
+  km_traveled?: number;
+
+  @ApiProperty({ description: 'Counter balance' })
+  @IsOptional()
+  @IsNumber()
+  balance?: number;
+}
