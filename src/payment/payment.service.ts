@@ -15,9 +15,9 @@ export class PaymentService {
     private notificationService: NotificationService,
   ) {}
 
-  async processPayment(createPaymentDto: CreatePaymentDto) {
+  async processPayment(zemId: string, createPaymentDto: CreatePaymentDto) {
     const counter = await this.counterModel.findOne({
-      zem: new Types.ObjectId(createPaymentDto.zem_id),
+      zem: new Types.ObjectId(zemId),
     });
 
     if (!counter) {
@@ -29,10 +29,10 @@ export class PaymentService {
 
     const payment = new this.paymentModel({
       counter: counter._id,
-      zem: new Types.ObjectId(createPaymentDto.zem_id),
+      zem: new Types.ObjectId(zemId),
       amount: createPaymentDto.amount,
-      paymentMethod: createPaymentDto.payment_method,
-      transactionId,
+      payment_method: createPaymentDto.payment_method,
+      transaction_id: transactionId,
       status: PaymentStatus.COMPLETED,
     });
 

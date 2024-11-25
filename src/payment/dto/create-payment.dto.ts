@@ -12,9 +12,4 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   @IsEnum(PaymentMethod)
   payment_method: PaymentMethod;
-
-  @ApiProperty({ description: 'Zem ID' })
-  @IsString()
-  @IsNotEmpty()
-  zem_id: string;
 }

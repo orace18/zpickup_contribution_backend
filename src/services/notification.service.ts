@@ -21,4 +21,17 @@ export class NotificationService {
 
     return notification;
   }
+
+  async sendPaymentConfirmation(zemId: string, balance: number) {
+    const notification = {
+      type: 'SEND_PAYMENT_CONFIRAMATION',
+      message: `succès! Vous avez effectué un rechargement de ${balance} km`,
+      zemId,
+      timestamp: new Date().toISOString(),
+    };
+    // simulation d'un envoie de notification
+    console.log('Notification envoyée: ', notification);
+
+    return notification;
+  }
 }

@@ -4,7 +4,7 @@ import { UpdateCounterDto } from './dto/update-counter.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Counter } from '../Schemas/counter_schema/counter.schema';
 import { Model, Types } from 'mongoose';
-import { Payment } from '../Schemas/payment/payment.schema';
+import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
 import { Races } from '../Schemas/races_schema/races.schema';
 import { NotificationService } from '../services/notification.service';
@@ -49,23 +49,69 @@ export class CounterService {
   }
 
   async rechargeCounter(zemId: string, createPaymentDto: CreatePaymentDto) {
-    const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId) });
+
+    const counter = await this.counterModel.findOne({
+
+      zem: new Types.ObjectId(zemId)
+
+    });
+
     if (!counter) {
-      throw new NotFoundException('Zem not found for this zem');
+
+      throw new NotFoundException('Counter not found for this Zem');
+
     }
 
-    const recharge = new this.paymentModel({
+    // Générer un ID de transaction unique
+
+    const transactionId = `TR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const payment = new this.paymentModel({
       counter: counter._id,
-      ...createPaymentDto,
+
+      zem: new Types.ObjectId(zemId),
+
+      amount: createPaymentDto.amount,
+
+      payment_method: createPaymentDto.payment_method,
+
+      transaction_id: transactionId,
+
+      status: PaymentStatus.COMPLETED,
     });
-    await recharge.save();
 
-    counter.balance += createPaymentDto.amount;
-    counter.is_low_balance = counter.balance < 1000;
-    await counter.save();
+    try {
 
-    return recharge;
+      const savedPayment = await payment.save();
+
+      // Mettre à jour le solde du compteur
+
+      counter.balance += createPaymentDto.amount;
+
+      counter.is_low_balance = counter.balance < 1000;
+
+      await counter.save();
+
+      // Envoyer une notification de confirmation
+
+      await this.notificationService.sendPaymentConfirmation(zemId, createPaymentDto.amount);
+
+      return {
+
+        payment: savedPayment,
+
+        newBalance: counter.balance
+
+      };
+
+    } catch (error) {
+
+      throw new BadRequestException(`Payment failed: ${error.message}`);
+
+    }
+
   }
+
 
   async deductKilometers(zemId: string, deductKilometersDto: DeductKilometersDto) {
     const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId)});

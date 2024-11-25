@@ -40,6 +40,7 @@ export class CounterController {
     return this.counterService.getCounterHistory(zemId);
   }
 
+  // a tester demain avec Mr Patrick
   @Get('balance-after-course/:zemId/:raceId')
   @ApiOperation({ summary: 'Get balance after a specific course' })
   @ApiParam({ name: 'zemId', description: 'ID of the Zem' })

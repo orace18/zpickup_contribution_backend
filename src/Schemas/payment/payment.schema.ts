@@ -9,13 +9,16 @@ export enum PaymentMethod {
 export enum PaymentStatus {
   PENDING = 'pending',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 @Schema()
 export class Payment {
   @Prop({ type: Types.ObjectId, ref: 'Counter', required: true })
   counter: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Zems', required: true })
+  zem: Types.ObjectId;
 
   @Prop({ required: true })
   amount: number;
@@ -28,9 +31,6 @@ export class Payment {
 
   @Prop({ required: true, enum: PaymentStatus, default: PaymentStatus.PENDING })
   status: PaymentStatus;
-
-  @Prop({ type: Types.ObjectId, ref: 'Zems', required: true })
-  zem: Types.ObjectId;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

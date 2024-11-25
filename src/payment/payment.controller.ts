@@ -20,10 +20,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @Post('process-payment')
+  @Post('process-payment/:zemId')
   @ApiOperation({ summary: 'Process a payment for counter recharge' })
-  processPayment(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentService.processPayment(createPaymentDto);
+  processPayment(@Param('zemId') zemId: string, @Body() createPaymentDto: CreatePaymentDto) {
+    return this.paymentService.processPayment(zemId, createPaymentDto);
   }
 
   @Get('history/:zemId')
