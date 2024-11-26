@@ -7,7 +7,7 @@ export class Counter {
   zem: Zems
 
   @Prop({ required: true, default: 0 })
-  balance: number
+  balance_km: number
 
   @Prop({ required: true })
   price_per_km: number;

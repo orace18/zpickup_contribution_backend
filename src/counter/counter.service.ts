@@ -10,6 +10,7 @@ import { Races } from '../Schemas/races_schema/races.schema';
 import { NotificationService } from '../services/notification.service';
 import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
+import { Config } from '../Schemas/config_schema/config.schema';
 
 @Injectable()
 export class CounterService {
@@ -19,6 +20,7 @@ export class CounterService {
     @InjectModel(Payment.name) private readonly paymentModel: Model<Payment>,
     @InjectModel(Zems.name) private readonly zemsModel: Model<Zems>,
     @InjectModel(Races.name) private racesModel: Model<Races>,
+    @InjectModel(Config.name) private configModel: Model<Config>,
     private notificationService: NotificationService,
   ) {}
 
@@ -38,9 +40,11 @@ export class CounterService {
       throw new BadRequestException('Counter already exists for this Zem');
     }
 
+    const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
+
     const counter = new this.counterModel({
       zem: new Types.ObjectId(zemId),
-      balance: 0,
+      balance_km: parseFloat(free_km.value),
       price_per_km: 0,
       total_km_traveled: 0,
     });
@@ -51,63 +55,67 @@ export class CounterService {
   async rechargeCounter(zemId: string, createPaymentDto: CreatePaymentDto) {
 
     const counter = await this.counterModel.findOne({
-
-      zem: new Types.ObjectId(zemId)
-
+      zem: new Types.ObjectId(zemId),
     });
 
     if (!counter) {
-
-      throw new NotFoundException('Counter not found for this Zem');
-
+      throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
     }
 
-    // Générer un ID de transaction unique
 
-    const transactionId = `TR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const price_per_km = await this.configModel.findOne({ key: "km-price" }).exec();
+
+    const counter_min_km = await this.configModel.findOne({ key: "min-km" }).exec();
+
+    // Calcule du nombre de kilometre à rechager
+    const km_amount = Math.ceil(createPaymentDto.price_per_km / parseFloat(price_per_km.value));
+
+    // Générer un ID unique de transaction
+    const transactionId = `TR-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
     const payment = new this.paymentModel({
       counter: counter._id,
-
       zem: new Types.ObjectId(zemId),
-
-      amount: createPaymentDto.amount,
-
+      km_amount: km_amount,
+      price_per_km: createPaymentDto.price_per_km,
       payment_method: createPaymentDto.payment_method,
-
       transaction_id: transactionId,
-
       status: PaymentStatus.COMPLETED,
     });
 
     try {
-
       const savedPayment = await payment.save();
 
-      // Mettre à jour le solde du compteur
+      // Si le solde est négatif, une partie du nouveau montant servira à le rembourser
+      let new_balance;
+      if (counter.balance_km < 0) {
+        const previous_debt = counter.balance_km; // c'est négatif
+        new_balance = previous_debt + km_amount; // rembourser d'abord la dette
 
-      counter.balance += createPaymentDto.amount;
+        // Notifier l'utilisateur du remboursement
+        if (new_balance >= 0) {
+          await this.notificationService.sendDebtSettledAlert(zemId, Math.abs(previous_debt));
+        } else {
+          await this.notificationService.sendPartialDebtSettledAlert(zemId, km_amount, Math.abs(new_balance));
+        }
+      } else {
+        new_balance = counter.balance_km + km_amount;
+      }
 
-      counter.is_low_balance = counter.balance < 1000;
-
+      counter.balance_km = new_balance;
+      counter.is_low_balance = new_balance < counter_min_km; // seuil en km
       await counter.save();
 
-      // Envoyer une notification de confirmation
-
-      await this.notificationService.sendPaymentConfirmation(zemId, createPaymentDto.amount);
+      await this.notificationService.sendPaymentConfirmation(zemId, createPaymentDto.price_per_km);
 
       return {
-
         payment: savedPayment,
-
-        newBalance: counter.balance
-
-      };
-
-    } catch (error) {
-
-      throw new BadRequestException(`Payment failed: ${error.message}`);
-
+        new_km_balance: new_balance,
+        previous_debt: counter.balance_km < 0 ? Math.abs(counter.balance_km) : 0,
+        remaining_debt: new_balance < 0 ? Math.abs(new_balance) : 0,
+      }
+    } catch (e) {
+      throw new BadRequestException(`Paiement échoué: ${e.message}`);
     }
 
   }
@@ -116,56 +124,44 @@ export class CounterService {
   async deductKilometers(zemId: string, deductKilometersDto: DeductKilometersDto) {
     const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId)});
     if (!counter) {
-      throw new NotFoundException('Counter not found for this Zem');
+      throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
     }
 
-    if (counter.balance < deductKilometersDto.kilometers) {
-      throw new BadRequestException('Insufficient balance');
+    if (counter.balance_km < deductKilometersDto.kilometers) {
+      throw new BadRequestException('Balance en kilometre insuffisante');
     }
 
-    counter.balance -= deductKilometersDto.kilometers;
+    counter.balance_km -= deductKilometersDto.kilometers;
     counter.total_km_traveled += deductKilometersDto.kilometers;
-    counter.is_low_balance = counter.balance < 1000;
+    const kmMin = await this.configModel.findOne({ key: "min-km"}).exec();
+    counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
 
     if (counter.is_low_balance) {
-      await this.notificationService.sendLowBalanceAlert(zemId, counter.balance);
+      await this.notificationService.sendLowBalanceAlert(zemId, counter.balance_km);
+    }
+
+    if (counter.balance_km < 0) {
+      await this.notificationService.sendNegativeBalanceAlert(zemId, counter.balance_km);
     }
 
     return counter.save();
   }
 
-  async getCounterHistory(zemId: string) {
-    const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId)  });
-    if (!counter) {
-      throw new NotFoundException('Counter not found for this zem');
-    }
-
-    const recharges = await this.paymentModel.find({ counter: counter._id })
-      .sort({ createdAt: -1 })
-      .exec();
-
-    return {
-      currentBalance: counter.balance,
-      totalKmTraveled: counter.total_km_traveled,
-      rechargeHistory: recharges,
-    };
-  }
-
-  async getBalanceAfterCourse(zemId: string, raceId: string) {
+/*  async getBalanceAfterCourse(zemId: string, raceId: string) {
     const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId) });
     if (!counter) {
-      throw new NotFoundException('Counter not found for this Zem');
+      throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
     }
 
     const race = await this.racesModel.findById(raceId);
     if (!race) {
-      throw new NotFoundException('Race is not completed yet');
+      throw new NotFoundException('La course n\'est pas terminée');
     }
 
     return {
-      initialBalance: counter.balance + race.distance_traveled,
+      initialBalance: counter.balance_km + race.distance_traveled,
       distanceTraveled: race.distance_traveled,
-      remainingBalance: counter.balance,
+      remainingBalance: counter.balance_km,
       raceDetails: {
         startLocation: {
           latitude: race.latitude_start,
@@ -179,12 +175,12 @@ export class CounterService {
         endTime: race.ended_at,
       }
     }
-  }
+  }*/
 
   async getTotalKilometers(zemId: string) {
     const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId) });
     if (!counter) {
-      throw new NotFoundException('Counter not found for this Zem');
+      throw new NotFoundException('Aucun compteur trrouvé pour ce Zem');
     }
 
     const completedRaces = await this.racesModel.find({

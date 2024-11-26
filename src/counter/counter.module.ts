@@ -7,6 +7,7 @@ import { Payment, PaymentSchema } from '../Schemas/payment/payment.schema';
 import { Zems, ZemsSchema } from '../Schemas/zems_schema/Zems.schema';
 import { Races, RacesSchema } from '../Schemas/races_schema/races.schema';
 import { NotificationService } from '../services/notification.service';
+import { Config, ConfigSchema } from '../Schemas/config_schema/config.schema';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { NotificationService } from '../services/notification.service';
       { name: Payment.name, schema: PaymentSchema },
       { name: Zems.name, schema: ZemsSchema },
       { name: Races.name, schema: RacesSchema },
+      { name: Config.name, schema: ConfigSchema },
     ]),
   ],
   controllers: [CounterController],

@@ -6,7 +6,7 @@ export class CreatePaymentDto {
   @ApiProperty({ description: 'Amount to pay' })
   @IsNotEmpty()
   @IsNumber()
-  amount: number;
+  price_per_km: number;
 
   @ApiProperty({ enum: PaymentMethod, description: 'Payment methode' })
   @IsNotEmpty()

@@ -34,14 +34,8 @@ export class CounterController {
     return this.counterService.deductKilometers(zemId, deductKilometersDto);
   }
 
-  @Get('race-history/:zemId')
-  @ApiOperation({ summary: 'Get counter history' })
-  getCounterHistory(@Param('zemId') zemId: string) {
-    return this.counterService.getCounterHistory(zemId);
-  }
-
   // a tester demain avec Mr Patrick
-  @Get('balance-after-course/:zemId/:raceId')
+ /* @Get('balance-after-course/:zemId/:raceId')
   @ApiOperation({ summary: 'Get balance after a specific course' })
   @ApiParam({ name: 'zemId', description: 'ID of the Zem' })
   @ApiParam({ name: 'raceId', description: 'ID of the race/course' })
@@ -50,7 +44,7 @@ export class CounterController {
     @Param('raceId') raceId: string,
   ) {
     return this.counterService.getBalanceAfterCourse(zemId, raceId);
-  }
+  }*/
 
   @Get('total-kilometers/:zemId')
   @ApiOperation({ summary: 'Get total kilometers traveled by a Zem' })

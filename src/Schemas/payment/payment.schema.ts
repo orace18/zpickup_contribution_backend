@@ -21,7 +21,10 @@ export class Payment {
   zem: Types.ObjectId;
 
   @Prop({ required: true })
-  amount: number;
+  km_amount: number;
+
+  @Prop({ required: true })
+  price_per_km: number;
 
   @Prop({ required: true, enum: PaymentMethod })
   payment_method: PaymentMethod;
