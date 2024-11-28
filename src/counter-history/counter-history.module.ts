@@ -11,6 +11,8 @@ import {
   CounterSchema,
 } from '../Schemas/counter_schema/counter.schema';
 import { Payment, PaymentSchema } from '../Schemas/payment/payment.schema';
+import { Races, RacesSchema } from '../Schemas/races_schema/races.schema';
+import { NotificationService } from '../services/notification.service';
 
 @Module({
   imports: [
@@ -21,10 +23,11 @@ import { Payment, PaymentSchema } from '../Schemas/payment/payment.schema';
         schema: CounterSchema,
       },
       { name: Payment.name, schema: PaymentSchema },
+      { name: Races.name, schema: RacesSchema }
     ]),
   ],
   controllers: [CounterHistoryController],
-  providers: [CounterHistoryService],
+  providers: [CounterHistoryService, NotificationService],
   exports: [CounterHistoryService],
 })
 export class CounterHistoryModule {}

@@ -219,4 +219,99 @@ export class RacesService {
         return races;
     }
 
+    async getRaceHistory(zemId: string) {
+
+        if (!Types.ObjectId.isValid(zemId)) {
+
+            throw new NotFoundException('ID Zem invalide');
+
+        }
+
+        const races = await this.racesModel
+
+          .find({
+
+              zem: new Types.ObjectId(zemId),
+
+              status: CoursesStatus.END
+
+          })
+
+          .sort({ ended_at: -1 })
+
+          .lean()
+
+          .exec();
+
+        const formattedRaces = races.map(race => ({
+
+            _id: race._id,
+
+            reference: race.reference,
+
+            initial_location: {
+
+                longitude: race.initial_longitude,
+
+                latitude: race.initial_latitude,
+
+                datetime: race.initial_datetime
+
+            },
+
+            start_location: {
+
+                longitude: race.longitude_start,
+
+                latitude: race.latitude_start,
+
+                datetime: race.started_at
+
+            },
+
+            end_location: {
+
+                longitude: race.longitude_end,
+
+                latitude: race.latitude_end,
+
+                datetime: race.ended_at
+
+            },
+
+            service_km: race.service_km,
+
+            status: race.status,
+
+            timeline: {
+
+                created_at: race.created_at,
+
+                pending_at: race.pending_at,
+
+                accepted_at: race.accepted_at,
+
+                started_at: race.started_at,
+
+                ended_at: race.ended_at,
+
+                stopped_at: race.stopped_at
+
+            }
+
+        }));
+
+        return {
+
+            total_races: races.length,
+
+            total_kilometers: races.reduce((sum, race) => sum + (race.distance_traveled || 0), 0),
+
+            races: formattedRaces
+
+        };
+
+    }
+
+
 }

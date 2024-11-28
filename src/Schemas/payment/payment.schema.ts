@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { IsDate } from 'class-validator';
 
 export enum PaymentMethod {
   MOBILE_MONEY = 'mobile_money',
@@ -12,7 +13,7 @@ export enum PaymentStatus {
   FAILED = 'failed',
 }
 
-@Schema()
+@Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Payment {
   @Prop({ type: Types.ObjectId, ref: 'Counter', required: true })
   counter: Types.ObjectId;

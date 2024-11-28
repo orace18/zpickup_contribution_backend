@@ -6,11 +6,12 @@ import { Counter } from '../Schemas/counter_schema/counter.schema';
 import { Model, Types } from 'mongoose';
 import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
-import { Races } from '../Schemas/races_schema/races.schema';
+import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
 import { NotificationService } from '../services/notification.service';
 import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
 import { Config } from '../Schemas/config_schema/config.schema';
+import { response } from 'express';
 
 @Injectable()
 export class CounterService {
@@ -51,6 +52,89 @@ export class CounterService {
 
     return counter.save();
   }
+
+  async getCounterByZemId(zemId: string) {
+
+    console.log('Searching for counter with zemId:', zemId);
+
+    if (!Types.ObjectId.isValid(zemId)) {
+
+      throw new BadRequestException('Format d\'ID Zem invalide');
+
+    }
+
+    // Vérifier d'abord si le Zem existe
+
+    const zem = await this.zemsModel.findById(zemId);
+
+    if (!zem) {
+
+      throw new NotFoundException('Zem non trouvé');
+
+    }
+
+    // Vérifier si le Zem est validé
+
+    if (zem.profile_validation_status !== 'validated') {
+
+      throw new BadRequestException('Le profil du Zem n\'est pas encore validé');
+
+    }
+
+    // Trouver le compteur associé au Zem
+
+    const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId) })
+
+      .populate('zem', ['number_plate', 'card_number', 'profile_validation_status'])
+
+      .lean()
+
+      .exec();
+
+    console.log('Found Counter:', counter);
+
+    if (!counter) {
+
+      throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
+
+    }
+
+    // Calculer les statistiques supplémentaires
+
+    const kmMin = await this.configModel.findOne({ key: "min-km" }).exec();
+
+    const minKmValue = kmMin ? parseFloat(kmMin.value) : 0;
+
+    return {
+
+      counter_id: counter._id,
+
+      zem_info: counter.zem,
+
+      current_balance_km: counter.balance_km,
+
+      total_km_traveled: counter.total_km_traveled,
+
+      is_low_balance: counter.balance_km < minKmValue,
+
+      min_balance_threshold: minKmValue,
+
+      status: {
+
+        has_debt: counter.balance_km < 0,
+
+        debt_amount: counter.balance_km < 0 ? Math.abs(counter.balance_km) : 0,
+
+        can_start_new_race: counter.balance_km >= 0
+
+      },
+
+      last_updated_at: counter.updated_at
+
+    };
+
+  }
+
 
   async rechargeCounter(zemId: string, createPaymentDto: CreatePaymentDto) {
 
@@ -127,6 +211,12 @@ export class CounterService {
       throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
     }
 
+    const race = await this.racesModel.findById(deductKilometersDto.race_id);
+    if (!race) {
+      throw new NotFoundException('Course non trouvée');
+    }
+
+
     if (counter.balance_km < deductKilometersDto.kilometers) {
       throw new BadRequestException('Balance en kilometre insuffisante');
     }
@@ -144,7 +234,35 @@ export class CounterService {
       await this.notificationService.sendNegativeBalanceAlert(zemId, counter.balance_km);
     }
 
-    return counter.save();
+    await counter.save();
+
+    // Mise à jour du statut de la course
+
+    race.status = CoursesStatus.END;
+    race.ended_at = new Date();
+    await race.save();
+    return {
+      counter: {
+        _id: counter._id,
+        current_balance: counter.balance_km,
+        total_km_traveled: counter.total_km_traveled,
+        is_low_balance: counter.is_low_balance
+      },
+      race: {
+        _id: race._id,
+        longitude_start: race.longitude_start,
+        latitude_start: race.latitude_start,
+        longitude_end: race.longitude_end,
+        latitude_end: race.latitude_end,
+        reference: race.reference,
+        service_km: race.service_km,
+        status: race.status,
+        start_time: race.started_at,
+        end_time: race.ended_at,
+      },
+      kilometers_deducted: deductKilometersDto.kilometers
+    };
+
   }
 
 /*  async getBalanceAfterCourse(zemId: string, raceId: string) {

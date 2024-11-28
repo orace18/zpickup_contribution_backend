@@ -17,6 +17,7 @@ import {UpdateRaceDto} from './dto/update-race.dto';
 import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
 import {CoursesStatus} from "../Schemas/races_schema/races.schema";
 import { Race } from './entities/race.entity';
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
 @Controller('races')
@@ -76,5 +77,26 @@ export class RacesController {
         // Appel au service pour récupérer les courses du zem
         return this.racesService.findAllRacesByZem(zemId);
     }
+
+    @Get('race-history/:zemId')
+
+    @ApiOperation({ summary: 'Get race history for a Zem' })
+
+    @ApiParam({ name: 'zemId', description: 'ID of the Zem' })
+
+    @ApiResponse({
+
+        status: 200,
+
+        description: 'Returns the complete race history for the specified Zem'
+
+    })
+
+    async getRaceHistory(@Param('zemId') zemId: string) {
+
+        return this.racesService.getRaceHistory(zemId);
+
+    }
+
 
 }
