@@ -70,6 +70,14 @@ export class UsersService {
     return await this.userModel.find({ phone_number: id }).exec();
   }
 
+  async findUserOneByKey(key: string,value:string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    return await this.userModel.find({ key: value }).exec();
+  }
+
+  async findUserOneByPayload(payload: { }): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    return await this.userModel.find(payload).exec();
+  }
+
   findAll() {
     return this.userModel.find();
   }

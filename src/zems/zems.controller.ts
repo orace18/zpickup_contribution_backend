@@ -21,6 +21,7 @@ import {AuthGuard} from "@nestjs/passport";
 import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
 import {UsersService} from "../users/users.service";
 import {UserType} from "../Schemas/users_schema/Users.schema";
+import {sendMessage} from "../services/helpers.service";
 
 
 @Controller('zems')
@@ -71,7 +72,7 @@ export class ZemsController {
         const user_id = req.user.userId;
         createZemDto.user = user_id;
         return this.zemsService.create(createZemDto).then(zem => {
-            this.usersService.update(user_id,{zem:zem["_id"],user_type:UserType.ZEM});
+            this.usersService.update(user_id, {zem: zem["_id"], user_type: UserType.ZEM});
             return zem;
         }).catch(error => {
             console.error('Erreur lors de la création de Zem :', error);
@@ -91,24 +92,28 @@ export class ZemsController {
 
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto)
-    {
-        switch (updateZemDto.type_action){
+    async update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
+        switch (updateZemDto.type_action) {
             case "validated_zem":
-                if (updateZemDto.profile_validation_status){
-                    updateZemDto.validated_at = new  Date();
-                }else{
-                    throw new BadRequestException({"message":"le champs de la validation du profile est requis"});
+                if (updateZemDto.profile_validation_status) {
+                    updateZemDto.validated_at = new Date();
+                    let user = await this.usersService.findUserOneByKey("zem", id);
+                    if (user) {
+                        
+                      //  sendMessage("Votre demande pour devenir conducteur a changé de statut", user["phone_number"]);
+                    }
+                } else {
+                    throw new BadRequestException({"message": "le champs de la validation du profile est requis"});
                 }
                 break;
 
             case "change_status":
-                if (updateZemDto.service==null){
-                    throw new BadRequestException({"message":"Veuillez renseigner tous les champs pour la mise en service"});
-                }else{
-                    if (updateZemDto.service){
-                        if (!updateZemDto.service_latitude || !updateZemDto.service_longitude){
-                            throw new BadRequestException({"message":"Veuillez renseigner tous les champs pour la mise en service"});
+                if (updateZemDto.service == null) {
+                    throw new BadRequestException({"message": "Veuillez renseigner tous les champs pour la mise en service"});
+                } else {
+                    if (updateZemDto.service) {
+                        if (!updateZemDto.service_latitude || !updateZemDto.service_longitude) {
+                            throw new BadRequestException({"message": "Veuillez renseigner tous les champs pour la mise en service"});
                         }
                     }
                 }

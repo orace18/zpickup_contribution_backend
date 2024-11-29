@@ -21,6 +21,9 @@ import { ActivationHistoryModule } from './activation_history/activation_history
 import { ConfigModule } from '@nestjs/config';
 import {SeedsModule} from "./seeds/seed.module";
 import { RacesModule } from './races/races.module';
+import {ServeStaticModule} from "@nestjs/serve-static";
+import { join } from 'path';
+
 
 @Module({
   imports: [
@@ -29,6 +32,10 @@ import { RacesModule } from './races/races.module';
     ),
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // Chemin vers le dossier uploads
+      serveRoot: '/uploads', // URL pour accéder aux fichiers
     }),
     AuthModule,
     UsersModule,
