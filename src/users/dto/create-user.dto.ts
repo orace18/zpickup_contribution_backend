@@ -1,50 +1,77 @@
 import {
-  IsDate,
-  IsEmail,
-  IsNotEmpty,
+  IsDate, IsDateString,
+  IsEmail, IsEnum,
+  IsNotEmpty, IsNumberString, IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { UserType } from '../../Schemas/users_schema/Users.schema';
+import { Zems } from '../../Schemas/zems_schema/Zems.schema';
+import {Types} from "mongoose";
 
 export class CreateUserDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  lastname: string;
+  lastname?: string;
+
+  @IsOptional()
+  @IsString()
+  firstname?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
 
   @IsNotEmpty()
   @IsString()
-  firstname: string;
-
-  @IsNotEmpty()
-  @IsString()
-  address: string;
-
-  @IsNotEmpty()
-  @IsString()
-  phoneNumber: string;
+  phone_number: string;
 
   @IsOptional()
   @IsString()
   @IsEmail()
-  emailAddress?: string;
+  email_address?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  password: string;
+  password?: string;
 
+  @IsOptional()
+  @IsNumberString()
+  verification_code?: string;
+
+  @IsOptional()
+  @IsString()
+  birthday?: string;
+
+  @IsOptional()
+  @IsString()
+  sponsorship_code?: string;
+
+  @IsOptional()
+  @IsString()
+  photo_piece_identity?: string;
+
+  @IsOptional()
+  @IsString()
+  profile_picture?: string;
+
+  @IsEnum(UserType)
   @IsNotEmpty()
+  user_type: UserType;
+
+  @IsOptional()
+  zem: Types.ObjectId
+
   @IsDate()
-  birthday: Date;
+  created_at: Date;
+
+  @IsDate()
+  updated_at: Date;
+
+  @IsDate()
+  @IsOptional()
+  validated_at?: Date;
 
   @IsOptional()
-  @IsString()
-  sponsorshipCode?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  photoPieceIdentity: string;
-
-  @IsOptional()
-  @IsString()
-  profilePicture?: string;
+  token_version?: number;
 }

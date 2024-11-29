@@ -7,7 +7,13 @@ export class Sponsorship {
   user: Users
 
   @Prop({ type: Object })
-  sponsoredUser: Users
+  sponsored_user: Users
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const SponsorshipSchema = SchemaFactory.createForClass(Sponsorship)

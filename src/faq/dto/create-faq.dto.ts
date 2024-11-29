@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateFaqDto {
   @IsString()
@@ -11,5 +11,11 @@ export class CreateFaqDto {
 
   @IsString()
   @IsNotEmpty()
-  youtubeVideoLink: string
+  youtube_video_link: string
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

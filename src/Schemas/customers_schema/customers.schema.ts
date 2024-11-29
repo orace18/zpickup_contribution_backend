@@ -3,11 +3,12 @@ import { Users } from '../users_schema/Users.schema';
 
 @Schema()
 export class Customers extends Users {
-  @Prop({ required: true })
-  customerWallet: number;
 
-  @Prop({ required: true })
-  insuranceWallet: number;
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const CustomersSchema = SchemaFactory.createForClass(Customers);

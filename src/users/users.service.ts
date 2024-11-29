@@ -1,26 +1,88 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Users } from '../Schemas/users_schema/Users.schema';
+import {HydratedDocument, Model} from 'mongoose';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectModel(Users.name) private readonly userModel: Model<Users>,
+  ) {}
+
+  // Méthode pour générer un code unique de parrainage
+  async generateUniqueSponsorshipCode(): Promise<string> {
+    let sponsorship_code;
+    let isUnique = false;
+
+    while (!isUnique) {
+      sponsorship_code = `ZP-${Math.floor(100000 + Math.random() * 900000).toString()}`;
+      const existingUser = await this.userModel.findOne({ sponsorship_code }).exec();
+      if (!existingUser) {
+        isUnique = true;
+      }
+    }
+
+    return sponsorship_code;
+  }
+
+  async findByPhone(phone_number: string): Promise<Users> {
+    const user = await this.userModel.findOne({ phone_number })
+        .populate("race").exec();
+    return user;
+  }
+
+  async findByVerificationCode(verification_code: string): Promise<Users | null> {
+    return this.userModel.findOne({ verification_code }).exec();
+  }
+
+  async createTemporary(userData: Partial<Users>): Promise<Users> {
+    if (userData.password) {
+      const salt = await bcrypt.genSalt();
+      userData.password = await bcrypt.hash(userData.password, salt);
+    }
+    const user = new this.userModel(userData);
+    return user.save();
+  }
+
+  async update(id: string, updateData: Partial<Users>): Promise<Users | null> {
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt();
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    }
+
+    return await this.userModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .exec();
+  }
+
+
+  // Correction de la méthode findOne pour retourner un utilisateur
+  async findOne(id: string): Promise<Users | null> {
+    return this.userModel.findById(id)
+        .populate('zem').populate('race').lean().exec();
+  }
+
+  async findUserOne(id: string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    console.log("findUserOne",id);
+    return await this.userModel.find({ phone_number: id }).exec();
+  }
+
+  async findUserOneByKey(key: string,value:string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    return await this.userModel.find({ key: value }).exec();
+  }
+
+  async findUserOneByPayload(payload: { }): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    return await this.userModel.find(payload).exec();
   }
 
   findAll() {
-    return `This action returns all users`;
-  }
-
-  findOne(id: string) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    return this.userModel.find();
   }
 
   remove(id: string) {
-    return `This action removes a #${id} user`;
+    return this.userModel.findByIdAndDelete(id).exec();
   }
 }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsObject } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsObject } from 'class-validator';
 import { Users } from '../../Schemas/users_schema/Users.schema';
 
 export class CreateSponsorshipDto {
@@ -8,5 +8,11 @@ export class CreateSponsorshipDto {
 
   @IsObject()
   @IsNotEmpty()
-  sponsoredUser: Users
+  sponsored_user: Users
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

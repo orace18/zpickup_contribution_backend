@@ -4,11 +4,17 @@ import { Users } from '../../Schemas/users_schema/Users.schema';
 export class CreateNotificationDto {
   @IsObject()
   @IsNotEmpty()
-  user: Users
+  user: Users;
 
-  @IsArray()
-  notificationsHistory: string[]
+  @IsString()
+  message: string;
+
+  @IsObject()
+  data: Object;
 
   @IsDateString()
-  createdAt: Date
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

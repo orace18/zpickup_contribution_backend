@@ -8,17 +8,17 @@ export class FAQ {
   })
   title: string;
 
-  @Prop({
-    required: true,
-    unique: true,
-  })
-  description: string;
+  @Prop()
+  description?: string;
 
-  @Prop({
-    required: true,
-    unique: true,
-  })
-  youtubeVideoLink: string;
+  @Prop()
+  youtube_video_link?: string;
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
-export const FAQSchema = SchemaFactory.createForClass(FAQ)
+export const FAQSchema = SchemaFactory.createForClass(FAQ);

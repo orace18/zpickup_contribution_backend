@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateConfigDto {
   @IsString()
@@ -8,4 +8,14 @@ export class CreateConfigDto {
   @IsString()
   @IsNotEmpty()
   value: string
+
+  @IsString()
+  @IsNotEmpty()
+  description: string
+
+  @IsDateString()
+  created_at: Date;
+
+  @IsDateString()
+  updated_at: Date;
 }

@@ -1,21 +1,22 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { CreateUserDto } from '../users/dto/create-user.dto';
+import { Controller, Post, UseGuards, Request, Body, HttpStatus, HttpException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginUserDto } from '../users/dto/login-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // Route pour l'inscription
-  @Post('register')
-  async register(@Body() createUserDto: CreateUserDto) {
-    return await this.authService.register(createUserDto);
-  }
-
-  // Route pour la connexion
   @Post('login')
-  async login(@Body() loginDto: LoginUserDto) {
-    return await this.authService.login(loginDto);
+  @UseGuards(AuthGuard('local'))
+  async login(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validatedUser(loginDto.phone_number, loginDto.password);
+    if (!user) {
+      throw new HttpException(
+        'Identifiants invalides',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+    return this.authService.login(user);
   }
 }

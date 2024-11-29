@@ -7,7 +7,13 @@ export class Counter {
   zem: Zems
 
   @Prop({ required: true })
-  availableKilometers: number
+  available_kilometers: number
+
+  @Prop({ default: new Date() })
+  created_at: Date;
+
+  @Prop({ default: new Date() })
+  updated_at: Date;
 }
 
 export const CounterSchema = SchemaFactory.createForClass(Counter)
