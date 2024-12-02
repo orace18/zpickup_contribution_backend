@@ -6,6 +6,8 @@ export class Notification {
   @Prop({ required: true })
   user: Users;
 
+  // mettre un titre
+
   @Prop()
   message: string;
 

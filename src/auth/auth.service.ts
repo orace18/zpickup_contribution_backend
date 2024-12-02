@@ -54,9 +54,12 @@ export class AuthService {
 
     console.log('Generated payload:', payload);
 
+    // Récupérer les données utilisateur mises à jour avec la course active
+    const updatedUser = await this.usersService.findOne(userData._id.toString());
+
     return {
       access_token: this.jwtService.sign(payload),
-      user: userData
+      user: updatedUser
     };
   }
 }

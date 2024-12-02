@@ -227,7 +227,7 @@ export class CounterService {
     counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
 
     if (counter.is_low_balance) {
-      await this.notificationService.sendLowBalanceAlert(zemId, counter.balance_km);
+       this.notificationService.sendLowBalanceAlert(zemId, counter.balance_km);
     }
 
     if (counter.balance_km < 0) {

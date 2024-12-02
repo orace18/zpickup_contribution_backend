@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import {CreateRaceDto} from './dto/create-race.dto';
 import {UpdateRaceDto} from './dto/update-race.dto';
 import {InjectModel} from "@nestjs/mongoose";
@@ -26,6 +26,22 @@ export class RacesService {
     }
 
     async create(createRaceDto: CreateRaceDto, req) {
+
+        // Vérifier s'il existe déjà une course active pour cet utilisateur
+        const existingActiveRace = await this.racesModel.findOne({
+            user: new Types.ObjectId(req.user.userId),
+            status: {
+                $in: [CoursesStatus.PENDING, CoursesStatus.ACCEPTED, CoursesStatus.START]
+            }
+        });
+
+        if (existingActiveRace) {
+            throw new HttpException(
+              'Une course est déjà en cours',
+              HttpStatus.BAD_REQUEST
+            );
+        }
+
         createRaceDto.user = req.user.userId;
         createRaceDto.initial_datetime = new Date();
         createRaceDto.reference = await generateUniqueString(this.racesModel, "reference", "ZR");
@@ -34,7 +50,7 @@ export class RacesService {
         createRaceDto.status = CoursesStatus.PENDING;
         createRaceDto.pending_at = new Date();
         const created = new this.racesModel(createRaceDto);
-        let saved = await created.save();
+        const saved = await created.save();
 
         await this.userService.update(req.user.userId, {race: saved._id});
 
