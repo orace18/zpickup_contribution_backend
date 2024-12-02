@@ -21,9 +21,9 @@ import { ActivationHistoryModule } from './activation_history/activation_history
 import { ConfigModule } from '@nestjs/config';
 import {SeedsModule} from "./seeds/seed.module";
 import { RacesModule } from './races/races.module';
+import { PaymentModule } from './payment/payment.module';
 import {ServeStaticModule} from "@nestjs/serve-static";
 import { join } from 'path';
-
 
 @Module({
   imports: [
@@ -54,7 +54,9 @@ import { join } from 'path';
     NotificationsModule,
     ActivationHistoryModule,
     SeedsModule,
-    RacesModule
+    RacesModule,
+    CounterModule,
+    PaymentModule
   ],
   controllers: [AppController],
   providers: [AppService],

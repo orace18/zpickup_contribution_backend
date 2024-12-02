@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Users } from '../Schemas/users_schema/Users.schema';
 import {HydratedDocument, Model} from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import * as path from 'node:path';
 
 @Injectable()
 export class UsersService {
@@ -62,7 +63,14 @@ export class UsersService {
   // Correction de la méthode findOne pour retourner un utilisateur
   async findOne(id: string): Promise<Users | null> {
     return this.userModel.findById(id)
-        .populate('zem').populate('race').lean().exec();
+        .populate('zem').populate({
+        path: 'race',
+        match: {
+          status: {
+            $in: ['pending', 'accepted', 'start']
+          }
+        }
+      }).lean().exec();
   }
 
   async findUserOne(id: string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
