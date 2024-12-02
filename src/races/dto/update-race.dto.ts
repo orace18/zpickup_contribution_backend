@@ -58,5 +58,14 @@ export class UpdateRaceDto extends PartialType(CreateRaceDto) {
     distance_traveled?: number;
 
 
+    @IsOptional()
+    code_pin: string;
+
+    @IsOptional()
+    service_km: number;
+
+    @IsOptional()
+    service_duration: number;
+
 
 }

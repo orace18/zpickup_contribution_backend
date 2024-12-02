@@ -21,8 +21,9 @@ import { ActivationHistoryModule } from './activation_history/activation_history
 import { ConfigModule } from '@nestjs/config';
 import {SeedsModule} from "./seeds/seed.module";
 import { RacesModule } from './races/races.module';
-import { WebsocketGateway } from './websocket/websocket.gateway';
 import { PaymentModule } from './payment/payment.module';
+import {ServeStaticModule} from "@nestjs/serve-static";
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -31,6 +32,10 @@ import { PaymentModule } from './payment/payment.module';
     ),
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // Chemin vers le dossier uploads
+      serveRoot: '/uploads', // URL pour accéder aux fichiers
     }),
     AuthModule,
     UsersModule,
@@ -54,6 +59,6 @@ import { PaymentModule } from './payment/payment.module';
     PaymentModule
   ],
   controllers: [AppController],
-  providers: [AppService, WebsocketGateway],
+  providers: [AppService],
 })
 export class AppModule {}

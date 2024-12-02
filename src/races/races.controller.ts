@@ -38,7 +38,7 @@ export class RacesController {
 
     @Get(':id')
     findOne(@Param('id') id: string) {
-        return this.racesService.findOne(+id);
+        return this.racesService.findOne(id);
     }
 
     @Patch(':id')

@@ -27,6 +27,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @IsOptional()
   @IsString()
+  fcm_token?: string;
+
+  @IsOptional()
+  @IsString()
   birthday?: string;
 
   @IsOptional()

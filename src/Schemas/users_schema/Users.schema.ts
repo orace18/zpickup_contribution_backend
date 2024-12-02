@@ -68,6 +68,12 @@ export class Users {
   @Prop({ type: Types.ObjectId, ref: 'Races', required: false })
   race: Types.ObjectId;
 
+  @Prop()
+  fcm_token: string;
+
+  @Prop()
+  code_pin: string;
+
 
 }
 
