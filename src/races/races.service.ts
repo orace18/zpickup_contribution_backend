@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
 import {CreateRaceDto} from './dto/create-race.dto';
 import {UpdateRaceDto} from './dto/update-race.dto';
 import {InjectModel} from "@nestjs/mongoose";
@@ -161,7 +161,7 @@ export class RacesService {
                     code_pin: updateRaceDto.code_pin
                 });
 
-                console.log("user_ended",user_ended);
+                console.log("user_ended", user_ended);
 
                 if (!user_ended) {
                     throw new BadRequestException("Votre code est invalide");
@@ -296,5 +296,65 @@ export class RacesService {
         return availables;
     }
 
+    async getRaceHistory(zemId: string) {
+        if (!Types.ObjectId.isValid(zemId)) {
+            throw new NotFoundException('ID Zem invalide');
+        }
+        const races = await this.racesModel.find({
+            zem: new Types.ObjectId(zemId),
+            status: CoursesStatus.END,
+        }).sort({ended_at: -1}).lean().exec();
+        const formattedRaces = races.map((race) => ({
+            _id: race._id,
+            reference: race.reference,
+            initial_location: {
+                longitude: race.initial_longitude,
+                latitude: race.initial_latitude,
+                datetime: race.initial_datetime,
+            },
+            start_location: {
+                longitude: race.longitude_start,
+                latitude: race.latitude_start,
+                datetime: race.started_at,
+            },
+            end_location: {longitude: race.longitude_end, latitude: race.latitude_end, datetime: race.ended_at,},
+            service_km: race.service_km,
+            status: race.status,
+            timeline: {
+                created_at: race.created_at,
+                pending_at: race.pending_at,
+                accepted_at: race.accepted_at,
+                started_at: race.started_at,
+                ended_at: race.ended_at,
+                stopped_at: race.stopped_at,
+            },
+        }));
+        return {
+            total_races: races.length,
+            total_kilometers: races.reduce((sum, race) => sum + (race.distance_traveled || 0), 0,),
+            races: formattedRaces,
+        };
+    }
+
+
+
+    async findAllRacesByZem(zemId: string) {
+        console.log(`ZemId reçu : ${zemId}`);
+        const objectId = new Types.ObjectId(zemId);
+        const races = await this.racesModel.find({zem: objectId}).populate('user').lean().exec();
+        console.log(`Résultat trouvé pour le zemId ${zemId}:`, races);
+        if (!races || races.length === 0) {
+            throw new NotFoundException(`Aucune course trouvée pour ce zem.`);
+        }
+        return races;
+    }
+
+    async findAllRacesByUser(userId: string) {
+        const races = await this.racesModel.find({user: userId}).populate('zem').lean().exec();
+        if (!races || races.length === 0) {
+            throw new NotFoundException(`Aucune course trouvée pour cet utilisateur.`,);
+        }
+        return races;
+    }
 
 }
