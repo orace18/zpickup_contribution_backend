@@ -39,24 +39,24 @@ export class CounterHistoryService {
       .lean()
       .exec();
 
-    const formattedRaces = races.map(race => ({
+    const formattedRaces = races.map((race) => ({
       _id: race._id,
       reference: race.reference,
       start_location: {
         longitude: race.longitude_start,
         latitude: race.latitude_start,
-        started_at: race.started_at
+        started_at: race.started_at,
       },
       end_location: {
         longitude: race.longitude_end,
         latitude: race.latitude_end,
-        ended_at: race.ended_at
+        ended_at: race.ended_at,
       },
       service_km: Number(race.distance_traveled?.toFixed(2)) || 0,
       status: race.status,
       created_at: race.created_at,
-      updated_at: race.updated_at
-    }))
+      updated_at: race.updated_at,
+    }));
 
     return {
       currentBalance: counter.balance_km,
@@ -66,7 +66,7 @@ export class CounterHistoryService {
       statistics: {
         total_recharges: recharges.length,
         total_races: races.length,
-      }
+      },
     };
   }
 

@@ -1,13 +1,14 @@
 import {
-  IsDate, IsDateString,
-  IsEmail, IsEnum,
-  IsNotEmpty, IsNumberString, IsObject,
+  IsDate,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumberString,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { UserType } from '../../Schemas/users_schema/Users.schema';
-import { Zems } from '../../Schemas/zems_schema/Zems.schema';
-import {Types} from "mongoose";
+import { Types } from 'mongoose';
 
 export class CreateUserDto {
   @IsOptional()
@@ -60,7 +61,7 @@ export class CreateUserDto {
   user_type: UserType;
 
   @IsOptional()
-  zem: Types.ObjectId
+  zem: Types.ObjectId;
 
   @IsDate()
   created_at: Date;

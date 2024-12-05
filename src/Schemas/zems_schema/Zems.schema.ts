@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Users } from '../users_schema/Users.schema';
-import {Types} from "mongoose";
+import { Types } from 'mongoose';
 
 export enum CardType {
   IDENTITY_CARD = 'identity_card',
@@ -15,9 +14,7 @@ export enum ProfileValidationStatus {
 }
 
 @Schema()
-export class Zems{
-
-
+export class Zems {
   @Prop({ required: true, enum: CardType, default: CardType.PASSPORT_CARD })
   card_type: CardType;
 
@@ -52,14 +49,13 @@ export class Zems{
   })
   profile_validation_status: ProfileValidationStatus;
 
-
   @Prop({ default: false })
   service: boolean;
 
-  @Prop({ required:false })
+  @Prop({ required: false })
   service_latitude: number;
 
-  @Prop({ required:false })
+  @Prop({ required: false })
   service_longitude: number;
 
   @Prop({ type: Number, required: false })
@@ -68,10 +64,8 @@ export class Zems{
   @Prop({ type: Number, required: false })
   service_duration: number;
 
-
   @Prop({ default: null })
   validated_at: Date;
-
 
   @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
   user: Types.ObjectId;
@@ -83,4 +77,4 @@ export class Zems{
   updated_at: Date;
 }
 
-export const ZemsSchema = SchemaFactory.createForClass(Zems)
+export const ZemsSchema = SchemaFactory.createForClass(Zems);

@@ -9,6 +9,7 @@ import {UsersService} from "../users/users.service";
 import {Config, ConfigSchema} from "../Schemas/config_schema/config.schema";
 import {ZemsService} from "../zems/zems.service";
 import { WebsocketModule } from '../websocket/websocket.module';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { WebsocketModule } from '../websocket/websocket.module';
     MongooseModule.forFeature([{ name: Users.name, schema: UserSchema }]),
     MongooseModule.forFeature([{ name: Zems.name, schema: ZemsSchema }]),
     MongooseModule.forFeature([{ name: Config.name, schema: ConfigSchema }]),
-    WebsocketModule
+    WebsocketModule,
+    WalletModule,
   ],
   controllers: [RacesController],
   providers: [RacesService, UsersService, ZemsService],

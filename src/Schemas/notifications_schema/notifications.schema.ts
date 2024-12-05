@@ -1,24 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Users } from '../users_schema/Users.schema';
+import { Types } from 'mongoose';
 
-@Schema()
+@Schema({
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
+})
 export class Notification {
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true })
+  user: Types.ObjectId;
+
   @Prop({ required: true })
-  user: Users;
+  title: string;
 
-  // mettre un titre
-
-  @Prop()
+  @Prop({ required: true })
   message: string;
 
   @Prop({ type: Object, default: null })
-  data: Object;
-
-  @Prop({ default: new Date() })
-  created_at: Date;
-
-  @Prop({ default: new Date() })
-  updated_at: Date;
+  data: object;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

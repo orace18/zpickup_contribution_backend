@@ -1,7 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
-import { IsDate, IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import {Types} from "mongoose";
+import {
+  IsDate,
+  IsDateString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { Types } from 'mongoose';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
@@ -34,7 +41,5 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   birthday?: string;
 
   @IsOptional()
-  zem?:  Types.ObjectId;
-
-
+  zem?: Types.ObjectId;
 }
