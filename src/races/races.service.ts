@@ -245,22 +245,6 @@ export class RacesService {
           service_longitude: null,
         });
 
-        /*Ajout des bonus aux portefeuilles*/
-        try {
-          await Promise.all([
-            this.walletService.addRaceBonus(
-              race_ended.user.toString(),
-              UserType.CUSTOMER,
-            ),
-            this.walletService.addRaceBonus(
-              race_ended.zem['user'].toString(),
-              UserType.ZEM,
-            ),
-          ]);
-        } catch (error) {
-          console.error("Erreur lors de l'ajout des bonus:", error);
-        }
-
         body_notification = 'Votre course est terminée. Merci';
         more_action = 'ended';
 
