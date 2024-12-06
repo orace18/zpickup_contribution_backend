@@ -45,12 +45,14 @@ export function estimateDuration(distance) {
 
 export async function sendMessage(body,to) {
     const client = twilio(accountSid, authToken);
-    const message = await client.messages.create({
-        body: body,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: to,
-    });
-    console.log(message);
+    if(process.env.TWILIO_SEND_SMS){
+        const message = await client.messages.create({
+            body: body,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: to,
+        });
+        console.log(message);
+    }
 }
 
 
