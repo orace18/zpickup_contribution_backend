@@ -99,8 +99,8 @@ export class ZemsController {
                     updateZemDto.validated_at = new Date();
                     let user = await this.usersService.findUserOneByKey("zem", id);
                     if (user) {
-                        
-                      //  sendMessage("Votre demande pour devenir conducteur a changé de statut", user["phone_number"]);
+
+                        //  sendMessage("Votre demande pour devenir conducteur a changé de statut", user["phone_number"]);
                     }
                 } else {
                     throw new BadRequestException({"message": "le champs de la validation du profile est requis"});

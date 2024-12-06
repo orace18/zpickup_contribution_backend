@@ -11,7 +11,11 @@ export class ConfigSeeder {
         const tabs = [
             {key: 'ray', value: '5', description: 'Rayon par defaut pour les recherches de clients ou zem'},
             {key: 'percent-share-customer', value: '30', description: 'Pourcentage de gain des clients par km'},
-            {key: 'percent-share-zem', value: '10', description: 'Pourcentage de gain des zems par km'},
+            {key: 'percent-share-zem', value: '30', description: 'Pourcentage de gain des zems par km'},
+            {key: 'balance-minimum', value: '1000', description: 'Montant minimum à recharger'},
+            {key: 'free-km', value: '20', description: 'Nombre de kilometre gratuit'},
+            {key: 'km-price', value: '12', description: "Valeur d'un kilomètre"},
+            {key: 'min-km', value: '5', description: "Valeur de km minimum restant dans le compteur"}
         ];
         const bulkOps = tabs.map(item => ({
             updateOne: {
