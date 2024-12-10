@@ -12,6 +12,12 @@ export class Notification {
   user: Types.ObjectId;
 
   @Prop({ required: true })
+  notif_type: string;
+
+  @Prop({ required: true })
+  color: string;
+
+  @Prop({ required: true })
   title: string;
 
   @Prop({ required: true })
@@ -19,6 +25,9 @@ export class Notification {
 
   @Prop({ type: Object, default: null })
   data: object;
+
+  @Prop({ type: Boolean, default: false })
+  is_read: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

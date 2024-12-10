@@ -15,6 +15,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WithdrawWalletDto } from './dto/withdraw-wallet.dto';
 import { TransactionType } from '../Schemas/wallet_schema/wallet_transaction.schema';
+import { CreditWalletDto } from './dto/credit-wallet.dto';
 
 @ApiTags('wallet')
 @UseGuards(JwtAuthGuard)
@@ -29,7 +30,21 @@ export class WalletController {
     description: 'Retourne le solde du portefeuille',
   })
   async getBalance(@Param('userId') userId: string) {
-    return this.walletService.getBalance(userId);
+    return this.walletService.getWalletBalance(userId);
+  }
+
+  @Post('credit/:userId')
+  @ApiOperation({ summary: 'Crediter le portefeuille' })
+  @ApiResponse({ status: 200, description: 'Recharge le portefeuille' })
+  async credit(
+    @Param('userId') userId: string,
+    @Body() creditWalletDto: CreditWalletDto,
+  ) {
+    return this.walletService.creditWalletBalance(
+      userId,
+      creditWalletDto.transaction_type,
+      creditWalletDto.amount,
+    );
   }
 
   @Post('withdraw/:userId')
@@ -45,16 +60,6 @@ export class WalletController {
       withdrawWalletDto.phone_number,
       TransactionType.WITHDRAWAL,
     );
-  }
-
-  @Get('wallet-history/:userId')
-  @ApiOperation({ summary: 'Historique des bonus reçus' })
-  @ApiResponse({
-    status: 200,
-    description: "Retourne l'historique des transactions",
-  })
-  async getBonusHistory(@Param('userId') userId: string) {
-    return this.walletService.getTransactionHistory(userId);
   }
 
   @Post()

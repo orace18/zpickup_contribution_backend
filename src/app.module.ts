@@ -24,6 +24,7 @@ import { RacesModule } from './races/races.module';
 import { PaymentModule } from './payment/payment.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { notificationConfig } from './notifications/notification.config';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { join } from 'path';
     ),
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [notificationConfig],
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'), // Chemin vers le dossier uploads

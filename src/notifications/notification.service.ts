@@ -1,85 +1,114 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Notification } from '../Schemas/notifications_schema/notifications.schema';
-
-export enum NotificationType {
-  LOW_BALANCE = 'LOW_BALANCE_NOTIFICATION_ALERT',
-  NEGATIVE_BALANCE = 'NEGATIVE_BALANCE_NOTIFICATION_ALERT',
-  DEBT_SETTLED = 'DEBT_SETTLED',
-  PARTIAL_DEBT_SETTLED = 'PARTIAL_DEBT_SETTLED',
-  PAYMENT_CONFIRMATION = 'PAYMENT_CONFIRMATION',
-}
-
-interface NotificationData {
-  balance?: number;
-  settledAmount?: number;
-  remainingDebt?: number;
-  zemId: string;
-}
+import { ConfigService } from '@nestjs/config';
+import * as process from 'node:process';
 
 @Injectable()
 export class NotificationService {
+  private readonly notificationColors: { [key: string]: string };
+  private readonly notificationTypes: string[];
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<Notification>,
-  ) {}
-
-  async globalNotificationService(
-    type: NotificationType,
-    userId: string,
-    data: NotificationData,
+    private configService: ConfigService,
   ) {
-    let title: string;
-    let message: string;
+    /* Initialisation des couleurs */
+    this.notificationColors = {
+      promotion: process.env.NOTIFICATION_COLOR_PROMOTION,
+      commande: process.env.NOTIFICATION_COLOR_COMMANDE,
+      probleme: process.env.NOTIFICATION_COLOR_PROBLEME,
+      order: process.env.NOTIFICATION_COLOR_ORDER,
+      low_balance: process.env.NOTIFICATION_COLOR_LOW_BALANCE,
+      debt_settled: process.env.NOTIFICATION_COLOR_DEBT_SETTLED,
+      partial_debt_settled: process.env.NOTIFICATION_COLOR_PARTIAL_DEBT_SETTLED,
+      payment_confirmation: process.env.NOTIFICATION_COLOR_PAYMENT_CONFIRMATION,
+      negative_balance: process.env.NOTIFICATION_COLOR_NEGATIVE_BALANCE,
+    };
 
-    switch (type) {
-      case NotificationType.LOW_BALANCE:
-        title = 'Solde Bas';
-        message = `Attention! Votre solde est bas: ${data.balance} km`;
-        break;
+    /* Initialisation des types de notification */
+    this.notificationTypes = this.configService
+      .get<string>('NOTIFICATION_TYPES')
+      .split(',')
+      .map((type) => type.trim());
+  }
 
-      case NotificationType.NEGATIVE_BALANCE:
-        title = 'Solde Négatif';
-        message = `Attention! Votre solde est négatif: ${data.balance} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`;
-        break;
+  async createNotification(
+    userId: string,
+    title: string,
+    message: string,
+    notif_type: string,
+    data?: object,
+  ) {
+    // Vérifier si le type de notification est valide
+    if (!this.notificationTypes.includes(notif_type)) {
+      throw new BadRequestException(
+        `Type de notification invalide. Types valides: ${this.notificationTypes.join(
+          ', ',
+        )}`,
+      );
+    }
 
-      case NotificationType.DEBT_SETTLED:
-        title = 'Dette Remboursée';
-        message = `Votre dette de ${data.settledAmount} km a été entièrement remboursée.`;
-        break;
-
-      case NotificationType.PARTIAL_DEBT_SETTLED:
-        title = 'Dette Partiellement Remboursée';
-        message = `${data.settledAmount} km de votre dette ont été remboursés. Dette restante: ${data.remainingDebt} km`;
-        break;
-
-      case NotificationType.PAYMENT_CONFIRMATION:
-        title = 'Paiement Confirmé';
-        message = `Succès! Vous avez effectué un rechargement de ${data.balance} km`;
-        break;
+    // Récupérer la couleur correspondante
+    const color = this.notificationColors[notif_type];
+    if (!color) {
+      throw new BadRequestException(
+        `Couleur non définie pour le type: ${notif_type}`,
+      );
     }
 
     const notification = new this.notificationModel({
       user: new Types.ObjectId(userId),
       title,
       message,
-      data: {
-        type,
-        ...data,
-      },
+      notif_type: notif_type,
+      color,
+      data: data || {},
+      is_read: false,
     });
 
     const savedNotification = await notification.save();
 
-    console.log('Notification envoyée:', {
-      type,
+    console.log('Notification créée:', {
+      userId,
       title,
       message,
-      data,
+      type: notif_type,
+      color,
       timestamp: new Date().toISOString(),
     });
 
     return savedNotification;
+  }
+
+  async markAsRead(notificationId: string) {
+    return this.notificationModel.findByIdAndUpdate(
+      notificationId,
+      { is_read: true },
+      { new: true },
+    );
+  }
+
+  async getUserNotifications(userId: string) {
+    return await this.notificationModel
+      .find({ user: new Types.ObjectId(userId) })
+      .sort({ created_at: -1 })
+      .exec();
+  }
+
+  async getUnreadNotifications(userId: string) {
+    return await this.notificationModel
+      .find({
+        user: new Types.ObjectId(userId),
+        is_read: false,
+      })
+      .sort({ created_at: -1 })
+      .lean()
+      .exec();
+  }
+
+  async deleteNotification(notificationId: string) {
+    return this.notificationModel.findByIdAndDelete(notificationId);
   }
 }

@@ -10,10 +10,7 @@ import { Model, Types } from 'mongoose';
 import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
 import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
-import {
-  NotificationService,
-  NotificationType,
-} from '../notifications/notification.service';
+import { NotificationService } from '../notifications/notification.service';
 import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
 import { Config } from '../Schemas/config_schema/config.schema';
@@ -173,28 +170,29 @@ export class CounterService {
     try {
       const savedPayment = await payment.save();
 
-      // Si le solde est négatif, une partie du nouveau montant servira à le rembourser
+      /* Si le solde est négatif, une partie du nouveau montant servira à le rembourser */
       let new_balance;
       if (counter.balance_km < 0) {
-        const previous_debt = counter.balance_km; // c'est négatif
-        new_balance = previous_debt + km_amount; // rembourser d'abord la dette
+        const previous_debt = counter.balance_km; /* c'est négatif */
+        new_balance =
+          previous_debt + km_amount; /* rembourser d'abord la dette */
 
-        // Notifier l'utilisateur du remboursement
+        /* Notifier l'utilisateur du remboursement */
         if (new_balance >= 0) {
-          await this.notificationService.globalNotificationService(
-            NotificationType.DEBT_SETTLED,
+          await this.notificationService.createNotification(
             zem.user.toString(),
-            {
-              zemId,
-              settledAmount: Math.abs(previous_debt),
-            },
+            'Dette remboursée',
+            `Votre dette de ${Math.abs(previous_debt)} km a été entièrement remboursée.`,
+            'debt_settled',
+            { settled_amount: Math.abs(previous_debt) },
           );
         } else {
-          await this.notificationService.globalNotificationService(
-            NotificationType.PARTIAL_DEBT_SETTLED,
+          await this.notificationService.createNotification(
             zem.user.toString(),
+            'Dette partiellement remboursée',
+            `${km_amount} km de votre dette ont été remboursés. Dette restante: ${Math.abs(new_balance)} km`,
+            'partial_debt_settled',
             {
-              zemId,
               settledAmount: km_amount,
               remainingDebt: Math.abs(new_balance),
             },
@@ -205,16 +203,16 @@ export class CounterService {
       }
 
       counter.balance_km = new_balance;
-      counter.is_low_balance = new_balance < parseFloat(counter_min_km.value); // seuil en km
+      counter.is_low_balance =
+        new_balance < parseFloat(counter_min_km.value); /* seuil en km */
       await counter.save();
 
-      await this.notificationService.globalNotificationService(
-        NotificationType.PAYMENT_CONFIRMATION,
+      await this.notificationService.createNotification(
         zem.user.toString(),
-        {
-          zemId,
-          balance: createPaymentDto.price_per_km,
-        },
+        'Paiement Confirmé',
+        `Succès! Vous avez effectué un rechargement de ${createPaymentDto.price_per_km} XOF`,
+        'payment_confirmation',
+        { balance: createPaymentDto.price_per_km },
       );
 
       return {
@@ -257,24 +255,22 @@ export class CounterService {
     counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
 
     if (counter.is_low_balance) {
-      await this.notificationService.globalNotificationService(
-        NotificationType.LOW_BALANCE,
+      await this.notificationService.createNotification(
         zem.user.toString(),
-        {
-          zemId,
-          balance: counter.balance_km,
-        },
+        'Solde Bas',
+        `Attention! Votre solde est bas: ${counter.balance_km} km`,
+        'low_balance',
+        { balance: counter.balance_km },
       );
     }
 
     if (counter.balance_km < 0) {
-      await this.notificationService.globalNotificationService(
-        NotificationType.NEGATIVE_BALANCE,
+      await this.notificationService.createNotification(
         zem.user.toString(),
-        {
-          zemId,
-          balance: counter.balance_km,
-        },
+        'Solde Négatif',
+        `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`,
+        'negative_balance',
+        { balance: counter.balance_km },
       );
     }
 

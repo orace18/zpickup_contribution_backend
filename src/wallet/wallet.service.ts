@@ -8,6 +8,8 @@ import {
   TransactionType,
   WalletTransaction,
 } from '../Schemas/wallet_schema/wallet_transaction.schema';
+import { CreditWallet } from '../Schemas/wallet_schema/credit-wallet.schema';
+import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
 export class WalletService {
@@ -15,9 +17,12 @@ export class WalletService {
     @InjectModel(Wallet.name) private walletModel: Model<Wallet>,
     @InjectModel(WalletTransaction.name)
     private walletTransactionModel: Model<WalletTransaction>,
+    @InjectModel(CreditWallet.name)
+    private creditWalletModel: Model<CreditWallet>,
+    private notificationService: NotificationService,
   ) {}
 
-  async getBalance(userId: string) {
+  async getWalletBalance(userId: string) {
     let wallet = await this.walletModel.findOne({
       user: new Types.ObjectId(userId),
     });
@@ -31,17 +36,34 @@ export class WalletService {
     return wallet;
   }
 
-  async creditWallet(userId: string, amount: number) {
-    const wallet = await this.getBalance(userId);
+  async creditWalletBalance(
+    userId: string,
+    transaction_type: string,
+    amount: number,
+  ) {
+    const wallet = await this.getWalletBalance(userId);
 
     wallet.wallet_amount += amount;
     wallet.updated_at = new Date();
     await wallet.save();
 
-    const transaction = await this.walletTransactionModel.create({
+    const transaction = await this.creditWalletModel.create({
       user: new Types.ObjectId(userId),
+      transaction_type,
       amount,
     });
+
+    await this.notificationService.createNotification(
+      userId,
+      'Recharge Réussie',
+      `Votre compte a été rechargé avec succès de ${amount} XOF. Nouveau solde: ${wallet.wallet_amount} XOF`,
+      'payment_confirmation',
+      {
+        transactionId: transaction._id,
+        amount: amount,
+        newBalance: wallet.wallet_amount,
+      },
+    );
 
     return {
       message: 'Recharge effectué avec succès',
@@ -53,23 +75,23 @@ export class WalletService {
   async withdrawWalletBalance(
     userId: string,
     amount: number,
-    phoneNumber: string,
+    phone_number: string,
     type: TransactionType.WITHDRAWAL,
     minWithdrawalAmount = 10000,
   ): Promise<{ newBalance: number; transaction: any }> {
-    const wallet = await this.getBalance(userId);
+    const wallet = await this.getWalletBalance(userId);
 
     if (wallet.wallet_amount < amount) {
       throw new BadRequestException('Solde insuffisant');
     }
 
-    if (amount < minWithdrawalAmount) {
+    if (wallet.wallet_amount < minWithdrawalAmount) {
       throw new BadRequestException(
         `Vous n'avez pas encore atteint le montant minimum de retrait`,
       );
     }
 
-    if (amount > wallet.wallet_amount) {
+    if (amount >= wallet.wallet_amount) {
       throw new BadRequestException(
         `Vous ne pouvez pas tout retirer sur le compte. Veuillez choisir un montant raisonnable à retirer pour le moment`,
       );
@@ -83,35 +105,24 @@ export class WalletService {
       user: new Types.ObjectId(userId),
       amount,
       type,
-      phoneNumber,
+      phone_number,
     });
+
+    await this.notificationService.createNotification(
+      userId,
+      'Retrait effectué avec succès',
+      `Votre avez retiré avec succès un montant de ${amount} XOF. Nouveau solde: ${wallet.wallet_amount} XOF`,
+      'payment_confirmation',
+      {
+        transactionId: transaction._id,
+        amount: amount,
+        newBalance: wallet.wallet_amount,
+      },
+    );
 
     return {
       newBalance: wallet.wallet_amount,
       transaction,
-    };
-  }
-
-  async getTransactionHistory(userId: string) {
-    const transactions = await this.walletTransactionModel
-      .find({
-        user: new Types.ObjectId(userId),
-      })
-      .sort({ created_at: -1 })
-      .lean()
-      .exec();
-
-    return {
-      total_transactions: transactions.length,
-      total_amount: transactions.reduce(
-        (sum, transaction) => sum + transaction.amount,
-        0,
-      ),
-      transactions: transactions.map((transaction) => ({
-        amount: transaction.amount,
-        phone_number: transaction.phone_number,
-        created_at: transaction.created_at,
-      })),
     };
   }
 
