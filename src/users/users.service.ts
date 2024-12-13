@@ -10,7 +10,7 @@ export class UsersService {
     @InjectModel(Users.name) private readonly userModel: Model<Users>,
   ) {}
 
-  // Méthode pour générer un code unique de parrainage
+  /* Méthode pour générer un code unique de parrainage */
   async generateUniqueSponsorshipCode(): Promise<string> {
     let sponsorship_code;
     let isUnique = false;
@@ -62,7 +62,7 @@ export class UsersService {
       .exec();
   }
 
-  // Correction de la méthode findOne pour retourner un utilisateur
+  /* Correction de la méthode findOne pour retourner un utilisateur */
   async findOne(id: string): Promise<Users | null> {
     return this.userModel
       .findById(id)
