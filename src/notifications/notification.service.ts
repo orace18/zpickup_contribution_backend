@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { isValidObjectId, Model, Types } from 'mongoose';
 import { Notification } from '../Schemas/notifications_schema/notifications.schema';
 import { ConfigService } from '@nestjs/config';
-import * as process from 'node:process';
+import { DEFAULT_NOTIFICATION_CONFIG } from './notification.config';
 
 @Injectable()
 export class NotificationService {
@@ -16,22 +16,41 @@ export class NotificationService {
   ) {
     /* Initialisation des couleurs */
     this.notificationColors = {
-      promotion: process.env.NOTIFICATION_COLOR_PROMOTION,
-      commande: process.env.NOTIFICATION_COLOR_COMMANDE,
-      probleme: process.env.NOTIFICATION_COLOR_PROBLEME,
-      order: process.env.NOTIFICATION_COLOR_ORDER,
-      low_balance: process.env.NOTIFICATION_COLOR_LOW_BALANCE,
-      debt_settled: process.env.NOTIFICATION_COLOR_DEBT_SETTLED,
-      partial_debt_settled: process.env.NOTIFICATION_COLOR_PARTIAL_DEBT_SETTLED,
-      payment_confirmation: process.env.NOTIFICATION_COLOR_PAYMENT_CONFIRMATION,
-      negative_balance: process.env.NOTIFICATION_COLOR_NEGATIVE_BALANCE,
+      promotion:
+        this.configService.get('NOTIFICATION_COLOR_PROMOTION') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.promotion,
+      commande:
+        this.configService.get('NOTIFICATION_COLOR_COMMANDE') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.commande,
+      probleme:
+        this.configService.get('NOTIFICATION_COLOR_PROBLEME') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.probleme,
+      order:
+        this.configService.get('NOTIFICATION_COLOR_ORDER') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.order,
+      low_balance:
+        this.configService.get('NOTIFICATION_COLOR_LOW_BALANCE') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.low_balance,
+      debt_settled:
+        this.configService.get('NOTIFICATION_COLOR_DEBT_SETTLED') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.debt_settled,
+      partial_debt_settled:
+        this.configService.get('NOTIFICATION_COLOR_PARTIAL_DEBT_SETTLED') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.partial_debt_settled,
+      payment_confirmation:
+        this.configService.get('NOTIFICATION_COLOR_PAYMENT_CONFIRMATION') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.payment_confirmation,
+      negative_balance:
+        this.configService.get('NOTIFICATION_COLOR_NEGATIVE_BALANCE') ||
+        DEFAULT_NOTIFICATION_CONFIG.colors.negative_balance,
     };
 
     /* Initialisation des types de notification */
-    this.notificationTypes = this.configService
-      .get<string>('NOTIFICATION_TYPES')
-      .split(',')
-      .map((type) => type.trim());
+    this.notificationTypes =
+      this.configService
+        .get<string>('NOTIFICATION_TYPES')
+        ?.split(',')
+        .map((type) => type.trim()) || DEFAULT_NOTIFICATION_CONFIG.types;
   }
 
   async createNotification(
@@ -41,6 +60,10 @@ export class NotificationService {
     notif_type: string,
     data?: object,
   ) {
+    if (!isValidObjectId(userId)) {
+      throw new BadRequestException('Invalid user ID format');
+    }
+
     // Vérifier si le type de notification est valide
     if (!this.notificationTypes.includes(notif_type)) {
       throw new BadRequestException(
@@ -83,6 +106,10 @@ export class NotificationService {
   }
 
   async markAsRead(notificationId: string) {
+    if (!isValidObjectId(notificationId)) {
+      throw new BadRequestException('Invalid notification ID format');
+    }
+
     return this.notificationModel.findByIdAndUpdate(
       notificationId,
       { is_read: true },
@@ -91,6 +118,10 @@ export class NotificationService {
   }
 
   async getUserNotifications(userId: string) {
+    if (!isValidObjectId(userId)) {
+      throw new BadRequestException('Invalid user ID format');
+    }
+
     return await this.notificationModel
       .find({ user: new Types.ObjectId(userId) })
       .sort({ created_at: -1 })
@@ -98,6 +129,10 @@ export class NotificationService {
   }
 
   async getUnreadNotifications(userId: string) {
+    if (!isValidObjectId(userId)) {
+      throw new BadRequestException('Invalid user ID format');
+    }
+
     return await this.notificationModel
       .find({
         user: new Types.ObjectId(userId),
@@ -109,6 +144,10 @@ export class NotificationService {
   }
 
   async deleteNotification(notificationId: string) {
+    if (!isValidObjectId(notificationId)) {
+      throw new BadRequestException('Invalid notification ID format');
+    }
+
     return this.notificationModel.findByIdAndDelete(notificationId);
   }
 }

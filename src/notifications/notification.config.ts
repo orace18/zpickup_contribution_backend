@@ -15,3 +15,28 @@ export const notificationConfig = registerAs('notification', () => ({
   },
   types: process.env.NOTIFICATION_TYPES.split(','),
 }));
+
+export const DEFAULT_NOTIFICATION_CONFIG = {
+  colors: {
+    promotion: '#796CE7',
+    commande: '#FA8C00',
+    probleme: '#DF4848',
+    order: '#109F81',
+    low_balance: '#FA8C00',
+    debt_settled: '#109F81',
+    partial_debt_settled: '#FA8C00',
+    payment_confirmation: '#109F81',
+    negative_balance: '#DF4848',
+  },
+  types: [
+    'promotion',
+    'commande',
+    'probleme',
+    'order',
+    'low_balance',
+    'debt_settled',
+    'partial_debt_settled',
+    'payment_confirmation',
+    'negative_balance',
+  ],
+};
