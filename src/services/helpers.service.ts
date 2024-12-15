@@ -50,44 +50,47 @@ export function estimateDuration(distance) {
   return { hours: Math.floor(minutes / 60), minutes: minutes % 60 };
 }
 
-export async function sendMessage(body, to) {
-  const client = twilio(accountSid, authToken);
-  const message = await client.messages.create({
-    body: body,
-    from: process.env.TWILIO_PHONE_NUMBER,
-    to: to,
-  });
-  console.log(message);
-}
 
 export async function sendNotification(title, body, token, data) {
-  if (!admin.apps.length) {
-    const serviceAccount = require('../../config/wt-zpickup-firebase-adminsdk-5dm4w-2c0344d8d8.json');
+    if (!admin.apps.length) {
+        const serviceAccount = require('../../config/wt-zpickup-firebase-adminsdk-5dm4w-2c0344d8d8.json');
 
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+        });
 
-    console.log('Firebase initialisé');
-  } else {
-    console.log('Firebase est déjà initialisé');
-  }
+        console.log('Firebase initialisé');
+    } else {
+        console.log('Firebase est déjà initialisé');
+    }
 
-  const message = {
-    notification: {
-      title: title,
-      body: body,
-    },
-    token: token,
-    data: data,
-  };
+    const message = {
+        notification: {
+            title: title,
+            body: body,
+        },
+        token: token,
+        data: data,
+    };
 
-  console.log('message', message);
+    console.log('message', message);
 
-  try {
-    const response = await admin.messaging().send(message);
-    console.log('Notification envoyée avec succès :', response);
-  } catch (error) {
-    console.error("Erreur lors de l'envoi de la notification :", error);
-  }
+    try {
+        const response = await admin.messaging().send(message);
+        console.log('Notification envoyée avec succès :', response);
+    } catch (error) {
+        console.error("Erreur lors de l'envoi de la notification :", error);
+    }
+
+}
+export async function sendMessage(body,to) {
+    const client = twilio(accountSid, authToken);
+    if(process.env.TWILIO_SEND_SMS){
+        const message = await client.messages.create({
+            body: body,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: to,
+        });
+        console.log(message);
+    }
 }
