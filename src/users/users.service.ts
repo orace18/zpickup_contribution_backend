@@ -57,6 +57,7 @@ export class UsersService {
       updateData.password = await bcrypt.hash(updateData.password, salt);
     }
 
+
     return await this.userModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .exec();

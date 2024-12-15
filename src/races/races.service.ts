@@ -233,8 +233,7 @@ export class RacesService {
           race_ended.zem['user'].toString(),
         );
         zem_user = zem_final;
-
-        await this.userService.update(race_ended.user.toString(), {
+        await this.userService.update(race_ended.user['_id'].toString(), {
           race: null,
         });
         await this.userService.update(zem_final._id.toString(), { race: null });
@@ -254,7 +253,6 @@ export class RacesService {
         break;
     }
 
-    console.log('zem_user', zem_user);
     await this.racesModel.findByIdAndUpdate(id, updateRaceDto).exec();
     const race = await this.findOne(id);
     const user = await this.userService.findOne(race.user.toString());
