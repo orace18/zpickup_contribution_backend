@@ -4,11 +4,11 @@ import { Users } from '../../Schemas/users_schema/Users.schema';
 export class CreateWalletDto {
   @IsObject()
   @IsNotEmpty()
-  user: Users
+  user: Users;
 
   @IsNotEmpty()
   @IsNumber()
-  wallet_amount: number
+  wallet_amount: number;
 
   @IsDateString()
   created_at: Date;

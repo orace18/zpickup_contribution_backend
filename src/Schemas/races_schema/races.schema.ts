@@ -1,18 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
-import {Types} from "mongoose";
+import { Types } from 'mongoose';
 
 export enum CoursesStatus {
   PENDING = 'pending',
   STOPPED = 'stopped',
   ACCEPTED = 'accepted',
   START = 'start',
-  END = 'end'
+  END = 'end',
 }
 
 @Schema()
 export class Races {
-
   @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
   user: Types.ObjectId;
 
@@ -54,7 +53,7 @@ export class Races {
   @Prop({ required: true })
   qrcode_end: string;
 
-  @Prop({ default:null })
+  @Prop({ default: null })
   distance_traveled: number;
 
   @Prop({ required: true, enum: CoursesStatus })

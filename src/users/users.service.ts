@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Users } from '../Schemas/users_schema/Users.schema';
-import {HydratedDocument, Model} from 'mongoose';
+import { HydratedDocument, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import * as path from 'node:path';
 
 @Injectable()
 export class UsersService {
@@ -13,14 +10,16 @@ export class UsersService {
     @InjectModel(Users.name) private readonly userModel: Model<Users>,
   ) {}
 
-  // Méthode pour générer un code unique de parrainage
+  /* Méthode pour générer un code unique de parrainage */
   async generateUniqueSponsorshipCode(): Promise<string> {
     let sponsorship_code;
     let isUnique = false;
 
     while (!isUnique) {
       sponsorship_code = `ZP-${Math.floor(100000 + Math.random() * 900000).toString()}`;
-      const existingUser = await this.userModel.findOne({ sponsorship_code }).exec();
+      const existingUser = await this.userModel
+        .findOne({ sponsorship_code })
+        .exec();
       if (!existingUser) {
         isUnique = true;
       }
@@ -30,12 +29,16 @@ export class UsersService {
   }
 
   async findByPhone(phone_number: string): Promise<Users> {
-    const user = await this.userModel.findOne({ phone_number })
-        .populate("race").exec();
+    const user = await this.userModel
+      .findOne({ phone_number })
+      .populate('race')
+      .exec();
     return user;
   }
 
-  async findByVerificationCode(verification_code: string): Promise<Users | null> {
+  async findByVerificationCode(
+    verification_code: string,
+  ): Promise<Users | null> {
     return this.userModel.findOne({ verification_code }).exec();
   }
 
@@ -54,35 +57,46 @@ export class UsersService {
       updateData.password = await bcrypt.hash(updateData.password, salt);
     }
 
+
     return await this.userModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .exec();
   }
 
-
-  // Correction de la méthode findOne pour retourner un utilisateur
+  /* Correction de la méthode findOne pour retourner un utilisateur */
   async findOne(id: string): Promise<Users | null> {
-    return this.userModel.findById(id)
-        .populate('zem').populate({
+    return this.userModel
+      .findById(id)
+      .populate('zem')
+      .populate({
         path: 'race',
         match: {
           status: {
-            $in: ['pending', 'accepted', 'start']
-          }
-        }
-      }).lean().exec();
+            $in: ['pending', 'accepted', 'start'],
+          },
+        },
+      })
+      .lean()
+      .exec();
   }
 
-  async findUserOne(id: string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
-    console.log("findUserOne",id);
+  async findUserOne(
+    id: string,
+  ): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+    console.log('findUserOne', id);
     return await this.userModel.find({ phone_number: id }).exec();
   }
 
-  async findUserOneByKey(key: string,value:string): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+  async findUserOneByKey(
+    key: string,
+    value: string,
+  ): Promise<Array<HydratedDocument<Users, {}, {}>>> {
     return await this.userModel.find({ key: value }).exec();
   }
 
-  async findUserOneByPayload(payload: { }): Promise<Array<HydratedDocument<Users, {}, {}>>> {
+  async findUserOneByPayload(payload: {}): Promise<
+    Array<HydratedDocument<Users, {}, {}>>
+  > {
     return await this.userModel.find(payload).exec();
   }
 

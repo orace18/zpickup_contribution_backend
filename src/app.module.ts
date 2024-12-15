@@ -19,11 +19,12 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivationHistoryModule } from './activation_history/activation_history.module';
 import { ConfigModule } from '@nestjs/config';
-import {SeedsModule} from "./seeds/seed.module";
+import { SeedsModule } from './seeds/seed.module';
 import { RacesModule } from './races/races.module';
 import { PaymentModule } from './payment/payment.module';
-import {ServeStaticModule} from "@nestjs/serve-static";
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { notificationConfig } from './notifications/notification.config';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { join } from 'path';
     ),
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [notificationConfig],
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'), // Chemin vers le dossier uploads
@@ -52,12 +54,12 @@ import { join } from 'path';
     CounterHistoryModule,
     WalletHistoryModule,
     WalletModule,
-    NotificationsModule,
     ActivationHistoryModule,
     SeedsModule,
     RacesModule,
     CounterModule,
-    PaymentModule
+    PaymentModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

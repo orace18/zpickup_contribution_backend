@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsObject, IsString } from 'class-validator';
 import { Users } from '../../Schemas/users_schema/Users.schema';
 
 export class CreateNotificationDto {
@@ -7,10 +7,13 @@ export class CreateNotificationDto {
   user: Users;
 
   @IsString()
+  title: string;
+
+  @IsString()
   message: string;
 
   @IsObject()
-  data: Object;
+  data: object;
 
   @IsDateString()
   created_at: Date;

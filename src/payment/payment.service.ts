@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
 import { Model, Types } from 'mongoose';
 import { Counter } from '../Schemas/counter_schema/counter.schema';
-import { NotificationService } from '../services/notification.service';
+import { NotificationService } from '../notifications/notification.service';
 import { Config } from '../Schemas/config_schema/config.schema';
 
 @Injectable()
