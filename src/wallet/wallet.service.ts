@@ -10,6 +10,8 @@ import {
 } from '../Schemas/wallet_schema/wallet_transaction.schema';
 import { CreditWallet } from '../Schemas/wallet_schema/credit-wallet.schema';
 import { NotificationService } from '../notifications/notification.service';
+import { UsersService } from '../users/users.service';
+import { sendNotification } from '../services/helpers.service';
 
 @Injectable()
 export class WalletService {
@@ -20,6 +22,7 @@ export class WalletService {
     @InjectModel(CreditWallet.name)
     private creditWalletModel: Model<CreditWallet>,
     private notificationService: NotificationService,
+    private readonly userService: UsersService,
   ) {}
 
   async getWalletBalance(userId: string) {
@@ -64,6 +67,20 @@ export class WalletService {
         newBalance: wallet.wallet_amount,
       },
     );
+
+    const user = await this.userService.findOne(userId);
+    if (user.fcm_token) {
+      const send_data = {
+        _id: user._id.toString(),
+        more_action: 'credited',
+      };
+      sendNotification(
+        'Recharge Réussie',
+        'Vous venez de recharger votre portefeuille avec succès',
+        user.fcm_token,
+        send_data,
+      );
+    }
 
     return {
       message: 'Recharge effectué avec succès',
@@ -119,6 +136,20 @@ export class WalletService {
         newBalance: wallet.wallet_amount,
       },
     );
+
+    const user = await this.userService.findOne(userId);
+    if (user.fcm_token) {
+      const send_data = {
+        _id: user._id.toString(),
+        more_action: 'withdraw',
+      };
+      sendNotification(
+        'Retrait effectué',
+        "Vous venez de retirer de l'argent de votre portefeuille avec succès",
+        user.fcm_token,
+        send_data,
+      );
+    }
 
     return {
       newBalance: wallet.wallet_amount,

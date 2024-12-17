@@ -13,11 +13,14 @@ import {
   CreditWalletSchema,
 } from '../Schemas/wallet_schema/credit-wallet.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersService } from '../users/users.service';
+import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Wallet.name, schema: WalletSchema },
+      { name: Users.name, schema: UserSchema },
       { name: Config.name, schema: ConfigSchema },
       { name: WalletTransaction.name, schema: WalletTransactionSchema },
       { name: CreditWallet.name, schema: CreditWalletSchema },
@@ -25,7 +28,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     NotificationsModule,
   ],
   controllers: [WalletController],
-  providers: [WalletService],
+  providers: [WalletService, UsersService],
   exports: [WalletService],
 })
 export class WalletModule {}

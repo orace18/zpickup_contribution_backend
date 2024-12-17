@@ -17,7 +17,6 @@ import {
 import { UsersService } from '../users/users.service';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
 import { Config } from '../Schemas/config_schema/config.schema';
-import { UserType } from '../Schemas/users_schema/Users.schema';
 import { ZemsService } from '../zems/zems.service';
 import { WalletService } from '../wallet/wallet.service';
 

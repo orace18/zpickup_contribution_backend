@@ -15,11 +15,14 @@ import {
   Notification,
   NotificationSchema,
 } from '../Schemas/notifications_schema/notifications.schema';
+import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
+import { UsersService } from '../users/users.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Counter.name, schema: CounterSchema },
+      { name: Users.name, schema: UserSchema },
       { name: Payment.name, schema: PaymentSchema },
       { name: Zems.name, schema: ZemsSchema },
       { name: Races.name, schema: RacesSchema },
@@ -28,7 +31,7 @@ import {
     ]),
   ],
   controllers: [CounterController],
-  providers: [CounterService, NotificationService],
+  providers: [CounterService, NotificationService, UsersService],
   exports: [CounterService],
 })
 export class CounterModule {}

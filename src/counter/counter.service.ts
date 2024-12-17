@@ -14,6 +14,8 @@ import { NotificationService } from '../notifications/notification.service';
 import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
 import { Config } from '../Schemas/config_schema/config.schema';
+import { UsersService } from '../users/users.service';
+import { sendNotification } from '../services/helpers.service';
 
 @Injectable()
 export class CounterService {
@@ -24,6 +26,7 @@ export class CounterService {
     @InjectModel(Races.name) private racesModel: Model<Races>,
     @InjectModel(Config.name) private configModel: Model<Config>,
     private notificationService: NotificationService,
+    private readonly userService: UsersService,
   ) {}
 
   async createCounter(zemId: string) {
@@ -130,6 +133,10 @@ export class CounterService {
     };
   }
 
+  findOne(id: string) {
+    return this.counterModel.findById(id).exec();
+  }
+
   async rechargeCounter(zemId: string, createPaymentDto: CreatePaymentDto) {
     const counter = await this.counterModel.findOne({
       zem: new Types.ObjectId(zemId),
@@ -186,17 +193,45 @@ export class CounterService {
             'debt_settled',
             { settled_amount: Math.abs(previous_debt) },
           );
+
+          const zem_user = await this.userService.findOne(zem.user.toString());
+          if (zem_user && zem_user.fcm_token) {
+            const send_data = {
+              _id: zem_user._id.toString(),
+              more_action: 'Dette',
+            };
+            await sendNotification(
+              'Dette remboursée',
+              `Votre dette de ${Math.abs(previous_debt)} km a été entièrement remboursée.`,
+              zem_user.fcm_token,
+              send_data,
+            );
+          }
         } else {
           await this.notificationService.createNotification(
             zem.user.toString(),
             'Dette partiellement remboursée',
-            `${km_amount} km de votre dette ont été remboursés. Dette restante: ${Math.abs(new_balance)} km`,
+            `${km_amount} km de votre dette a été partiellement remboursée. Dette restante: ${Math.abs(new_balance)} km`,
             'partial_debt_settled',
             {
               settledAmount: km_amount,
               remainingDebt: Math.abs(new_balance),
             },
           );
+
+          const zem_user = await this.userService.findOne(zem.user.toString());
+          if (zem_user && zem_user.fcm_token) {
+            const send_data = {
+              _id: zem_user._id.toString(),
+              more_action: 'Dette',
+            };
+            await sendNotification(
+              'Dette partiellement remboursée',
+              `${km_amount} km de votre dette a été partiellement remboursée. Dette restante: ${Math.abs(new_balance)} km`,
+              zem_user.fcm_token,
+              send_data,
+            );
+          }
         }
       } else {
         new_balance = counter.balance_km + km_amount;
@@ -214,6 +249,20 @@ export class CounterService {
         'payment_confirmation',
         { balance: createPaymentDto.price_per_km },
       );
+
+      const zem_user = await this.userService.findOne(zem.user.toString());
+      if (zem_user && zem_user.fcm_token) {
+        const send_data = {
+          _id: zem_user._id.toString(),
+          more_action: 'Paiement Confirmé',
+        };
+        await sendNotification(
+          'Rechargement Confirmé',
+          `Succès! Vous avez effectué un rechargement de ${createPaymentDto.price_per_km} XOF`,
+          zem_user.fcm_token,
+          send_data,
+        );
+      }
 
       return {
         payment: savedPayment,
@@ -262,6 +311,20 @@ export class CounterService {
         'low_balance',
         { balance: counter.balance_km },
       );
+
+      const zem_user = await this.userService.findOne(zem.user.toString());
+      if (zem_user && zem_user.fcm_token) {
+        const send_data = {
+          _id: zem_user._id.toString(),
+          more_action: 'Alerte',
+        };
+        await sendNotification(
+          'Solde Bas',
+          `Attention! Votre solde est bas: ${counter.balance_km} km`,
+          zem_user.fcm_token,
+          send_data,
+        );
+      }
     }
 
     if (counter.balance_km < 0) {
@@ -272,6 +335,20 @@ export class CounterService {
         'negative_balance',
         { balance: counter.balance_km },
       );
+
+      const zem_user = await this.userService.findOne(zem.user.toString());
+      if (zem_user && zem_user.fcm_token) {
+        const send_data = {
+          _id: zem_user._id.toString(),
+          more_action: 'Alerte',
+        };
+        await sendNotification(
+          'Solde Négatif',
+          `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`,
+          zem_user.fcm_token,
+          send_data,
+        );
+      }
     }
 
     await counter.save();
@@ -333,10 +410,6 @@ export class CounterService {
 
   findAll() {
     return `This action returns all counter`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} counter`;
   }
 
   update(id: number, updateCounterDto: UpdateCounterDto) {

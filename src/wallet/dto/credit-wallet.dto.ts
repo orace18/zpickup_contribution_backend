@@ -1,7 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreditWalletDto {
+  @IsOptional()
+  user?: Types.ObjectId;
+
   @IsNotEmpty()
   @IsString()
   transaction_type: string;
