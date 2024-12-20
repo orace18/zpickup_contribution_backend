@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { UserType } from '../../Schemas/users_schema/Users.schema';
 import { Types } from 'mongoose';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @IsOptional()
@@ -18,6 +19,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   firstname?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ type: 'string', format: 'binary' })
+  user_profile_image?: string;
 
   @IsOptional()
   @IsString()

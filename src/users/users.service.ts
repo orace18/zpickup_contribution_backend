@@ -52,15 +52,34 @@ export class UsersService {
   }
 
   async update(id: string, updateData: Partial<Users>): Promise<Users | null> {
-    if (updateData.password) {
-      const salt = await bcrypt.genSalt();
-      updateData.password = await bcrypt.hash(updateData.password, salt);
+    try {
+      console.log('Données transmises à updateData :', updateData);
+
+      // Si un mot de passe est fourni, on le hash
+      if (updateData.password) {
+        const salt = await bcrypt.genSalt();
+        updateData.password = await bcrypt.hash(updateData.password, salt);
+      }
+
+      // Mise à jour de l'utilisateur dans la base de données
+      const updatedUser = await this.userModel
+        .findByIdAndUpdate(id, updateData, { new: true })
+        .exec();
+
+      // Si l'utilisateur n'est pas trouvé, on retourne null
+      if (!updatedUser) {
+        console.error(`Erreur : utilisateur avec l'ID ${id} introuvable`);
+        return null;
+      }
+
+      console.log('Utilisateur mis à jour :', updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'utilisateur :", error);
+      throw new Error(
+        "Une erreur est survenue lors de la mise à jour de l'utilisateur",
+      );
     }
-
-
-    return await this.userModel
-      .findByIdAndUpdate(id, updateData, { new: true })
-      .exec();
   }
 
   /* Correction de la méthode findOne pour retourner un utilisateur */

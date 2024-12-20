@@ -10,6 +10,9 @@ import {
   Post,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,6 +20,7 @@ import { TwilioService } from '../services/twilio.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { sendMessage } from '../services/helpers.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UsersController {
@@ -176,11 +180,21 @@ export class UsersController {
   }
 
   @Patch('complete-registration/:id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    // Utilisez `await` pour récupérer l'utilisateur avant de vérifier `sponsorship_code`
+  @UseInterceptors(FileInterceptor('user_profile_image'))
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    // Récupère l'utilisateur par ID
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+    }
+
+    // Si un fichier est envoyé, on met à jour l'image de profil avec le chemin du fichier
+    if (file) {
+      updateUserDto.user_profile_image = file.path;
     }
 
     // Si le code de parrainage n'existe pas, en génère un
@@ -190,7 +204,7 @@ export class UsersController {
       updateUserDto = { ...updateUserDto, sponsorship_code };
     }
 
-    // Mettez à jour l'utilisateur avec les informations reçues dans `updateUserDto`
+    // Mettez à jour l'utilisateur avec les nouvelles données
     return await this.usersService.update(id, {
       ...updateUserDto,
       updated_at: new Date(),
