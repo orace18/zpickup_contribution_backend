@@ -1,13 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Zems } from '../zems_schema/Zems.schema';
+import { Types } from 'mongoose';
 
 @Schema()
 export class Counter {
-  @Prop({ type: Object })
-  zem: Zems
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
+  user: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
+  zem: Types.ObjectId;
 
   @Prop({ required: true, default: 0 })
-  balance_km: number
+  balance_km: number;
 
   @Prop({ required: true })
   price_per_km: number;
@@ -25,4 +28,4 @@ export class Counter {
   updated_at: Date;
 }
 
-export const CounterSchema = SchemaFactory.createForClass(Counter)
+export const CounterSchema = SchemaFactory.createForClass(Counter);

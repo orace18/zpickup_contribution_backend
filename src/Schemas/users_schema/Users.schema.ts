@@ -3,10 +3,9 @@ import { Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { PrimaryGeneratedColumn } from 'typeorm/typeorm-model-shim.js';
 
-
 export enum UserType {
   CUSTOMER = 'customer',
-  ZEM = 'zem'
+  ZEM = 'zem',
 }
 
 @Schema()
@@ -21,12 +20,15 @@ export class Users {
   firstname?: string;
 
   @Prop()
+  user_profile_image?: string;
+
+  @Prop()
   address?: string;
 
   @Prop({ required: true, unique: true })
   phone_number: string;
 
-  @Prop({ })
+  @Prop({})
   email_address?: string;
 
   @Prop({ default: null })
@@ -73,14 +75,12 @@ export class Users {
 
   @Prop()
   code_pin: string;
-
-
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);
 
 // Middleware pour hasher le mot de passe
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }

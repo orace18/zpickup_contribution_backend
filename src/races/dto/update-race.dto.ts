@@ -68,4 +68,39 @@ export class UpdateRaceDto extends PartialType(CreateRaceDto) {
     service_duration: number;
 
 
+    @IsOptional()
+    street_start: string;
+
+    @IsOptional()
+    country_start: string;
+
+    @IsOptional()
+    locality_start: string;
+
+
+    @IsOptional()
+    street_end: string;
+
+    @IsOptional()
+    country_end: string;
+
+    @IsOptional()
+    locality_end: string;
+
+    @IsOptional()
+    street_accepted: string;
+
+    @IsOptional()
+    country_accepted: string;
+
+    @IsOptional()
+    locality_accepted: string;
+
+    @IsOptional()
+    longitude_accepted?: number;
+
+    @IsOptional()
+    latitude_accepted?: number;
+
+
 }
