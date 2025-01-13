@@ -5,6 +5,7 @@ import { Races } from '../races_schema/races.schema';
 export enum TransactionType {
   BONUS = 'bonus',
   WITHDRAWAL = 'withdrawal',
+  DEBIT = 'debit',
 }
 
 @Schema()

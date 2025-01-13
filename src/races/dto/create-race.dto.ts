@@ -63,4 +63,17 @@ export class CreateRaceDto {
     @IsOptional()
     status: CoursesStatus;
 
+
+    @IsString()
+    @IsOptional()
+    street: string;
+
+    @IsString()
+    @IsOptional()
+    country: string;
+
+    @IsString()
+    @IsOptional()
+    locality: string;
+
 }

@@ -9,11 +9,15 @@ import { ZemValidationService } from './zem-validation.service';
 import { CounterModule } from '../counter/counter.module';
 import { UsersModule } from '../users/users.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import {Config, ConfigSchema} from "../Schemas/config_schema/config.schema";
+import {Races, RacesSchema} from "../Schemas/races_schema/races.schema";
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Zems.name, schema: ZemsSchema }]),
     MongooseModule.forFeature([{ name: Users.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Config.name, schema: ConfigSchema }]),
+    MongooseModule.forFeature([{ name: Races.name, schema: RacesSchema }]),
     UsersModule,
     CounterModule,
     NotificationsModule,

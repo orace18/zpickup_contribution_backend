@@ -7,6 +7,7 @@ import { Counter } from '../Schemas/counter_schema/counter.schema';
 import { Payment } from '../Schemas/payment/payment.schema';
 import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
 import { Race } from '../races/entities/race.entity';
+import {CounterHistory} from "../Schemas/counter-history_schema/counter_history.schema";
 
 @Injectable()
 export class CounterHistoryService {
@@ -14,6 +15,7 @@ export class CounterHistoryService {
     @InjectModel(Counter.name) private readonly counterModel: Model<Counter>,
     @InjectModel(Payment.name) private readonly paymentModel: Model<Payment>,
     @InjectModel(Races.name) private readonly raceModel: Model<Races>,
+    @InjectModel(CounterHistory.name) private readonly counterHistoryModel: Model<CounterHistory>,
   ) {}
 
   async getCounterHistory(zemId: string) {
@@ -24,54 +26,26 @@ export class CounterHistoryService {
       throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
     }
 
-    const recharges = await this.paymentModel
+    const histories = await this.counterHistoryModel
       .find({ counter: counter._id })
       .sort({ created_at: -1 })
       .lean()
       .exec();
 
-    const races = await this.raceModel
-      .find({
-        zem: new Types.ObjectId(zemId),
-        status: CoursesStatus.END,
-      })
-      .sort({ ended_at: -1 })
-      .lean()
-      .exec();
-
-    const formattedRaces = races.map((race) => ({
-      _id: race._id,
-      reference: race.reference,
-      start_location: {
-        longitude: race.longitude_start,
-        latitude: race.latitude_start,
-        started_at: race.started_at,
-      },
-      end_location: {
-        longitude: race.longitude_end,
-        latitude: race.latitude_end,
-        ended_at: race.ended_at,
-      },
-      service_km: Number(race.distance_traveled?.toFixed(2)) || 0,
-      status: race.status,
-      created_at: race.created_at,
-      updated_at: race.updated_at,
-    }));
 
     return {
       currentBalance: counter.balance_km,
       totalKmTraveled: counter.total_km_traveled,
-      rechargeHistory: recharges,
-      raceHistory: formattedRaces,
+      histories: histories,
       statistics: {
-        total_recharges: recharges.length,
-        total_races: races.length,
+        total_recharges: histories.length,
       },
     };
   }
 
-  create(createCounterHistoryDto: CreateCounterHistoryDto) {
-    return 'This action adds a new counterHistory';
+  create(payload) {
+    const created = new this.counterHistoryModel(payload);
+    return created.save();
   }
 
   findAll() {

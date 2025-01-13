@@ -1,9 +1,12 @@
 import { Model } from 'mongoose';
 import * as process from 'node:process';
+import {UsersService} from "../users/users.service";
 const twilio = require('twilio');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const admin = require('firebase-admin');
+
+
 
 export async function generateUniqueString(
   model: Model<any>,
@@ -81,6 +84,43 @@ export async function sendNotification(title, body, token, data) {
     console.error("Erreur lors de l'envoi de la notification :", error);
   }
 }
+
+
+export async function sendNotificationForSeveralTokens(title, body, tokens, data) {
+  if (!admin.apps.length) {
+    const serviceAccount = require('../../config/wt-zpickup-firebase-adminsdk-5dm4w-2c0344d8d8.json');
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+
+    console.log('Firebase initialisé');
+  } else {
+    console.log('Firebase est déjà initialisé');
+  }
+
+  const message = {
+    notification: {
+      title: title,
+      body: body,
+    },
+    tokens: tokens,
+    data: data,
+  };
+
+  console.log('message', message);
+
+  try {
+    const response = await admin.messaging().sendEachForMulticast(message);
+    console.log('Notification envoyée avec succès :', response);
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de la notification :", error);
+  }
+}
+
+
+
+
 export async function sendMessage(body, to) {
   const client = twilio(accountSid, authToken);
   if (process.env.TWILIO_SEND_SMS) {
@@ -92,3 +132,6 @@ export async function sendMessage(body, to) {
     console.log(message);
   }
 }
+
+
+

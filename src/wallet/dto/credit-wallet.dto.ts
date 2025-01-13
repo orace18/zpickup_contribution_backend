@@ -6,7 +6,7 @@ export class CreditWalletDto {
   @IsOptional()
   user?: Types.ObjectId;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   transaction_type: string;
 

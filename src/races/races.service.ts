@@ -1,24 +1,26 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { CreateRaceDto } from './dto/create-race.dto';
-import { UpdateRaceDto } from './dto/update-race.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
+import {BadRequestException, Injectable, NotFoundException,} from '@nestjs/common';
+import {CreateRaceDto} from './dto/create-race.dto';
+import {UpdateRaceDto} from './dto/update-race.dto';
+import {InjectModel} from '@nestjs/mongoose';
+import {Model, Types} from 'mongoose';
+import {CoursesStatus, Races} from '../Schemas/races_schema/races.schema';
 import {
   calculateDistance,
   estimateDuration,
   generateUniqueString,
   sendNotification,
+  sendNotificationForSeveralTokens,
 } from '../services/helpers.service';
-import { UsersService } from '../users/users.service';
-import { Zems } from '../Schemas/zems_schema/Zems.schema';
-import { Config } from '../Schemas/config_schema/config.schema';
-import { ZemsService } from '../zems/zems.service';
-import { WalletService } from '../wallet/wallet.service';
+import {UsersService} from '../users/users.service';
+import {Zems} from '../Schemas/zems_schema/Zems.schema';
+import {Config} from '../Schemas/config_schema/config.schema';
+import {ZemsService} from '../zems/zems.service';
+import {WalletService} from '../wallet/wallet.service';
+import {NotificationService} from "../notifications/notification.service";
+import * as process from "node:process";
+import {CounterService} from "../counter/counter.service";
+import {CounterType} from "../Schemas/counter-history_schema/counter_history.schema";
+import {TransactionType} from "../Schemas/wallet_schema/wallet_transaction.schema";
 
 @Injectable()
 export class RacesService {
@@ -29,6 +31,8 @@ export class RacesService {
     private readonly userService: UsersService,
     private readonly zemsService: ZemsService,
     private readonly walletService: WalletService,
+    private readonly notificationService: NotificationService,
+    private readonly counterService: CounterService,
   ) {}
 
   async create(createRaceDto: CreateRaceDto, req) {
@@ -55,16 +59,67 @@ export class RacesService {
     const saved = await created.save();
 
     await this.userService.update(req.user.userId, { race: saved._id });
-
+    this.sendNotificationForAllZemInRay(saved);
     return saved;
   }
+
+  async sendNotificationForAllZemInRay(race_saved){
+    const ray = await this.configModel.findOne({ key: 'ray' }).exec();
+    const zems = await this.zemsModel
+        .find({ service: true })
+        .lean()
+        .exec();
+    const filteredZems = zems.filter(service => {
+      const distance = calculateDistance(
+          race_saved.initial_latitude,
+          race_saved.initial_longitude,
+          service.service_latitude,
+          service.service_longitude
+      );
+      return distance <= parseFloat(ray.value); // Comparaison
+    });
+    const tokens = [];
+    let body_notification_zem =
+        'Nouvelle course disponible';
+    let more_action_zem = 'available_race';
+    for (let i = 0; i < filteredZems.length; i++) {
+        const zem_user = await this.userService.findOne(filteredZems[i].user.toString());
+        if (zem_user) {
+          this.notificationService.createNotification(zem_user._id.toString(), "Course disponible",body_notification_zem,process.env.NOTIFICATION_COMMANDE,{});
+          if (zem_user.fcm_token && zem_user.user_type=="zem") {
+            tokens.push(zem_user.fcm_token);
+          }
+        }
+    }
+
+    if(tokens.length>0){
+      const send_data = {
+        more_action: more_action_zem,
+      };
+      sendNotificationForSeveralTokens(
+          'Course',
+          body_notification_zem,
+          tokens,
+          send_data,
+      );
+    }
+
+  }
+
 
   findAll() {
     return `This action returns all races`;
   }
 
   findOne(id: string) {
-    return this.racesModel.findById(id).exec();
+    return this.racesModel.findById(id)
+        .populate({
+          path: 'zem',
+          populate: {
+            path: 'user',
+          },
+        })
+        .exec();
   }
 
   async update(id: string, updateRaceDto: UpdateRaceDto, req) {
@@ -225,6 +280,7 @@ export class RacesService {
           race_ended.latitude_end,
           race_ended.longitude_end,
         );
+        updateRaceDto.distance_traveled = (updateRaceDto.distance_traveled < 1) ? 1 : updateRaceDto.distance_traveled;
         updateRaceDto.status = CoursesStatus.END;
         updateRaceDto.ended_at = new Date();
 
@@ -242,7 +298,8 @@ export class RacesService {
           service_latitude: null,
           service_longitude: null,
         });
-
+        this.counterService.debitOrCreditCounter(race_ended.zem['_id'].toString(), updateRaceDto.distance_traveled, "Course effectuée #"+race_ended["reference"], CounterType.OUTPUT);
+        this.addWalletPercentWinForEndedRace(race_ended['_id']);
         body_notification = 'Votre course est terminée. Merci';
         more_action = 'ended';
 
@@ -255,12 +312,15 @@ export class RacesService {
     await this.racesModel.findByIdAndUpdate(id, updateRaceDto).exec();
     const race = await this.findOne(id);
     const user = await this.userService.findOne(race.user.toString());
+    const title = "Course "+race.reference;
     if (user.fcm_token) {
       const send_data = {
         _id: race._id.toString(),
         more_action: more_action,
       };
-      sendNotification('Course', body_notification, user.fcm_token, send_data);
+      sendNotification(title, body_notification, user.fcm_token, send_data);
+      this.notificationService.createNotification(user._id.toString(), title,body_notification,process.env.NOTIFICATION_COMMANDE,send_data);
+
     }
     if (zem_user) {
       if (zem_user.fcm_token) {
@@ -269,15 +329,58 @@ export class RacesService {
           more_action: more_action_zem,
         };
         sendNotification(
-          'Course',
+            title,
           body_notification_zem,
           zem_user.fcm_token,
           send_data,
         );
+        this.notificationService.createNotification(zem_user._id.toString(), title,body_notification_zem,process.env.NOTIFICATION_COMMANDE,send_data);
+
       }
     }
 
     return race;
+  }
+
+
+  async addWalletPercentWinForEndedRace(race_id){
+
+    const customer_race_bonus = await this.configModel.findOne({ key: 'percent-share-customer' }).exec();
+    const zem_race_bonus = await this.configModel.findOne({ key: 'percent-share-zem' }).exec();
+    const km_price = await this.configModel.findOne({ key: 'km-price' }).exec();
+
+    const race = await this.findOne(race_id);
+
+    if(race["status"]=="end"){
+      let zem_user = await this.userService.findUserOneByPayload({zem:race["zem"]["_id"]});
+      const race_user = await this.userService.findUserOneByPayload({_id:race["user"].toString()});
+      let amount_for_admin = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]));
+      let amount_for_zem = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(zem_race_bonus["value"])/100));
+      let amount_for_user = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(customer_race_bonus["value"])/100));
+      amount_for_zem = parseFloat(amount_for_zem.toFixed(2));
+      amount_for_user = parseFloat(amount_for_user.toFixed(2));
+      amount_for_admin = parseFloat(amount_for_admin.toFixed(2));
+      let amount_for_admin_percent = parseFloat(((parseFloat(amount_for_admin.toFixed(2)) - amount_for_zem - amount_for_user)).toFixed(2));
+
+      this.racesModel.findByIdAndUpdate(race["_id"].toString(), {
+        zem_bonus:amount_for_zem,
+        customer_bonus:amount_for_user,
+        admin_bonus:amount_for_admin_percent ,
+        zem_percent:parseFloat(zem_race_bonus["value"]),
+        customer_percent:parseFloat(customer_race_bonus["value"]),
+        admin_percent:(100 - parseFloat(customer_race_bonus["value"]) - parseFloat(zem_race_bonus["value"])) ,
+        amount_per_km:parseFloat(km_price["value"]),
+        amount_total_bonus:parseFloat(amount_for_admin.toFixed(2)),
+      }).exec();
+
+      if(zem_user.length>0){
+        this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(),amount_for_zem,"Course bonus","Vous avez obtenu un gain de "+amount_for_zem+" XOF suite à votre course "+race["reference"]+". ZPickup vous remercie de nous avoir choisi",TransactionType.BONUS);
+      }
+      if(race_user.length>0){
+        this.walletService.creditWalletUserCustomBalance(race_user[0]["_id"].toString(),amount_for_user,"Course bonus","Vous avez obtenu un gain de "+amount_for_user+" XOF suite à votre course "+race["reference"]+". ZPickup vous remercie de nous avoir choisi",TransactionType.BONUS);
+      }
+    }
+
   }
 
   remove(id: number) {
@@ -434,9 +537,16 @@ export class RacesService {
     console.log(`ZemId reçu : ${zemId}`);
     const objectId = new Types.ObjectId(zemId);
     const races = await this.racesModel
-      .find({ zem: objectId })
+      .find({ zem: objectId, status: "end" })
       .populate('user')
-      .lean()
+        .populate({
+          path: 'zem',
+          populate: {
+            path: 'user',
+          },
+        })
+        .sort({ created_at: -1 })
+        .lean()
       .exec();
     console.log(`Résultat trouvé pour le zemId ${zemId}:`, races);
     if (!races || races.length === 0) {
@@ -447,9 +557,18 @@ export class RacesService {
 
   async findAllRacesByUser(userId: string) {
     const races = await this.racesModel
-      .find({ user: userId })
-      .populate('zem')
-      .lean()
+        .find({
+          user: userId,
+          status: "end"
+        })
+        .populate({
+          path: 'zem',
+          populate: {
+            path: 'user',
+          },
+        })
+        .sort({ created_at: -1 })
+        .lean()
       .exec();
     if (!races || races.length === 0) {
       throw new NotFoundException(
@@ -458,4 +577,7 @@ export class RacesService {
     }
     return races;
   }
+
+
+
 }

@@ -17,6 +17,8 @@ import {
 } from '../Schemas/notifications_schema/notifications.schema';
 import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
 import { UsersService } from '../users/users.service';
+import {CounterHistoryService} from "../counter-history/counter-history.service";
+import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_schema/counter_history.schema";
 
 @Module({
   imports: [
@@ -28,10 +30,11 @@ import { UsersService } from '../users/users.service';
       { name: Races.name, schema: RacesSchema },
       { name: Config.name, schema: ConfigSchema },
       { name: Notification.name, schema: NotificationSchema },
+      { name: CounterHistory.name, schema: CounterHistorySchema },
     ]),
   ],
   controllers: [CounterController],
-  providers: [CounterService, NotificationService, UsersService],
+  providers: [CounterService, NotificationService, UsersService,CounterHistoryService],
   exports: [CounterService],
 })
 export class CounterModule {}

@@ -10,6 +10,7 @@ import { Payment, PaymentSchema } from '../Schemas/payment/payment.schema';
 import { Races, RacesSchema } from '../Schemas/races_schema/races.schema';
 import { NotificationService } from '../notifications/notification.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_schema/counter_history.schema";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       },
       { name: Payment.name, schema: PaymentSchema },
       { name: Races.name, schema: RacesSchema },
+      { name: CounterHistory.name, schema: CounterHistorySchema },
     ]),
   ],
   controllers: [CounterHistoryController],

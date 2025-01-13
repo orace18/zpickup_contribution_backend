@@ -26,7 +26,7 @@ export class ConfigSeeder {
       },
       {
         key: 'percent-share-zem',
-        value: '30',
+        value: '10',
         description: 'Pourcentage de gain des zems par km',
       },
       {
@@ -55,6 +55,12 @@ export class ConfigSeeder {
         value: '1',
         description: 'Bonus par course terminée pour le zem',
       },
+        {
+        key: 'min-recharge-amount',
+        value: '500',
+        description: 'Montant minimum de charge du portefeuille',
+      },
+
     ];
     const bulkOps = tabs.map((item) => ({
       updateOne: {

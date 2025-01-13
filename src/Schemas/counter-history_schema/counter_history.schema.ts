@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Counter } from '../counter_schema/counter.schema';
+import {Types} from "mongoose";
 
 export enum CounterType {
   INPUT = "input",
@@ -8,14 +9,18 @@ export enum CounterType {
 
 @Schema()
 export class CounterHistory {
-  @Prop({ type: Object, required: true })
-  counter: Counter
+
+  @Prop({ type: Types.ObjectId, ref: 'Counter', required: true })
+  counter: Types.ObjectId;
 
   @Prop({ required: true })
   value: number
 
   @Prop({ required: true, enum: CounterType })
   counter_type: CounterType
+
+  @Prop({ required: true})
+  reference: String
 
   @Prop({ default: new Date() })
   created_at: Date;

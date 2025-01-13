@@ -144,8 +144,11 @@ export class ZemsController {
                   'Veuillez renseigner tous les champs pour la mise en service',
               });
             }
+            this.zemsService.sendNotificationForAllUserInRay(id);
+
           }
         }
+
         break;
     }
 

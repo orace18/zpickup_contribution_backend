@@ -1,21 +1,19 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { UpdateCounterDto } from './dto/update-counter.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Counter } from '../Schemas/counter_schema/counter.schema';
-import { Model, Types } from 'mongoose';
-import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
-import { Zems } from '../Schemas/zems_schema/Zems.schema';
-import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
-import { NotificationService } from '../notifications/notification.service';
-import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
-import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
-import { Config } from '../Schemas/config_schema/config.schema';
-import { UsersService } from '../users/users.service';
-import { sendNotification } from '../services/helpers.service';
+import {BadRequestException, Injectable, NotFoundException,} from '@nestjs/common';
+import {UpdateCounterDto} from './dto/update-counter.dto';
+import {InjectModel} from '@nestjs/mongoose';
+import {Counter} from '../Schemas/counter_schema/counter.schema';
+import {Model, Types} from 'mongoose';
+import {Payment, PaymentStatus} from '../Schemas/payment/payment.schema';
+import {Zems} from '../Schemas/zems_schema/Zems.schema';
+import {CoursesStatus, Races} from '../Schemas/races_schema/races.schema';
+import {NotificationService} from '../notifications/notification.service';
+import {CreatePaymentDto} from '../payment/dto/create-payment.dto';
+import {DeductKilometersDto} from '../payment/dto/deduct-kilometers.dto';
+import {Config} from '../Schemas/config_schema/config.schema';
+import {UsersService} from '../users/users.service';
+import {sendNotification} from '../services/helpers.service';
+import {CounterType} from "../Schemas/counter-history_schema/counter_history.schema";
+import {CounterHistoryService} from "../counter-history/counter-history.service";
 
 @Injectable()
 export class CounterService {
@@ -27,6 +25,7 @@ export class CounterService {
     @InjectModel(Config.name) private configModel: Model<Config>,
     private notificationService: NotificationService,
     private readonly userService: UsersService,
+    private readonly counterHistoryService: CounterHistoryService,
   ) {}
 
   async createCounter(zemId: string) {
@@ -44,20 +43,21 @@ export class CounterService {
     const existingCounter = await this.counterModel.findOne({
       zem: new Types.ObjectId(zemId),
     });
-    if (existingCounter) {
-      throw new BadRequestException('Counter already exists for this Zem');
+    if (!existingCounter) {
+      const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
+
+      const counter = new this.counterModel({
+        zem: new Types.ObjectId(zemId),
+        balance_km: parseFloat(free_km.value),
+        price_per_km: 0,
+        total_km_traveled: 0,
+      });
+
+      return counter.save();
     }
 
-    const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
 
-    const counter = new this.counterModel({
-      zem: new Types.ObjectId(zemId),
-      balance_km: parseFloat(free_km.value),
-      price_per_km: 0,
-      total_km_traveled: 0,
-    });
-
-    return counter.save();
+    return zem;
   }
 
   async getCounterByZemId(zemId: string) {
@@ -162,7 +162,7 @@ export class CounterService {
     );
 
     // Générer un ID unique de transaction
-    const transactionId = `TR-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const transactionId = `TR-${Date.now()}-${Math.random().toString(36).substring(2, 3)}`;
 
     const payment = new this.paymentModel({
       counter: counter._id,
@@ -241,11 +241,13 @@ export class CounterService {
       counter.is_low_balance =
         new_balance < parseFloat(counter_min_km.value); /* seuil en km */
       await counter.save();
+      await this.counterHistoryService.create({counter: counter._id, counter_type:CounterType.INPUT,value:km_amount, reference: `Recharge #${transactionId}`});
+
 
       await this.notificationService.createNotification(
         zem.user.toString(),
         'Paiement Confirmé',
-        `Succès! Vous avez effectué un rechargement de ${createPaymentDto.price_per_km} XOF`,
+        `Succès! Vous avez effectué un rechargement de ${createPaymentDto.price_per_km} XOF soit ${km_amount} km`,
         'payment_confirmation',
         { balance: createPaymentDto.price_per_km },
       );
@@ -258,7 +260,7 @@ export class CounterService {
         };
         await sendNotification(
           'Rechargement Confirmé',
-          `Succès! Vous avez effectué un rechargement de ${createPaymentDto.price_per_km} XOF`,
+          `Succès! Vous avez effectué un rechargement de ${createPaymentDto.price_per_km} XOF soit ${km_amount} km`,
           zem_user.fcm_token,
           send_data,
         );
@@ -294,9 +296,9 @@ export class CounterService {
       throw new NotFoundException('Course non trouvée');
     }
 
-    if (counter.balance_km < deductKilometersDto.kilometers) {
+    /*if (counter.balance_km < deductKilometersDto.kilometers) {
       throw new BadRequestException('Balance en kilometre insuffisante');
-    }
+    }*/
 
     counter.balance_km -= deductKilometersDto.kilometers;
     counter.total_km_traveled += deductKilometersDto.kilometers;
@@ -304,10 +306,10 @@ export class CounterService {
     counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
 
     if (counter.is_low_balance) {
+      const title = "Kilométrage faible";
+      const msg = "Veuillez recharger votre compteur pour continuer à rouler.";
       await this.notificationService.createNotification(
-        zem.user.toString(),
-        'Solde Bas',
-        `Attention! Votre solde est bas: ${counter.balance_km} km`,
+        zem.user.toString(), title, msg,
         'low_balance',
         { balance: counter.balance_km },
       );
@@ -319,8 +321,8 @@ export class CounterService {
           more_action: 'Alerte',
         };
         await sendNotification(
-          'Solde Bas',
-          `Attention! Votre solde est bas: ${counter.balance_km} km`,
+          title,
+          msg,
           zem_user.fcm_token,
           send_data,
         );
@@ -328,10 +330,12 @@ export class CounterService {
     }
 
     if (counter.balance_km < 0) {
+      const title = "Kilométrage faible";
+      const msg = `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`;
       await this.notificationService.createNotification(
         zem.user.toString(),
-        'Solde Négatif',
-        `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`,
+          title,
+          msg,
         'negative_balance',
         { balance: counter.balance_km },
       );
@@ -343,9 +347,7 @@ export class CounterService {
           more_action: 'Alerte',
         };
         await sendNotification(
-          'Solde Négatif',
-          `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`,
-          zem_user.fcm_token,
+            title, msg, zem_user.fcm_token,
           send_data,
         );
       }
@@ -379,6 +381,90 @@ export class CounterService {
       },
       kilometers_deducted: deductKilometersDto.kilometers,
     };
+  }
+
+
+  async debitOrCreditCounter(
+    zemId: string,
+    kilometers:number,
+    reference:string,
+    type:CounterType,
+  ) {
+    const counter = await this.counterModel.findOne({
+      zem: new Types.ObjectId(zemId),
+    });
+    if (!counter) {
+      throw new NotFoundException('Aucun compteur trouvé pour ce Zem');
+    }
+
+    const zem = await this.zemsModel.findById(zemId);
+
+    switch (type){
+      case CounterType.OUTPUT:
+        counter.balance_km -= kilometers;
+        counter.total_km_traveled += kilometers;
+        break;
+      case CounterType.INPUT:
+        counter.balance_km -= kilometers;
+        break;
+    }
+
+    const kmMin = await this.configModel.findOne({ key: 'min-km' }).exec();
+    counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
+
+    if (counter.is_low_balance) {
+      const title = "Kilométrage faible";
+      const msg = "Veuillez recharger votre compteur afin d'éffectuer d'autres courses";
+      await this.notificationService.createNotification(
+        zem.user.toString(), title, msg,
+        'low_balance',
+        { balance: counter.balance_km },
+      );
+
+      const zem_user = await this.userService.findOne(zem.user.toString());
+      if (zem_user && zem_user.fcm_token) {
+        const send_data = {
+          _id: zem_user._id.toString(),
+          more_action: 'Alerte',
+        };
+        await sendNotification(
+          title,
+          msg,
+          zem_user.fcm_token,
+          send_data,
+        );
+      }
+    }
+
+    if (counter.balance_km < 0) {
+      const title = "Kilométrage faible";
+      const msg = `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`;
+      await this.notificationService.createNotification(
+        zem.user.toString(),
+          title,
+          msg,
+        'negative_balance',
+        { balance: counter.balance_km },
+      );
+
+      const zem_user = await this.userService.findOne(zem.user.toString());
+      if (zem_user && zem_user.fcm_token) {
+        const send_data = {
+          _id: zem_user._id.toString(),
+          more_action: 'Alerte',
+        };
+        await sendNotification(
+            title, msg, zem_user.fcm_token,
+          send_data,
+        );
+      }
+    }
+
+    await counter.save();
+
+    await this.counterHistoryService.create({counter: counter._id, counter_type:type,value:kilometers, reference: reference});
+
+    return counter;
   }
 
   async getTotalKilometers(zemId: string) {

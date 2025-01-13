@@ -105,9 +105,8 @@ export class UsersService {
     console.log('findUserOne', id);
     return await this.userModel.find({ phone_number: id }).exec();
   }
-
   async findUserOneByKey(
-    key: string,
+    key_co: string,
     value: string,
   ): Promise<Array<HydratedDocument<Users, {}, {}>>> {
     return await this.userModel.find({ key: value }).exec();
