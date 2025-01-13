@@ -22,6 +22,11 @@ export class ConfigsController {
     return this.configsService.findOne(+id);
   }
 
+  @Get('by-key/:key_value')
+  findOneByKey(@Param('key_value') key_value: string) {
+    return this.configsService.findConfigOneByKey(key_value);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateConfigDto: UpdateConfigDto) {
     return this.configsService.update(+id, updateConfigDto);

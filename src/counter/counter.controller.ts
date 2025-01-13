@@ -9,12 +9,19 @@ import {
   UseGuards,
   Req,
   Request,
-  HttpException, HttpStatus,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { CounterService } from './counter.service';
 import { CreateCounterDto } from './dto/create-counter.dto';
 import { UpdateCounterDto } from './dto/update-counter.dto';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
@@ -37,17 +44,18 @@ export class CounterController {
   @ApiParam({ name: 'zemId', description: 'ID of the Zem' })
   @ApiResponse({
     status: 200,
-    description: 'Returns the counter data for the specified Zem'
+    description: 'Returns the counter data for the specified Zem',
   })
   async getCounterByZemId(@Param('zemId') zemId: string) {
     return this.counterService.getCounterByZemId(zemId);
   }
 
-
-
   @Post('payment/recharge/:zemId')
   @ApiOperation({ summary: 'Recharge a Zem counter' })
-  rechargeCounter(@Param('zemId') zemId: string, @Body() createPaymentDto: CreatePaymentDto) {
+  rechargeCounter(
+    @Param('zemId') zemId: string,
+    @Body() createPaymentDto: CreatePaymentDto,
+  ) {
     return this.counterService.rechargeCounter(zemId, createPaymentDto);
   }
 
@@ -59,18 +67,6 @@ export class CounterController {
   ) {
     return this.counterService.deductKilometers(zemId, deductKilometersDto);
   }
-
-  // a tester demain avec Mr Patrick
- /* @Get('balance-after-course/:zemId/:raceId')
-  @ApiOperation({ summary: 'Get balance after a specific course' })
-  @ApiParam({ name: 'zemId', description: 'ID of the Zem' })
-  @ApiParam({ name: 'raceId', description: 'ID of the race/course' })
-  getBalanceAfterCourse(
-    @Param('zemId') zemId: string,
-    @Param('raceId') raceId: string,
-  ) {
-    return this.counterService.getBalanceAfterCourse(zemId, raceId);
-  }*/
 
   @Get('total-kilometers/:zemId')
   @ApiOperation({ summary: 'Get total kilometers traveled by a Zem' })

@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Users } from '../users_schema/Users.schema';
+import { Types } from 'mongoose';
 
 @Schema()
 export class Wallet {
-  @Prop({ type: Object, required: true })
-  user: Users
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true })
+  user: Types.ObjectId;
 
   @Prop({ required: true })
-  wallet_amount: number
+  wallet_amount: number;
 
   @Prop({ default: new Date() })
   created_at: Date;
@@ -16,4 +16,4 @@ export class Wallet {
   updated_at: Date;
 }
 
-export const WalletSchema = SchemaFactory.createForClass(Wallet)
+export const WalletSchema = SchemaFactory.createForClass(Wallet);

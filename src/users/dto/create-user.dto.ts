@@ -1,13 +1,15 @@
 import {
-  IsDate, IsDateString,
-  IsEmail, IsEnum,
-  IsNotEmpty, IsNumberString, IsObject,
+  IsDate,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumberString,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { UserType } from '../../Schemas/users_schema/Users.schema';
-import { Zems } from '../../Schemas/zems_schema/Zems.schema';
-import {Types} from "mongoose";
+import { Types } from 'mongoose';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @IsOptional()
@@ -17,6 +19,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   firstname?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ type: 'string', format: 'binary' })
+  user_profile_image?: string;
 
   @IsOptional()
   @IsString()
@@ -60,7 +67,7 @@ export class CreateUserDto {
   user_type: UserType;
 
   @IsOptional()
-  zem: Types.ObjectId
+  zem: Types.ObjectId;
 
   @IsDate()
   created_at: Date;

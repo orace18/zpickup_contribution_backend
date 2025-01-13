@@ -1,11 +1,20 @@
-import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { CardType, ProfileValidationStatus } from '../../Schemas/zems_schema/Zems.schema';
-import {ApiProperty} from "@nestjs/swagger";
-import {Users} from "../../Schemas/users_schema/Users.schema";
-import {Types} from "mongoose";
+import {
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import {
+  CardType,
+  ProfileValidationStatus,
+} from '../../Schemas/zems_schema/Zems.schema';
+import { ApiProperty } from '@nestjs/swagger';
+import { Users } from '../../Schemas/users_schema/Users.schema';
+import { Types } from 'mongoose';
 export class CreateZemDto {
-
-
   @IsEnum(CardType)
   @IsNotEmpty()
   card_type: CardType;
@@ -37,7 +46,7 @@ export class CreateZemDto {
 
   @IsNotEmpty()
   @IsString()
-  number_plate: string
+  number_plate: string;
 
   @IsEnum(ProfileValidationStatus)
   @IsOptional()
@@ -45,6 +54,5 @@ export class CreateZemDto {
 
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
-  plate_picture: any
-
+  plate_picture: any;
 }

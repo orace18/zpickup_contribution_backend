@@ -15,6 +15,9 @@ export enum PaymentStatus {
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Payment {
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
+  user: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Counter', required: true })
   counter: Types.ObjectId;
 
