@@ -76,7 +76,7 @@ export class RacesService {
           service.service_latitude,
           service.service_longitude
       );
-      return distance <= parseFloat(ray.value); // Comparaison
+      return (service.ray==null ? (distance <= parseFloat(ray.value)) : (distance <= service.ray));
     });
     const tokens = [];
     let body_notification_zem =
@@ -429,10 +429,19 @@ export class RacesService {
           zem.service_latitude,
           zem.service_longitude,
         );
-        if (km <= parseFloat(ray.value)) {
-          zem.service_km = km;
-          zem.service_duration = estimateDuration(km).minutes;
-          available_zems.push(zem);
+
+        if(zem.ray==null){
+          if (km <= parseFloat(ray.value)) {
+            zem.service_km = km;
+            zem.service_duration = estimateDuration(km).minutes;
+            available_zems.push(zem);
+          }
+        }else{
+          if (km <= zem.ray) {
+            zem.service_km = km;
+            zem.service_duration = estimateDuration(km).minutes;
+            available_zems.push(zem);
+          }
         }
       }
     }
@@ -471,10 +480,18 @@ export class RacesService {
         zem.service_latitude,
         zem.service_longitude,
       );
-      if (km <= parseFloat(ray.value)) {
-        race.service_km = km;
-        race.service_duration = estimateDuration(km).minutes;
-        availables.push(race);
+      if(zem.ray==null){
+        if (km <= parseFloat(ray.value)) {
+          race.service_km = km;
+          race.service_duration = estimateDuration(km).minutes;
+          availables.push(race);
+        }
+      }else{
+        if (km <= zem.ray) {
+          race.service_km = km;
+          race.service_duration = estimateDuration(km).minutes;
+          availables.push(race);
+        }
       }
     }
     availables.sort((a, b) => a.service_km - b.service_km);

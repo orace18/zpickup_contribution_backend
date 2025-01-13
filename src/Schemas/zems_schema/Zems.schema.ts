@@ -64,6 +64,9 @@ export class Zems {
   @Prop({ type: Number, required: false })
   service_duration: number;
 
+  @Prop({ type: Number, required: false, default:null })
+  ray: number;
+
   @Prop({ default: null })
   validated_at: Date;
 

@@ -58,7 +58,7 @@ export class ZemsService {
             zem.service_latitude,
             zem.service_longitude
         );
-        return distance <= parseFloat(ray.value); // Comparaison
+        return (zem.ray==null ? (distance <= parseFloat(ray.value)) : (distance <= zem.ray));
       });
       const tokens = [];
       let body_notification_zem =
