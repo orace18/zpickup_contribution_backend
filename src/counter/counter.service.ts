@@ -40,11 +40,13 @@ export class CounterService {
       );
     }
 
-    const existingCounter = await this.counterModel.findOne({
+    let existingCounter = await this.counterModel.findOne({
       zem: new Types.ObjectId(zemId),
     });
+    const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
+    const km_kdo_for_zem = await this.configModel.findOne({ key: 'km-kdo-for-zem' }).exec();
+
     if (!existingCounter) {
-      const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
 
       const counter = new this.counterModel({
         zem: new Types.ObjectId(zemId),
@@ -53,7 +55,11 @@ export class CounterService {
         total_km_traveled: 0,
       });
 
-      return counter.save();
+      existingCounter = await counter.save();
+    }
+
+    if(existingCounter && parseInt(km_kdo_for_zem.value)==1){
+      await this.counterHistoryService.create({counter: existingCounter._id, counter_type:CounterType.INPUT,value:parseFloat(free_km.value), reference: `Km kdo de bienvenu`});
     }
 
 

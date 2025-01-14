@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import {BadRequestException, forwardRef, Inject, Injectable} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import {Model, Types} from 'mongoose';
 import {Wallet} from '../Schemas/wallet_schema/wallet.schema';
@@ -18,6 +18,7 @@ export class WalletService {
     @InjectModel(CreditWallet.name)
     private creditWalletModel: Model<CreditWallet>,
     private notificationService: NotificationService,
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
   ) {}
 

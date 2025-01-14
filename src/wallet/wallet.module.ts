@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {forwardRef, Module} from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { WalletController } from './wallet.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,6 +15,7 @@ import {
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersService } from '../users/users.service';
 import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
+import {UsersModule} from "../users/users.module";
 
 @Module({
   imports: [
@@ -26,6 +27,8 @@ import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
       { name: CreditWallet.name, schema: CreditWalletSchema },
     ]),
     NotificationsModule,
+    forwardRef(() => UsersModule)
+
   ],
   controllers: [WalletController],
   providers: [WalletService, UsersService],

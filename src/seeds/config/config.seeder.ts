@@ -60,6 +60,11 @@ export class ConfigSeeder {
         value: '500',
         description: 'Montant minimum de charge du portefeuille',
       },
+        {
+        key: 'km-kdo-for-zem',
+        value: '1',
+        description: 'Activer/Desactiver le km gratuit offer aux nouveaux conducteurs',
+      },
 
     ];
     const bulkOps = tabs.map((item) => ({

@@ -11,6 +11,7 @@ import { UsersModule } from '../users/users.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import {Config, ConfigSchema} from "../Schemas/config_schema/config.schema";
 import {Races, RacesSchema} from "../Schemas/races_schema/races.schema";
+import {WalletModule} from "../wallet/wallet.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import {Races, RacesSchema} from "../Schemas/races_schema/races.schema";
     UsersModule,
     CounterModule,
     NotificationsModule,
+    WalletModule
   ],
   controllers: [ZemsController],
   providers: [ZemsService, ZemValidationService, UsersService],

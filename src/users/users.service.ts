@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {forwardRef, Inject, Injectable} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Users } from '../Schemas/users_schema/Users.schema';
 import { HydratedDocument, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import {WalletService} from "../wallet/wallet.service";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(Users.name) private readonly userModel: Model<Users>,
+      @Inject(forwardRef(() => WalletService))
+     private readonly walletService: WalletService
   ) {}
 
   /* Méthode pour générer un code unique de parrainage */
@@ -48,7 +51,11 @@ export class UsersService {
       userData.password = await bcrypt.hash(userData.password, salt);
     }
     const user = new this.userModel(userData);
-    return user.save();
+    let userResult = await user.save();
+    console.log("getWalletBalance",userResult["_id"]);
+    this.walletService.getWalletBalance(userResult._id.toString());
+
+    return userResult;
   }
 
   async update(id: string, updateData: Partial<Users>): Promise<Users | null> {

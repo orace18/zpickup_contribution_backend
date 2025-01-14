@@ -19,6 +19,7 @@ import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
 import { UsersService } from '../users/users.service';
 import {CounterHistoryService} from "../counter-history/counter-history.service";
 import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_schema/counter_history.schema";
+import {WalletModule} from "../wallet/wallet.module";
 
 @Module({
   imports: [
@@ -31,7 +32,9 @@ import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_s
       { name: Config.name, schema: ConfigSchema },
       { name: Notification.name, schema: NotificationSchema },
       { name: CounterHistory.name, schema: CounterHistorySchema },
-    ]),
+    ],
+    ),
+    WalletModule
   ],
   controllers: [CounterController],
   providers: [CounterService, NotificationService, UsersService,CounterHistoryService],
