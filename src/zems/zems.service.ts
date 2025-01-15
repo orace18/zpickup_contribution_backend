@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
@@ -89,5 +89,26 @@ export class ZemsService {
         );
       }
     }
+  }
+
+  async updateRay(id: string, ray: number) {
+    const zem = await this.zemModel.findById(id);
+    
+    if (!zem) {
+      throw new HttpException(
+        'Zem non trouvé',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    zem.ray = ray;
+    await zem.save();
+
+    // Si le zem est en service, on envoie les notifications avec le nouveau rayon
+    if (zem.service) {
+      await this.sendNotificationForAllUserInRay(id);
+    }
+
+    return zem;
   }
 }

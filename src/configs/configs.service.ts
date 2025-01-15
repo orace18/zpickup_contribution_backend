@@ -30,25 +30,6 @@ export class ConfigsService {
     return await this.configModel.findOne({ "key": key_value }).exec();
   }
 
-  async updateConfigByKey(key_value: string, updateConfigDto: UpdateConfigDto) {
-    try {
-      const updatedConfig = await this.configModel.findOneAndUpdate(
-        { key: key_value },
-        { $set: { value: updateConfigDto.value } },
-        { new: true }
-      ).exec();
-
-      if (!updatedConfig) {
-        throw new Error('Configuration not found');
-      }
-
-      return updatedConfig;
-    } catch (error) {
-      throw new Error(`Error updating config: ${error.message}`);
-    }
-  }
-
-
   update(id: number, updateConfigDto: UpdateConfigDto) {
     return `This action updates a #${id} config`;
   }

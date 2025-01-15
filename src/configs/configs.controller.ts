@@ -27,14 +27,6 @@ export class ConfigsController {
     return this.configsService.findConfigOneByKey(key_value);
   }
 
-  @Patch('by-key/:key_value')
-  updateByKey(
-    @Param('key_value') key_value: string,
-    @Body() updateConfigDto: UpdateConfigDto
-  ) {
-    return this.configsService.updateConfigByKey(key_value, updateConfigDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.configsService.remove(+id);
