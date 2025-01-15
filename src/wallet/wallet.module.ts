@@ -16,22 +16,23 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersService } from '../users/users.service';
 import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
 import {UsersModule} from "../users/users.module";
+import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Wallet.name, schema: WalletSchema },
-      { name: Users.name, schema: UserSchema },
       { name: Config.name, schema: ConfigSchema },
       { name: WalletTransaction.name, schema: WalletTransactionSchema },
       { name: CreditWallet.name, schema: CreditWalletSchema },
+      { name: Users.name, schema: UserSchema }, 
     ]),
     NotificationsModule,
-    forwardRef(() => UsersModule)
-
+    forwardRef(() => UsersModule),
+    forwardRef(() => ReferenceHistoryModule),
   ],
   controllers: [WalletController],
-  providers: [WalletService, UsersService],
+  providers: [WalletService],
   exports: [WalletService],
 })
 export class WalletModule {}

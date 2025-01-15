@@ -4,31 +4,46 @@ import { Users } from '../Schemas/users_schema/Users.schema';
 import { HydratedDocument, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import {WalletService} from "../wallet/wallet.service";
+import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(Users.name) private readonly userModel: Model<Users>,
-      @Inject(forwardRef(() => WalletService))
-     private readonly walletService: WalletService
+    @Inject(forwardRef(() => WalletService))
+    private readonly walletService: WalletService,
+    @Inject(forwardRef(() => ReferenceHistoryService))
+    private readonly referenceHistoryService: ReferenceHistoryService,
   ) {}
 
   /* Méthode pour générer un code unique de parrainage */
-  async generateUniqueSponsorshipCode(): Promise<string> {
-    let sponsorship_code;
+  async generateUniqueCode(prefix: string = 'ZP'): Promise<string> {
+    let sponsorship_code : string;
     let isUnique = false;
 
     while (!isUnique) {
-      sponsorship_code = `ZP-${Math.floor(100000 + Math.random() * 900000).toString()}`;
+      const randomNum = Math.floor(100000 + Math.random() * 900000);
+      sponsorship_code = `${prefix}-${randomNum}`;
       const existingUser = await this.userModel
-        .findOne({ sponsorship_code })
-        .exec();
+        .findOne({ sponsorship_code: sponsorship_code });
       if (!existingUser) {
         isUnique = true;
       }
     }
 
     return sponsorship_code;
+  }
+
+  async handleReferralCode(userId: string, sponsorshipCode: string) {
+    if (!sponsorshipCode) return;
+
+    const referrer = await this.userModel.findOne({ sponsorship_code: sponsorshipCode });
+    if (!referrer) return;
+
+    await this.referenceHistoryService.createReferenceHistory(
+      referrer._id.toString(),
+      userId
+    );
   }
 
   async findByPhone(phone_number: string): Promise<Users> {
@@ -45,8 +60,55 @@ export class UsersService {
     return this.userModel.findOne({ verification_code }).exec();
   }
 
+  /* Correction de la méthode findOne pour retourner un utilisateur */
+  async findOne(id: string): Promise<Users | null> {
+    return this.userModel
+      .findById(id)
+      .populate('zem')
+      .populate({
+        path: 'race',
+        match: {
+          status: {
+            $in: ['pending', 'accepted', 'start'],
+          },
+        },
+      })
+      .lean()
+      .exec();
+  }
+
   async createTemporary(userData: Partial<Users>): Promise<Users> {
-    if (userData.password) {
+
+    try {
+      // Générer un code de parrainage unique
+      const referalCode = await this.generateUniqueCode();
+      userData.referal_code = referalCode;
+
+      // Hasher le mot de passe si présent
+      if (userData.password) {
+        const salt = await bcrypt.genSalt();
+        userData.password = await bcrypt.hash(userData.password, salt);
+      }
+
+      // Créer l'utilisateur
+      const user = new this.userModel(userData);
+      const savedUser = await user.save();
+
+      // Initialiser le wallet
+      await this.walletService.getWalletBalance(savedUser._id.toString());
+
+      // Gérer le code de parrainage si fourni
+      if (userData.sponsorship_code) {
+        await this.handleReferralCode(savedUser._id.toString(), userData.sponsorship_code);
+      }
+
+      return savedUser;
+    } catch (error) {
+      throw new Error(`Erreur lors de la création de l'utilisateur: ${error.message}`);
+    }
+
+
+    /* if (userData.password) {
       const salt = await bcrypt.genSalt();
       userData.password = await bcrypt.hash(userData.password, salt);
     }
@@ -55,7 +117,7 @@ export class UsersService {
     console.log("getWalletBalance",userResult["_id"]);
     this.walletService.getWalletBalance(userResult._id.toString());
 
-    return userResult;
+    return userResult; */
   }
 
   async update(id: string, updateData: Partial<Users>): Promise<Users | null> {
@@ -87,23 +149,6 @@ export class UsersService {
         "Une erreur est survenue lors de la mise à jour de l'utilisateur",
       );
     }
-  }
-
-  /* Correction de la méthode findOne pour retourner un utilisateur */
-  async findOne(id: string): Promise<Users | null> {
-    return this.userModel
-      .findById(id)
-      .populate('zem')
-      .populate({
-        path: 'race',
-        match: {
-          status: {
-            $in: ['pending', 'accepted', 'start'],
-          },
-        },
-      })
-      .lean()
-      .exec();
   }
 
   async findUserOne(

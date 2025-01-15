@@ -25,6 +25,7 @@ import { PaymentModule } from './payment/payment.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { notificationConfig } from './notifications/notification.config';
+import { ReferenceHistoryModule } from './reference_history/reference_history.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { notificationConfig } from './notifications/notification.config';
     CounterModule,
     PaymentModule,
     NotificationsModule,
+    ReferenceHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

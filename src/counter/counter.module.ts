@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CounterService } from './counter.service';
 import { CounterController } from './counter.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -20,12 +20,14 @@ import { UsersService } from '../users/users.service';
 import {CounterHistoryService} from "../counter-history/counter-history.service";
 import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_schema/counter_history.schema";
 import {WalletModule} from "../wallet/wallet.module";
+import { ReferenceHistory, ReferenceHistorySchema } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
+import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Counter.name, schema: CounterSchema },
-      { name: Users.name, schema: UserSchema },
       { name: Payment.name, schema: PaymentSchema },
       { name: Zems.name, schema: ZemsSchema },
       { name: Races.name, schema: RacesSchema },
@@ -34,10 +36,12 @@ import {WalletModule} from "../wallet/wallet.module";
       { name: CounterHistory.name, schema: CounterHistorySchema },
     ],
     ),
-    WalletModule
+    forwardRef(() => WalletModule),
+    forwardRef(() => ReferenceHistoryModule),
+    forwardRef(() => UsersModule), // Ajout de cette ligne
   ],
   controllers: [CounterController],
-  providers: [CounterService, NotificationService, UsersService,CounterHistoryService],
+  providers: [CounterService, NotificationService,CounterHistoryService],
   exports: [CounterService],
 })
 export class CounterModule {}

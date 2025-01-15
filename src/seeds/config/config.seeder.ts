@@ -10,7 +10,7 @@ import {
 export class ConfigSeeder {
   constructor(
     @InjectModel(Config.name) private configModel: Model<ConfigDocument>,
-  ) {}
+  ) { }
 
   async seed() {
     const tabs = [
@@ -55,16 +55,21 @@ export class ConfigSeeder {
         value: '1',
         description: 'Bonus par course terminée pour le zem',
       },
-        {
+      {
         key: 'min-recharge-amount',
         value: '500',
         description: 'Montant minimum de charge du portefeuille',
       },
-        {
+      {
         key: 'km-kdo-for-zem',
         value: '1',
         description: 'Activer/Desactiver le km gratuit offer aux nouveaux conducteurs',
       },
+      {
+        key: 'referal-code-bonus',
+        value: '20',
+        description: 'Bonus par parrainage',
+      }
 
     ];
     const bulkOps = tabs.map((item) => ({

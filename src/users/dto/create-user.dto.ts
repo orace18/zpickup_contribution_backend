@@ -40,6 +40,10 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
+  referal_code?: string;
+
+  @IsOptional()
+  @IsString()
   password?: string;
 
   @IsOptional()

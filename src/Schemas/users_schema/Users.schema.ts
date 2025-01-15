@@ -32,6 +32,9 @@ export class Users {
   email_address?: string;
 
   @Prop({ default: null })
+  referal_code?: string;
+  
+  @Prop({ default: null })
   password?: string;
 
   @Prop()

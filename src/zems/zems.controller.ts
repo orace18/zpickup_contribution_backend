@@ -159,26 +159,4 @@ export class ZemsController {
   remove(@Param('id') id: string) {
     return this.zemsService.remove(id);
   }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('update-rayon/:id')
-  async updateRay(
-    @Param('id') id: string,
-    @Body('ray') ray: number,
-    @Request() req,
-  ) {
-    if (ray === undefined) {
-      throw new BadRequestException({
-        message: 'La valeur du rayon est requise',
-      });
-    }
-
-    if (ray < 0) {
-      throw new BadRequestException({
-        message: 'Le rayon doit être un nombre positif',
-      });
-    }
-
-    return this.zemsService.updateRay(id, ray);
-  }
 }

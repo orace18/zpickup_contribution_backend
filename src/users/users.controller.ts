@@ -200,7 +200,7 @@ export class UsersController {
     // Si le code de parrainage n'existe pas, en génère un
     if (!user.sponsorship_code) {
       const sponsorship_code =
-        await this.usersService.generateUniqueSponsorshipCode();
+        await this.usersService.generateUniqueCode();
       updateUserDto = { ...updateUserDto, sponsorship_code };
     }
 
