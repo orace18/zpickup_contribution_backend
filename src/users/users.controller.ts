@@ -21,12 +21,15 @@ import { UserType } from '../Schemas/users_schema/Users.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { sendMessage } from '../services/helpers.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly twilioService: TwilioService,
+    private readonly referenceHistoryService: ReferenceHistoryService,
+
   ) {}
 
   @Post('register/phone_number')
@@ -180,36 +183,57 @@ export class UsersController {
   }
 
   @Patch('complete-registration/:id')
-  @UseInterceptors(FileInterceptor('user_profile_image'))
-  async update(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    // Récupère l'utilisateur par ID
+@UseInterceptors(FileInterceptor('user_profile_image'))
+async update(
+  @Param('id') id: string,
+  @Body() updateUserDto: UpdateUserDto,
+  @UploadedFile() file: Express.Multer.File,
+) {
+  try {
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
     }
 
-    // Si un fichier est envoyé, on met à jour l'image de profil avec le chemin du fichier
     if (file) {
       updateUserDto.user_profile_image = file.path;
     }
 
-    // Si le code de parrainage n'existe pas, en génère un
+    // Générer un code de parrainage unique si l'utilisateur n'en a pas
     if (!user.sponsorship_code) {
-      const sponsorship_code =
-        await this.usersService.generateUniqueCode();
-      updateUserDto = { ...updateUserDto, sponsorship_code };
+      const sponsorship_code = await this.usersService.generateUniqueCode();
+      updateUserDto.sponsorship_code = sponsorship_code;
     }
 
-    // Mettez à jour l'utilisateur avec les nouvelles données
-    return await this.usersService.update(id, {
+    // Gérer le code de parrainage si fourni
+    if (updateUserDto.referal_code) {
+      // Utiliser findBySponsorshipCode au lieu de findOne
+      const referrer = await this.usersService.findBySponsorshipCode(updateUserDto.referal_code);
+
+      if (referrer) {
+        await this.referenceHistoryService.createReferenceHistory(
+          referrer._id.toString(),
+          id
+        );
+      } else {
+        throw new HttpException('Code de parrainage invalide', HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    // Mettre à jour l'utilisateur
+    const updatedUser = await this.usersService.update(id, {
       ...updateUserDto,
       updated_at: new Date(),
     });
+
+    return updatedUser;
+  } catch (error) {
+    throw new HttpException(
+      error.message || 'Une erreur est survenue',
+      error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
+}
 
   @Post('forgot-password/send-code')
   async sendVerificationCode(

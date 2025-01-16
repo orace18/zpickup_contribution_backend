@@ -15,30 +15,43 @@ export class ReferenceHistoryService {
     @InjectModel(ReferenceHistory.name)
     private referenceHistoryModel: Model<ReferenceHistory>,
     @InjectModel(Config.name) private configModel: Model<Config>,
-    private readonly walletService: WalletService,
+    private walletService: WalletService,
   ) { }
 
-  async createReferenceHistory(refferer: string, refered: string) {
-    const bonusAmount = await this.configModel.findOne({ key: 'referal-code-bonus' }).exec();
-
-    // crediter le wallet du parrain
-    await this.walletService.creditWalletUserCustomBalance(
-      refferer,
-      parseFloat(bonusAmount.value),
-      'Bonus de parrainage',
-      `Vous avez reçu ${bonusAmount.value} XOF pour avoir parrainé un nouvel utilisateur`,
-      TransactionType.BONUS,
-    );
-
-    // enregistrer l'historique
-    const referencehistory = await this.referenceHistoryModel.create({
-      referrer: new Types.ObjectId(refferer),
-      refered: new Types.ObjectId(refered),
-      bonus_amount: parseFloat(bonusAmount.value),
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
-    return referencehistory;
+  async createReferenceHistory(referrerId: string, referredId: string) {
+    try {
+      // Récupérer le montant du bonus depuis la configuration
+      const bonusConfig = await this.configModel.findOne({ key: 'referal-code-bonus' }).exec();
+      const bonusAmount = bonusConfig ? parseFloat(bonusConfig.value) : 20; // Valeur par défaut si non trouvée
+  
+      // Vérifier que bonusAmount est bien un nombre
+      if (isNaN(bonusAmount)) {
+        throw new Error('Le montant du bonus doit être un nombre');
+      }
+  
+      // Créer l'historique de parrainage
+      const referenceHistory = await this.referenceHistoryModel.create({
+        referrer: new Types.ObjectId(referrerId),
+        referred: new Types.ObjectId(referredId),
+        bonus_amount: bonusAmount, // Utiliser directement le nombre
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+  
+      // Créditer le wallet du parrain
+      await this.walletService.creditWalletUserCustomBalance(
+        referrerId,
+        bonusAmount,
+        'Bonus Parrainage',
+        `Vous avez reçu ${bonusAmount} XOF pour avoir parrainé un nouvel utilisateur`,
+        TransactionType.BONUS,
+      );
+  
+      return referenceHistory;
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'historique de parrainage:', error);
+      throw error;
+    }
   }
 
   async findAll() {
@@ -67,10 +80,33 @@ export class ReferenceHistoryService {
     return this.referenceHistoryModel.findByIdAndDelete(id);
   }
 
-  async findByReferrer(referrerId: string) {
-    return this.referenceHistoryModel
-      .find({ referrer: new Types.ObjectId(referrerId) })
-      .populate('referred', 'firstname lastname phone_number');
+  async findByReferrerWithDetails(referrerId: string) {
+    try {
+      const referrals = await this.referenceHistoryModel
+        .find({ referrer: new Types.ObjectId(referrerId) })
+        .populate('referrer', 'firstname lastname phone_number user_profile_image sponsorship_code')
+        .populate('referred', 'firstname lastname phone_number user_profile_image created_at')
+        .sort({ created_at: -1 })
+        .exec();
+  
+      const totalBonus = referrals.reduce((sum, referral) => sum + referral.bonus_amount, 0);
+  
+      const totalReferred = referrals.length;
+  
+      return {
+        referrer: referrals[0]?.referrer || null,
+        totalBonus,
+        totalReferred,
+        referrals: referrals.map(referral => ({
+          referred: referral.referred,
+          bonus_amount: referral.bonus_amount,
+          created_at: referral.created_at
+        }))
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails de parrainage:', error);
+      throw error;
+    }
   }
 
   create(createReferenceHistoryDto: CreateReferenceHistoryDto) {

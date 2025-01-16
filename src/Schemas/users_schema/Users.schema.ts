@@ -43,7 +43,7 @@ export class Users {
   @Prop({ default: null })
   birthday?: string;
 
-  @Prop()
+  @Prop({ default: null })
   sponsorship_code?: string;
 
   @Prop()

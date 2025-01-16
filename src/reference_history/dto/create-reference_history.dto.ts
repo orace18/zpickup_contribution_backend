@@ -1,4 +1,4 @@
-import { IsMongoId, IsNumber, IsNotEmpty } from 'class-validator';
+import { IsMongoId, IsNumber, IsNotEmpty, IsString } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class CreateReferenceHistoryDto {
@@ -9,6 +9,10 @@ export class CreateReferenceHistoryDto {
   @IsNotEmpty()
   @IsMongoId()
   referred: Types.ObjectId;
+
+  @IsNotEmpty()
+  @IsString()
+  referal_code: string;
 
   @IsNotEmpty()
   @IsNumber()

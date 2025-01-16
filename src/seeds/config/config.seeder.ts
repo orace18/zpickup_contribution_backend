@@ -69,8 +69,37 @@ export class ConfigSeeder {
         key: 'referal-code-bonus',
         value: '20',
         description: 'Bonus par parrainage',
-      }
-
+      },
+      {
+        key: 'referal-1-title',
+        value: 'Etape 1: Partagez votre code de parrainage',
+        description: 'titre de l\'etape 1',
+      },
+      {
+        key: 'referal-2-title',
+        value: 'Etape 2: Votre ami active son compte',
+        description: 'titre de l\'etape 2',
+      },
+      {
+        key: 'referal-3-title',
+        value: 'Etape 3: Recevez XX F CFA pour de l\'inscription de votre ami',
+        description: 'titre de l\'etape 3',
+      },
+      {
+        key: 'referal-4-title',
+        value: 'Etape 4: Recevez XX F CFA pour les 5 premières courses effectuées par votre ami',
+        description: 'titre de l\'etape 4',
+      },
+      {
+        key: 'referal-1-description',
+        value: 'Description: Vous pouvez inviter des amis qui sont nouveaux ou reviennent sur ZPickUp',
+        description: 'description de l\'etape 1',
+      },
+      {
+        key: 'referal-2-description',
+        value: 'Description: Votre amis sera redirige sur l\'application pour creer et activer sont compte ZPickUp',
+        description: 'description de l\'etape 2',
+      },
     ];
     const bulkOps = tabs.map((item) => ({
       updateOne: {

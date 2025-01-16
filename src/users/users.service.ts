@@ -1,4 +1,4 @@
-import {forwardRef, Inject, Injectable} from '@nestjs/common';
+import {forwardRef, HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Users } from '../Schemas/users_schema/Users.schema';
 import { HydratedDocument, Model } from 'mongoose';
@@ -34,16 +34,24 @@ export class UsersService {
     return sponsorship_code;
   }
 
-  async handleReferralCode(userId: string, sponsorshipCode: string) {
-    if (!sponsorshipCode) return;
+  async handleReferralCode(newUserId: string, referalCode: string) {
+    try {
+      // Recherche le parrain par son sponsorship_code
+      const referrer = await this.userModel.findOne({ sponsorship_code: referalCode });
+      if (!referrer) {
+        throw new HttpException('Code de parrainage invalide', HttpStatus.BAD_REQUEST);
+      }
 
-    const referrer = await this.userModel.findOne({ sponsorship_code: sponsorshipCode });
-    if (!referrer) return;
+      // Crée l'historique de parrainage et attribue le bonus
+      await this.referenceHistoryService.createReferenceHistory(
+        referrer._id.toString(),
+        newUserId
+      );
 
-    await this.referenceHistoryService.createReferenceHistory(
-      referrer._id.toString(),
-      userId
-    );
+    } catch (error) {
+      console.error('Erreur lors du traitement du code de parrainage:', error);
+      throw error;
+    }
   }
 
   async findByPhone(phone_number: string): Promise<Users> {
@@ -81,8 +89,8 @@ export class UsersService {
 
     try {
       // Générer un code de parrainage unique
-      const referalCode = await this.generateUniqueCode();
-      userData.referal_code = referalCode;
+      const sponsorship_code = await this.generateUniqueCode();
+      userData.sponsorship_code = sponsorship_code;
 
       // Hasher le mot de passe si présent
       if (userData.password) {
@@ -98,8 +106,8 @@ export class UsersService {
       await this.walletService.getWalletBalance(savedUser._id.toString());
 
       // Gérer le code de parrainage si fourni
-      if (userData.sponsorship_code) {
-        await this.handleReferralCode(savedUser._id.toString(), userData.sponsorship_code);
+      if (userData.referal_code) {
+        await this.handleReferralCode(savedUser._id.toString(), userData.referal_code);
       }
 
       return savedUser;
@@ -149,6 +157,10 @@ export class UsersService {
         "Une erreur est survenue lors de la mise à jour de l'utilisateur",
       );
     }
+  }
+
+  async findBySponsorshipCode(sponsorshipCode: string): Promise<Users | null> {
+    return this.userModel.findOne({ sponsorship_code: sponsorshipCode }).exec();
   }
 
   async findUserOne(

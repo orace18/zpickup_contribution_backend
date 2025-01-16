@@ -5,7 +5,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ReferenceHistory, ReferenceHistorySchema } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
 import { Config, ConfigSchema } from 'src/Schemas/config_schema/config.schema';
 import { WalletModule } from 'src/wallet/wallet.module';
-import { NotificationSchema } from 'src/Schemas/notifications_schema/notifications.schema';
 
 @Module({
   imports: [

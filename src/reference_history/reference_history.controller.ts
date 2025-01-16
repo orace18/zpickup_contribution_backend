@@ -23,9 +23,13 @@ export class ReferenceHistoryController {
   }
 
   @Get('referrer/:id')
-  async findByReferrer(@Param('id') id: string) {
-    return this.referenceHistoryService.findByReferrer(id);
-  }
+async findByReferrer(@Param('id') id: string) {
+  const referralDetails = await this.referenceHistoryService.findByReferrerWithDetails(id);
+  return {
+    success: true,
+    data: referralDetails
+  };
+}
 
   @Patch(':id')
   async update(
