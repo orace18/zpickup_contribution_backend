@@ -84,27 +84,34 @@ export class ReferenceHistoryService {
     try {
       const referrals = await this.referenceHistoryModel
         .find({ referrer: new Types.ObjectId(referrerId) })
-        .populate('referrer', 'firstname lastname phone_number user_profile_image sponsorship_code')
         .populate('referred', 'firstname lastname phone_number user_profile_image created_at')
         .sort({ created_at: -1 })
         .exec();
+
+      return referrals;
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails de parrainage:', error);
+      throw error;
+    }
+  }
+
+  async getReferralStats(referrerId: string) {
+    try {
+      const referrals = await this.referenceHistoryModel
+        .find({ referrer: new Types.ObjectId(referrerId) })
+        .select('bonus_amount')
+        .exec();
   
       const totalBonus = referrals.reduce((sum, referral) => sum + referral.bonus_amount, 0);
-  
       const totalReferred = referrals.length;
   
       return {
-        referrer: referrals[0]?.referrer || null,
         totalBonus,
-        totalReferred,
-        referrals: referrals.map(referral => ({
-          referred: referral.referred,
-          bonus_amount: referral.bonus_amount,
-          created_at: referral.created_at
-        }))
+        totalReferred
       };
     } catch (error) {
-      console.error('Erreur lors de la récupération des détails de parrainage:', error);
+      console.error('Erreur lors du calcul des statistiques de parrainage:', error);
       throw error;
     }
   }

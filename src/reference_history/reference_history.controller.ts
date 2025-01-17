@@ -24,11 +24,12 @@ export class ReferenceHistoryController {
 
   @Get('referrer/:id')
 async findByReferrer(@Param('id') id: string) {
-  const referralDetails = await this.referenceHistoryService.findByReferrerWithDetails(id);
-  return {
-    success: true,
-    data: referralDetails
-  };
+  return await this.referenceHistoryService.findByReferrerWithDetails(id);
+}
+
+@Get('referral-stats/:id')
+async getReferralStats(@Param('id') id: string) {
+  return this.referenceHistoryService.getReferralStats(id);
 }
 
   @Patch(':id')
