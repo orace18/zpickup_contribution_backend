@@ -1,34 +1,38 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { FaqService } from './faq.service';
 import { CreateFaqDto } from './dto/create-faq.dto';
 import { UpdateFaqDto } from './dto/update-faq.dto';
+import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('faq')
+@UseGuards(JwtAuthGuard)
 @Controller('faq')
 export class FaqController {
   constructor(private readonly faqService: FaqService) {}
 
-  @Post()
-  create(@Body() createFaqDto: CreateFaqDto) {
-    return this.faqService.create(createFaqDto);
+  @Post('create-faq')
+  createFAQ(@Body() createFaqDto: CreateFaqDto) {
+    return this.faqService.createFAQ(createFaqDto);
   }
 
-  @Get()
-  findAll() {
-    return this.faqService.findAll();
+  @Get('all-faq')
+  findAllFAQ() {
+    return this.faqService.findAllFAQ();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.faqService.findOne(+id);
+  @Patch('update-faq/:id')
+  updateFAQ(@Param('id') id: string, @Body() updateFaqDto: UpdateFaqDto) {
+    return this.faqService.updateFAQ(id, updateFaqDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFaqDto: UpdateFaqDto) {
-    return this.faqService.update(+id, updateFaqDto);
+  @Get('by-faq-key/:faq_key')
+  findByKey(@Param('faq_key') faq_key: string) {
+    return this.faqService.findByKey(faq_key);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.faqService.remove(+id);
+  @Delete('delete-faq/:id')
+  removeFAQ(@Param('id') id: string) {
+    return this.faqService.removeFAQ(id);
   }
 }

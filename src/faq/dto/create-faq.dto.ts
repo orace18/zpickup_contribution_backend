@@ -1,6 +1,11 @@
-import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
+import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateFaqDto {
+  
+  @IsOptional()
+  @IsString()
+  key?: string;
+
   @IsString()
   @IsNotEmpty()
   title: string
@@ -10,12 +15,6 @@ export class CreateFaqDto {
   description: string
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   youtube_video_link: string
-
-  @IsDateString()
-  created_at: Date;
-
-  @IsDateString()
-  updated_at: Date;
 }
