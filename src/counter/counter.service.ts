@@ -411,7 +411,7 @@ export class CounterService {
         counter.total_km_traveled += kilometers;
         break;
       case CounterType.INPUT:
-        counter.balance_km -= kilometers;
+        counter.balance_km += kilometers;
         break;
     }
 
