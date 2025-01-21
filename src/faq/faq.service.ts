@@ -24,11 +24,7 @@ export class FaqService {
 
   // fonction pour la recupération de tous les FAQ
   async findAllFAQ(): Promise<FAQ[]> {
-    return this.faqModel.find({
-      key: null
-    }).sort({
-      created_at: -1
-    })
+    return this.faqModel.find().exec();
   }
 
   // fonction pour mettre à jour un FAQ

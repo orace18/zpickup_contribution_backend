@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
+export type FAQDocument = FAQ & Document;
+
 @Schema()
 export class FAQ {
   @Prop({})

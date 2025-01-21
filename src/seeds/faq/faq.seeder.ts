@@ -1,15 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { FAQ } from "src/Schemas/FAQ_schema/FAQ.schema";
+import { FAQ, FAQDocument } from "src/Schemas/FAQ_schema/FAQ.schema";
 
 @Injectable()
 export class FaqSeeder {
     constructor(
-        @InjectModel(FAQ.name) private faqModel: Model<FAQ>,
+        @InjectModel(FAQ.name) private faqModel: Model<FAQDocument>,
     ) {}
 
-    async seed() {
+    async faqSeed() {
         const faq_tabs = [
             {
                 key: 'bonus-faq',
