@@ -13,7 +13,7 @@ export enum ProfileValidationStatus {
   VALIDATED = 'validated',
 }
 
-@Schema()
+@Schema({ timestamps: true })
 export class Zems {
   @Prop({ required: true, enum: CardType, default: CardType.PASSPORT_CARD })
   card_type: CardType;

@@ -595,6 +595,16 @@ export class RacesService {
     return races;
   }
 
+  async updateZemRay(userId: string, ray: number) {
+    const zem = await this.zemsModel.findOne({ user: userId }).exec();
 
+    if (ray < 0) {
+      throw new BadRequestException('Le rayon doit être un nombre positif');
+    }
+
+    await this.zemsModel.findByIdAndUpdate(zem._id, { ray: ray }).exec();
+    
+    return ray;
+  }
 
 }

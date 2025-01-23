@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
@@ -34,7 +34,6 @@ export class ZemsService {
   remove(id: string) {
     return `This action removes a #${id} zem`;
   }
-
 
   async sendNotificationForAllUserInRay(zem_id){
     const zem = await this.findOne(zem_id);
@@ -89,5 +88,15 @@ export class ZemsService {
         );
       }
     }
+  }
+
+  async updateSearchRadius(zemId: string, newRadius: number): Promise<Zems> {
+    const updatedZem = await this.zemModel.findByIdAndUpdate(
+      zemId,
+      { $set: { ray: newRadius } },
+      { new: true }
+    );
+
+    return updatedZem;
   }
 }

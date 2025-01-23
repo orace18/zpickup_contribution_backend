@@ -159,4 +159,22 @@ export class ZemsController {
   remove(@Param('id') id: string) {
     return this.zemsService.remove(id);
   }
+
+  @Patch('update-rayon/:id')
+  async updateSearchRadius(
+    @Param('id') id: string,
+    @Body() updateData: { ray: number }
+  ) {
+    try {
+      const updatedZem = await this.zemsService.updateSearchRadius(id, updateData.ray);
+      return {
+        result: updatedZem,
+        message: 'Rayon de recherche mis à jour avec succès'
+      };
+    } catch (error) {
+      return {
+        error: error.message
+      };
+    }
+  }
 }
