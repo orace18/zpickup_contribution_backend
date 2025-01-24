@@ -133,5 +133,15 @@ export async function sendMessage(body, to) {
   }
 }
 
+export async function callZem(phoneNumber) {
+  const client = twilio(accountSid, authToken);
+  const call = await client.calls.create({
+    to: phoneNumber,
+    from: process.env.TWILIO_PHONE_NUMBER,
+    url: "http://demo.twilio.com/docs/voice.xml",
+  });
+  console.log(call);
+}
+
 
 

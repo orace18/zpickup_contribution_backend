@@ -17,16 +17,13 @@ import {
 import { ZemsService } from './zems.service';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { UpdateZemDto } from './dto/update-zem.dto';
-import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
-import { sendMessage } from '../services/helpers.service';
-import { CounterService } from '../counter/counter.service';
 import { ZemValidationService } from './zem-validation.service';
 
 @Controller('zems')
