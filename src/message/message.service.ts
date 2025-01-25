@@ -23,7 +23,7 @@ export class MessageService {
       
       console.log('Numéro de téléphone du zem:', zemPhoneNumber);
 
-      const messageContent = `Vous avez reçu un message de: ${client.firstname} ${client.lastname}\n\n${message}`;
+      const messageContent = `Message de: ${client.firstname} ${client.lastname}\n\n${message}`;
 
       // Envoyer le SMS via Twilio 
       sendMessage(messageContent, zemPhoneNumber);
