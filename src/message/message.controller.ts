@@ -27,7 +27,6 @@ export class MessageController {
   @UseGuards(JwtAuthGuard)
   @Post('call-zem')
   async callZem(
-    @Req() req,
     @Body() payload: {
       phone_number: string
     }
