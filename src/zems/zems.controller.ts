@@ -25,6 +25,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { ZemValidationService } from './zem-validation.service';
+import {CounterService} from "../counter/counter.service";
+import {count} from "rxjs";
+import {Counter} from "../Schemas/counter_schema/counter.schema";
 
 @Controller('zems')
 export class ZemsController {
@@ -32,6 +35,7 @@ export class ZemsController {
     private readonly zemsService: ZemsService,
     private readonly usersService: UsersService,
     private readonly zemValidationService: ZemValidationService,
+    private readonly counterService: CounterService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -132,17 +136,25 @@ export class ZemsController {
           });
         } else {
           if (updateZemDto.service) {
-            if (
-              !updateZemDto.service_latitude ||
-              !updateZemDto.service_longitude
-            ) {
-              throw new BadRequestException({
-                message:
-                  'Veuillez renseigner tous les champs pour la mise en service',
-              });
-            }
-            this.zemsService.sendNotificationForAllUserInRay(id);
+            const counter = await this.counterService.findByZem(id);
+            console.log("counter",counter);
 
+            if (counter==null || counter.balance_km<=0){
+              throw new BadRequestException({message: 'Veuillez recharger votre compteur avant de pourvoir travailler',
+              });
+            }else{
+              if (
+                  !updateZemDto.service_latitude ||
+                  !updateZemDto.service_longitude
+              ) {
+                throw new BadRequestException({
+                  message:
+                      'Veuillez renseigner tous les champs pour la mise en service',
+                });
+              }
+              this.zemsService.sendNotificationForAllUserInRay(id);
+
+            }
           }
         }
 

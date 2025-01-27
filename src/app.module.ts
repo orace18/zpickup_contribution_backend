@@ -27,6 +27,7 @@ import { join } from 'path';
 import { notificationConfig } from './notifications/notification.config';
 import { ReferenceHistoryModule } from './reference_history/reference_history.module';
 import { MessageModule } from './message/message.module';
+import { RaceHistoryModule } from './race_history/race_history.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { MessageModule } from './message/message.module';
     NotificationsModule,
     ReferenceHistoryModule,
     MessageModule,
+    RaceHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
