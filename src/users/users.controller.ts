@@ -22,6 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { sendMessage } from '../services/helpers.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
+import { GSMNumberFormatService } from 'src/gsmnumber-format/gsmnumber-format.service';
 
 @Controller('users')
 export class UsersController {
@@ -29,13 +30,32 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly twilioService: TwilioService,
     private readonly referenceHistoryService: ReferenceHistoryService,
-
+    private readonly gsmNumberFormatService: GSMNumberFormatService,
   ) {}
 
   @Post('register/phone_number')
   async registerWithPhoneNumber(
     @Body() { phone_number }: { phone_number: string },
   ) {
+
+    // Vérification des caractères spéciaux et lettres
+    if (!/^\+?\d+$/.test(phone_number)) {
+      throw new HttpException(
+        'Le numéro de téléphone ne doit contenir que des chiffres',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Vérification du format GSM béninois
+    const isValidPrefix = await this.gsmNumberFormatService.isValidPrefix(phone_number);
+    if (!isValidPrefix) {
+      throw new HttpException(
+        'Le format du numéro de téléphone n\'est pas valide',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+
     // on vérifie si le numéro de téléphone existe déjà
     const existingUser = await this.usersService.findByPhone(phone_number);
     if (existingUser) {

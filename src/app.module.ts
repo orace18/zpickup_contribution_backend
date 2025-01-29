@@ -28,6 +28,7 @@ import { notificationConfig } from './notifications/notification.config';
 import { ReferenceHistoryModule } from './reference_history/reference_history.module';
 import { MessageModule } from './message/message.module';
 import { RaceHistoryModule } from './race_history/race_history.module';
+import { GSMNumberFormatModule } from './gsmnumber-format/gsmnumber-format.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { RaceHistoryModule } from './race_history/race_history.module';
     ReferenceHistoryModule,
     MessageModule,
     RaceHistoryModule,
+    GSMNumberFormatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

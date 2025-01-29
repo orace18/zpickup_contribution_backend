@@ -7,12 +7,14 @@ import { TwilioService } from '../services/twilio.service';
 import {WalletModule} from "../wallet/wallet.module";
 import {WalletService} from "../wallet/wallet.service";
 import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
+import { GSMNumberFormatModule } from 'src/gsmnumber-format/gsmnumber-format.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Users.name, schema: UserSchema }]),
     forwardRef(() => WalletModule),
     forwardRef(() => ReferenceHistoryModule),
+    GSMNumberFormatModule,
 
   ],
   controllers: [UsersController],
