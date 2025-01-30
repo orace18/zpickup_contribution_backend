@@ -26,8 +26,10 @@ export class GSMNumberFormatService {
   }
 
   async isValidPrefix(phone_number: string) : Promise<boolean> {
-    const prefix = phone_number.substring(0, 4);
-    const format = await this.gsmNumberFormatModel.findOne({ prefix }).exec();
-    return !!format;
+    const prefix = phone_number.substring(4, 8);
+    const format = await this.gsmNumberFormatModel.findOne({ prefix: prefix }).exec();
+
+    console.log(prefix);
+    return format !== null;
   }
 }

@@ -122,14 +122,16 @@ export async function sendNotificationForSeveralTokens(title, body, tokens, data
 
 
 export async function sendMessage(body, to) {
-  const client = twilio(accountSid, authToken);
-  if (process.env.TWILIO_SEND_SMS) {
+  try {
+    const client = twilio(accountSid, authToken);
     const message = await client.messages.create({
       body: body,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: to,
     });
     console.log(message);
+  } catch (error) {
+    console.error(error);
   }
 }
 
