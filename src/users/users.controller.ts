@@ -156,7 +156,10 @@ export class UsersController {
       throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
     }
 
-    if (user.verification_code !== verification_code) {
+    console.log('Code reçu:', verification_code);
+    console.log('Code stocké:', user.verification_code);
+
+    if (!user.verification_code || user.verification_code !== verification_code) {
       throw new HttpException(
         'Code de vérification incorrect',
         HttpStatus.BAD_REQUEST,
@@ -164,10 +167,17 @@ export class UsersController {
     }
 
     // Mise à jour de `validated_at` et suppression de `verification_code`
-    await this.usersService.update(user._id.toString(), {
+    const updatedUser = await this.usersService.update(user._id.toString(), {
       validated_at: new Date(),
       verification_code: null,
     });
+
+    if (!updatedUser) {
+      throw new HttpException(
+        'Erreur lors de la validation du compte',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
 
     return { message: 'Code vérifié avec succès', userId: user._id };
   }

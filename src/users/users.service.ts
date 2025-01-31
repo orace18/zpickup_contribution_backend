@@ -55,15 +55,21 @@ export class UsersService {
   }
 
   async findByPhone(phone_number: string, checkValidated: boolean = false): Promise<Users> {
-    const query = { phone_number };
+    const query: any = { 
+      phone_number,
+      deleted_at: null // On cherche uniquement les comptes non supprimés
+    };
+
     if (checkValidated) {
-      query['validated_at'] = { $ne: null };
+      query.validated_at = { $ne: null };
     }
     
     const user = await this.userModel
-      .findOne(query)
-      .populate('race')
-      .exec();
+    .findOne(query)
+    .sort({ created_at: -1 }) // Pour obtenir le plus récent en premier
+    .populate('race')
+    .exec();
+    
     return user;
   }
 
@@ -91,62 +97,48 @@ export class UsersService {
   }
 
   async createTemporary(userData: Partial<Users>): Promise<Users> {
-
     try {
-
-      // Vérifier si un compte supprimé existe avec le même numéro de téléphone
-      const existingUser = await this.findByPhone(userData.phone_number);
-
-      if (existingUser && existingUser.deleted_at) {
-        // Réactiver le compte en réinitialisant les données
-        const sponsorship_code = await this.generateUniqueCode();
-
-        const updatedData = {
-          ...userData,
-          sponsorship_code,
-          deleted_at: null,
-          created_at: new Date(),
-          updated_at: new Date(),
-        };
-
-        if (updatedData.password) {
-          const salt = await bcrypt.genSalt();
-          updatedData.password = await bcrypt.hash(updatedData.password, salt);
-        }
-
-        const updatedUser = await this.userModel
-          .findByIdAndUpdate(existingUser._id, updatedData, { new: true })
-          .exec();
-
-        return updatedUser;
+      // Vérifier si un compte actif existe avec ce numéro
+      const activeUser = await this.userModel.findOne({
+        phone_number: userData.phone_number,
+        validated_at: { $ne: null },
+        deleted_at: null
+      });
+  
+      if (activeUser) {
+        throw new HttpException(
+          'Ce numéro de téléphone est déjà attribué à un compte actif',
+          HttpStatus.BAD_REQUEST
+        );
       }
-
-      // Si pas de compte supprimé, création normale
-
+  
       // Générer un code de parrainage unique
       const sponsorship_code = await this.generateUniqueCode();
       userData.sponsorship_code = sponsorship_code;
-
+  
       // Hasher le mot de passe si présent
       if (userData.password) {
         const salt = await bcrypt.genSalt();
         userData.password = await bcrypt.hash(userData.password, salt);
       }
-
-      // Créer l'utilisateur
+  
+      // Créer un nouvel utilisateur
       const user = new this.userModel(userData);
       const savedUser = await user.save();
-
+  
       // Initialiser le wallet
       await this.walletService.getWalletBalance(savedUser._id.toString());
-
+  
       // Gérer le code de parrainage si fourni
       if (userData.referal_code) {
         await this.handleReferralCode(savedUser._id.toString(), userData.referal_code);
       }
-
+  
       return savedUser;
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new Error(`Erreur lors de la création de l'utilisateur: ${error.message}`);
     }
   }
