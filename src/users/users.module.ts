@@ -1,4 +1,4 @@
-import {forwardRef, Module} from '@nestjs/common';
+import {forwardRef, Global, Module} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import {WalletService} from "../wallet/wallet.service";
 import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
 import { GSMNumberFormatModule } from 'src/gsmnumber-format/gsmnumber-format.module';
 
+@Global()
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Users.name, schema: UserSchema }]),

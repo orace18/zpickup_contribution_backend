@@ -122,6 +122,20 @@ export class RacesService {
         .exec();
   }
 
+  findOneAppendUser(id: string) {
+    return this.racesModel.findById(id)
+        .populate({
+          path: 'zem',
+          populate: {
+            path: 'user',
+          },
+        })
+        .populate({
+          path: 'user',
+        })
+        .exec();
+  }
+
   async update(id: string, updateRaceDto: UpdateRaceDto, req) {
     let body_notification = '';
     let more_action = '';
@@ -313,30 +327,34 @@ export class RacesService {
     const race = await this.findOne(id);
     const user = await this.userService.findOne(race.user.toString());
     const title = "Course "+race.reference;
-    if (user.fcm_token) {
-      const send_data = {
-        _id: race._id.toString(),
-        more_action: more_action,
-      };
-      sendNotification(title, body_notification, user.fcm_token, send_data);
-      this.notificationService.createNotification(user._id.toString(), title,body_notification,process.env.NOTIFICATION_COMMANDE,send_data);
-
-    }
-    if (zem_user) {
-      if (zem_user.fcm_token) {
+    try {
+      if (user.fcm_token) {
         const send_data = {
           _id: race._id.toString(),
-          more_action: more_action_zem,
+          more_action: more_action,
         };
-        sendNotification(
-            title,
-          body_notification_zem,
-          zem_user.fcm_token,
-          send_data,
-        );
-        this.notificationService.createNotification(zem_user._id.toString(), title,body_notification_zem,process.env.NOTIFICATION_COMMANDE,send_data);
+        sendNotification(title, body_notification, user.fcm_token, send_data);
+        this.notificationService.createNotification(user._id.toString(), title,body_notification,process.env.NOTIFICATION_COMMANDE,send_data);
 
       }
+      if (zem_user) {
+        if (zem_user.fcm_token) {
+          const send_data = {
+            _id: race._id.toString(),
+            more_action: more_action_zem,
+          };
+          sendNotification(
+              title,
+              body_notification_zem,
+              zem_user.fcm_token,
+              send_data,
+          );
+          this.notificationService.createNotification(zem_user._id.toString(), title,body_notification_zem,process.env.NOTIFICATION_COMMANDE,send_data);
+
+        }
+      }
+    }catch (e) {
+      console.log("error",e);
     }
 
     return race;
@@ -603,7 +621,7 @@ export class RacesService {
     }
 
     await this.zemsModel.findByIdAndUpdate(zem._id, { ray: ray }).exec();
-    
+
     return ray;
   }
 

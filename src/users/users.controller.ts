@@ -82,11 +82,15 @@ export class UsersController {
       }
     }
 
-    // Envoie du code par SMS
-    sendMessage(
-      'Votre code de vérification ZPickup : ' + verification_code,
-      phone_number,
-    );
+    try {
+      // Envoie du code par SMS
+      sendMessage(
+          'Votre code de vérification ZPickup : ' + verification_code,
+          phone_number,
+      );
+    }catch (error){
+      console.error(error);
+    }
 
     // Création d'un utilisateur temporaire avec le minimum d'informations
     const user = await this.usersService.createTemporary({
