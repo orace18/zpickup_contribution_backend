@@ -3,7 +3,7 @@ import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateFaqDto {
   
   @IsOptional()
-  @IsString()
+  @IsString() 
   key?: string;
 
   @IsString()

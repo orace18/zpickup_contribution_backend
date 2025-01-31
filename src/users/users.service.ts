@@ -1,9 +1,9 @@
-import {forwardRef, HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
+import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Users } from '../Schemas/users_schema/Users.schema';
 import { HydratedDocument, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import {WalletService} from "../wallet/wallet.service";
+import { WalletService } from "../wallet/wallet.service";
 import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 
 @Injectable()
@@ -14,11 +14,11 @@ export class UsersService {
     private readonly walletService: WalletService,
     @Inject(forwardRef(() => ReferenceHistoryService))
     private readonly referenceHistoryService: ReferenceHistoryService,
-  ) {}
+  ) { }
 
   /* Méthode pour générer un code unique de parrainage */
   async generateUniqueCode(prefix: string = 'ZP'): Promise<string> {
-    let sponsorship_code : string;
+    let sponsorship_code: string;
     let isUnique = false;
 
     while (!isUnique) {
@@ -54,9 +54,14 @@ export class UsersService {
     }
   }
 
-  async findByPhone(phone_number: string): Promise<Users> {
+  async findByPhone(phone_number: string, checkValidated: boolean = false): Promise<Users> {
+    const query = { phone_number };
+    if (checkValidated) {
+      query['validated_at'] = { $ne: null };
+    }
+    
     const user = await this.userModel
-      .findOne({ phone_number })
+      .findOne(query)
       .populate('race')
       .exec();
     return user;
@@ -88,6 +93,36 @@ export class UsersService {
   async createTemporary(userData: Partial<Users>): Promise<Users> {
 
     try {
+
+      // Vérifier si un compte supprimé existe avec le même numéro de téléphone
+      const existingUser = await this.findByPhone(userData.phone_number);
+
+      if (existingUser && existingUser.deleted_at) {
+        // Réactiver le compte en réinitialisant les données
+        const sponsorship_code = await this.generateUniqueCode();
+
+        const updatedData = {
+          ...userData,
+          sponsorship_code,
+          deleted_at: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+        };
+
+        if (updatedData.password) {
+          const salt = await bcrypt.genSalt();
+          updatedData.password = await bcrypt.hash(updatedData.password, salt);
+        }
+
+        const updatedUser = await this.userModel
+          .findByIdAndUpdate(existingUser._id, updatedData, { new: true })
+          .exec();
+
+        return updatedUser;
+      }
+
+      // Si pas de compte supprimé, création normale
+
       // Générer un code de parrainage unique
       const sponsorship_code = await this.generateUniqueCode();
       userData.sponsorship_code = sponsorship_code;
@@ -114,18 +149,16 @@ export class UsersService {
     } catch (error) {
       throw new Error(`Erreur lors de la création de l'utilisateur: ${error.message}`);
     }
+  }
 
-
-    /* if (userData.password) {
-      const salt = await bcrypt.genSalt();
-      userData.password = await bcrypt.hash(userData.password, salt);
+  async verifyUserStatus(phone_number: string): Promise<void> {
+    const user = await this.findByPhone(phone_number);
+    if (user && user.deleted_at) {
+      throw new HttpException(
+        'Ce compte n\'existe plus sur notre serveur',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    const user = new this.userModel(userData);
-    let userResult = await user.save();
-    console.log("getWalletBalance",userResult["_id"]);
-    this.walletService.getWalletBalance(userResult._id.toString());
-
-    return userResult; */
   }
 
   async update(id: string, updateData: Partial<Users>): Promise<Users | null> {
@@ -188,5 +221,17 @@ export class UsersService {
 
   remove(id: string) {
     return this.userModel.findByIdAndDelete(id).exec();
+  }
+
+  async deleteAccount(userId: string): Promise<Users> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        deleted_at: new Date(),
+        validated_at: null, // Réinitialiser validated_at
+        verification_code: null, // Optionnel: réinitialiser aussi le code de vérification
+      },
+      { new: true }
+    ).exec();
   }
 }

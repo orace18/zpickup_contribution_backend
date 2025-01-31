@@ -17,6 +17,11 @@ export class AuthService {
       return null;
     }
 
+    // Vérifier si le compte a été supprimé
+    if (user.deleted_at) {
+      throw new UnauthorizedException('Ce compte n\'existe plus sur notre serveur');
+    }
+
     // on vérifie si le compte est validé
     if (!user.validated_at) {
       throw new UnauthorizedException('Compte non validé');
@@ -45,6 +50,11 @@ export class AuthService {
         'Données utilisateur invalides',
         HttpStatus.BAD_REQUEST
       );
+    }
+
+    // Vérifier à nouveau si le compte n'a pas été supprimé
+    if (userData.deleted_at) {
+      throw new UnauthorizedException('Ce compte n\'existe plus sur notre serveur');
     }
 
     const payload = {
