@@ -10,6 +10,8 @@ import { Permission, PermissionSchema } from '../Schemas/permission_schema/Permi
 import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
 import { ConfigSeeder } from './config/config.seeder';
 import { AdminSeeder } from './admin_user/admin_user.seeder';
+import { GSMNumberFormat, GSMNumberFormatSchema } from 'src/Schemas/gsm_number_format_schema/gsm_number_format.schema';
+import { GmsSeeder } from './gms/gsm.seeder';
 
 @Module({
   imports: [
@@ -20,8 +22,9 @@ import { AdminSeeder } from './admin_user/admin_user.seeder';
       { name: Permission.name, schema: PermissionSchema },
       { name: Users.name, schema: UserSchema }
     ]),
+    MongooseModule.forFeature([{ name: Config.name, schema: ConfigSchema }, { name: FAQ.name, schema: FAQSchema }, { name: GSMNumberFormat.name, schema: GSMNumberFormatSchema }]),
   ],
-  providers: [ConfigSeeder,RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder],
-  exports: [ConfigSeeder,RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder],
-})
-export class SeedsModule {}
+  providers: [ConfigSeeder,RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder, GmsSeeder],
+  exports: [ConfigSeeder,RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder, GmsSeeder],
+ })
+export class SeedsModule { }

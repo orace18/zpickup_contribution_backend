@@ -17,6 +17,11 @@ export class RaceHistoryController {
     return this.raceHistoryService.findAll();
   }
 
+  @Get('live/locations/:race_id')
+  findRaceLiveLocation(@Param('race_id') race_id: string) {
+    return this.raceHistoryService.findRaceLiveLocation(race_id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.raceHistoryService.findOne(+id);

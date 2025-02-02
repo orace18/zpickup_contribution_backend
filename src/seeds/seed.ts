@@ -4,6 +4,7 @@ import { PermissionSeeder } from './permission/permission.seeder';
 import { AppModule } from '../app.module';
 import { ConfigSeeder } from './config/config.seeder';
 import { FaqSeeder } from './faq/faq.seeder';
+import { GmsSeeder } from './gms/gsm.seeder';
 import { AdminSeeder } from './admin_user/admin_user.seeder';
 
 
@@ -19,6 +20,11 @@ async function bootstrap() {
     const faqSeeder = app.get(FaqSeeder);
     await faqSeeder.faqSeed();
     console.log('✓ FAQ seeding completed');
+
+    // Exécuter FaqSeeder
+    const gsmSeeder = app.get(GmsSeeder);
+    await gsmSeeder.seed();
+    console.log('GSM seeding completed');
 
     const permissionSeeder = app.get(PermissionSeeder);
     const roleSeeder = app.get(RoleSeeder);

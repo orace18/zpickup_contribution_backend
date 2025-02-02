@@ -21,6 +21,9 @@ export class Users {
   firstname?: string;
 
   @Prop()
+  user_profile_image?: string;
+
+  @Prop()
   address?: string;
 
   @Prop({ required: true, unique: true })
