@@ -35,6 +35,7 @@ import { RaceHistoryModule } from './race_history/race_history.module';
 import { GSMNumberFormatModule } from './gsmnumber-format/gsmnumber-format.module';
 import { PrivacyPolicyModule } from './privacy_policy/privacy_policy.module';
 import { TermsConditionsModule } from './terms_conditions/terms_conditions.module';
+import { ConversationsModule } from './conversations/conversations.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { TermsConditionsModule } from './terms_conditions/terms_conditions.modul
     GSMNumberFormatModule,
     PrivacyPolicyModule,
     TermsConditionsModule,
+    ConversationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
