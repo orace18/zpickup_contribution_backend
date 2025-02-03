@@ -19,6 +19,10 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivationHistoryModule } from './activation_history/activation_history.module';
 import { ConfigModule } from '@nestjs/config';
+import { AdminAuthModule } from './auth/admin/admin.module';
+import { AdminModule } from './users/admin/admin.module';
+import { PermissionModule } from './permission/permission.module';
+import { RoleModule } from './roles/roles.module';
 import { SeedsModule } from './seeds/seed.module';
 import { RacesModule } from './races/races.module';
 import { PaymentModule } from './payment/payment.module';
@@ -66,6 +70,10 @@ import { TermsConditionsModule } from './terms_conditions/terms_conditions.modul
     CounterModule,
     PaymentModule,
     NotificationsModule,
+    RoleModule,
+    PermissionModule,
+    AdminModule,
+    AdminAuthModule,
     ReferenceHistoryModule,
     MessageModule,
     RaceHistoryModule,

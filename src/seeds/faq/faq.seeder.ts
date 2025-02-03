@@ -16,6 +16,11 @@ export class FaqSeeder {
                 title: 'Comment sont calculés les gains sur une course effectué?',
                 description: 'On fait le calcul en fonction de la distance parcourue et du pourcentage de gain de la zone',
             },
+            {
+                key: 'test-faq',
+                title: 'Test de FAQ?',
+                description: 'Rien tout est cool',
+            },
         ];
 
         const bulkOps = faq_tabs.map((item) => ({

@@ -6,6 +6,7 @@ import { PrimaryGeneratedColumn } from 'typeorm/typeorm-model-shim.js';
 export enum UserType {
   CUSTOMER = 'customer',
   ZEM = 'zem',
+  ADMIN = 'admin'
 }
 
 @Schema()
@@ -81,6 +82,10 @@ export class Users {
 
   @Prop()
   code_pin: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Role' })
+  role: Types.ObjectId;
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);
@@ -92,8 +97,11 @@ UserSchema.pre('save', async function (next) {
   }
 
   try {
+    console.log('Hachage du mot de passe dans le middleware pre-save');
+    console.log('Mot de passe avant hachage:', this.password);
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
+    console.log('Mot de passe après hachage:', this.password);
     next();
   } catch (error) {
     next(error);

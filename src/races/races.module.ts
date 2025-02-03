@@ -24,6 +24,7 @@ import {UsersModule} from "../users/users.module";
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Races.name, schema: RacesSchema }]),
+    MongooseModule.forFeature([{ name: Users.name, schema: UserSchema }]),
     UsersModule,
     MongooseModule.forFeature([{ name: Zems.name, schema: ZemsSchema }]),
     MongooseModule.forFeature([{ name: Config.name, schema: ConfigSchema }]),
@@ -37,6 +38,6 @@ import {UsersModule} from "../users/users.module";
   ],
 
   controllers: [RacesController],
-  providers: [RacesService, ZemsService,NotificationService,CounterService,CounterHistoryService],
+  providers: [RacesService,UsersService, ZemsService,NotificationService,CounterService,CounterHistoryService],
 })
 export class RacesModule {}

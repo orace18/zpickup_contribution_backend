@@ -188,6 +188,32 @@ export class UsersService {
     return this.userModel.findOne({ sponsorship_code: sponsorshipCode }).exec();
   }
 
+  async findByMail(email_address: string): Promise<Users> {
+    const user = await this.userModel
+      .findOne({ email_address })
+      .populate('race')
+      .exec();
+    return user;
+  }
+
+
+  /* Correction de la méthode findOne pour retourner un utilisateur */
+/*  async findOne(id: string): Promise<Users | null> {
+    return this.userModel
+      .findById(id)
+      .populate('zem')
+      .populate({
+        path: 'race',
+        match: {
+          status: {
+            $in: ['pending', 'accepted', 'start'],
+          },
+        },
+      })
+      .lean()
+      .exec();
+  }*/
+
   async findUserOne(
     id: string,
   ): Promise<Array<HydratedDocument<Users, {}, {}>>> {
@@ -208,7 +234,7 @@ export class UsersService {
   }
 
   findAll() {
-    return this.userModel.find();
+    return this.userModel.find().populate('role').exec();
   }
 
   remove(id: string) {

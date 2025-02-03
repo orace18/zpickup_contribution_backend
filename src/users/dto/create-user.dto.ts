@@ -1,7 +1,7 @@
 import {
   IsDate,
   IsEmail,
-  IsEnum,
+  IsEnum, IsMongoId,
   IsNotEmpty,
   IsNumberString,
   IsOptional,
@@ -89,4 +89,9 @@ export class CreateUserDto {
 
   @IsOptional()
   token_version?: number;
+
+
+  @IsOptional()
+  @IsMongoId()
+  role?: Types.ObjectId;
 }

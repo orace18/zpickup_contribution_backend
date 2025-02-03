@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateFaqDto } from './dto/create-faq.dto';
 import { UpdateFaqDto } from './dto/update-faq.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -41,7 +41,22 @@ export class FaqService {
   }
 
   // fonction pour la suppression d'un FAQ
+  /*async removeFAQ(id: string): Promise<FAQ> {
+    return this.faqModel.findByIdAndDelete(id).exec();
+  }*/
+
   async removeFAQ(id: string): Promise<FAQ> {
+    // Vérifie d'abord si la FAQ existe et a une clé
+    const faq = await this.faqModel.findById(id).exec();
+
+    if (!faq) {
+      throw new BadRequestException('FAQ non trouvée');
+    }
+
+    if (faq.key) {
+      throw new BadRequestException('Impossible de supprimer une FAQ système');
+    }
+
     return this.faqModel.findByIdAndDelete(id).exec();
   }
 }
