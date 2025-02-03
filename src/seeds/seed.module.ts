@@ -33,7 +33,7 @@ import { PrivacyPolicySeeder } from './privacy_policy/privacy-policy.seeder';
 
     ]),
   ],
-  providers: [ConfigSeeder, RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder, GmsSeeder,TermsConditionsSeeder],
-  exports: [ConfigSeeder, RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder, GmsSeeder,TermsConditionsSeeder],
+  providers: [ConfigSeeder, RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder, GmsSeeder,TermsConditionsSeeder,PrivacyPolicySeeder],
+  exports: [ConfigSeeder, RoleSeeder, PermissionSeeder, FaqSeeder, AdminSeeder, GmsSeeder,TermsConditionsSeeder,PrivacyPolicySeeder],
 })
 export class SeedsModule { }
