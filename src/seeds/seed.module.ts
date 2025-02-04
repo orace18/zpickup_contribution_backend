@@ -15,7 +15,6 @@ import { GmsSeeder } from './gms/gsm.seeder';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Config.name, schema: ConfigSchema }, { name: FAQ.name, schema: FAQSchema }]),
     MongooseModule.forFeature([
       { name: Config.name, schema: ConfigSchema },
       { name: Role.name, schema: RoleSchema },

@@ -43,6 +43,15 @@ export class AdminSeeder {
           password: 'Admin123!',
           user_type: UserType.ADMIN,
           role: adminRole._id,
+        },
+        {
+          firstname: 'Patrick',
+          lastname: 'AMOUSSOU',
+          email_address: 'patou@admin.com',
+          phone_number: '+22900000002',
+          password: 'Admin123!',
+          user_type: UserType.ADMIN,
+          role: adminRole._id,
         }
       ];
 

@@ -26,7 +26,7 @@ export class RaceHistoryService {
   }
 
   findAll() {
-    return `This action returns all raceHistory`;
+    return this.raceHistoryModel.find().populate("race").exec();
   }
 
   async findRaceLiveLocation(race_id:string) {
