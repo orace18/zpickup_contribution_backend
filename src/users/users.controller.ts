@@ -23,6 +23,9 @@ import { sendMessage } from '../services/helpers.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 import { GSMNumberFormatService } from 'src/gsmnumber-format/gsmnumber-format.service';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { unlink } from 'fs/promises';
 
 @Controller('users')
 export class UsersController {
@@ -218,7 +221,21 @@ export class UsersController {
   }
 
   @Patch('complete-registration/:id')
-  @UseInterceptors(FileInterceptor('user_profile_image'))
+  @UseInterceptors(FileInterceptor('user_profile_image', {
+    storage: diskStorage({
+      destination: './uploads/users',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `user_profile_image-${uniqueSuffix}${extname(file.originalname)}`);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+        return cb(new Error('Seuls les fichiers jpg, jpeg et png sont autorisés!'), false);
+      }
+      cb(null, true);
+    },
+  }))
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -231,7 +248,15 @@ export class UsersController {
       }
 
       if (file) {
-        updateUserDto.user_profile_image = file.path;
+        // Supprimer l'ancienne image si elle existe
+        if (user.user_profile_image) {
+          try {
+            await unlink(join(process.cwd(), user.user_profile_image));
+          } catch (error) {
+            console.log('Erreur lors de la suppression de l\'ancienne image:', error);
+          }
+        }
+        updateUserDto.user_profile_image = file.path.replace(/\\/g, '/');
       }
 
       // Générer un code de parrainage unique si l'utilisateur n'en a pas
