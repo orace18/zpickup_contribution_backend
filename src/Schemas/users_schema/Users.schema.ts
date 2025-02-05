@@ -38,7 +38,7 @@ export class Users {
   @Prop({ default: null })
   password?: string;
 
-  @Prop()
+  @Prop({ type: String })
   verification_code: string;
 
   @Prop({ default: null })
@@ -64,6 +64,9 @@ export class Users {
 
   @Prop({ default: null })
   validated_at?: Date;
+
+  @Prop({ default: null })
+  deleted_at?: Date;
 
   @Prop({ default: 0 })
   token_version: number;
@@ -104,3 +107,22 @@ UserSchema.pre('save', async function (next) {
     next(error);
   }
 });
+
+// Supprimer l'ancien index unique sur phone_number s'il existe
+UserSchema.index({ phone_number: 1 }, { unique: false });
+
+// Créer un nouvel index composé
+UserSchema.index(
+  { 
+    phone_number: 1,
+    validated_at: 1,
+    deleted_at: 1
+  },
+  { 
+    unique: true,
+    partialFilterExpression: { 
+      validated_at: { $ne: null },
+      deleted_at: null
+    }
+  }
+);

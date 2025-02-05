@@ -84,6 +84,10 @@ export class CreateUserDto {
   validated_at?: Date;
 
   @IsOptional()
+  @IsDate()
+  deleted_at?: Date;
+
+  @IsOptional()
   token_version?: number;
 
 

@@ -33,6 +33,8 @@ import { ReferenceHistoryModule } from './reference_history/reference_history.mo
 import { MessageModule } from './message/message.module';
 import { RaceHistoryModule } from './race_history/race_history.module';
 import { GSMNumberFormatModule } from './gsmnumber-format/gsmnumber-format.module';
+import { PrivacyPolicyModule } from './privacy_policy/privacy_policy.module';
+import { TermsConditionsModule } from './terms_conditions/terms_conditions.module';
 
 @Module({
   imports: [
@@ -76,6 +78,8 @@ import { GSMNumberFormatModule } from './gsmnumber-format/gsmnumber-format.modul
     MessageModule,
     RaceHistoryModule,
     GSMNumberFormatModule,
+    PrivacyPolicyModule,
+    TermsConditionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

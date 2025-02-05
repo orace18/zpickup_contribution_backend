@@ -31,6 +31,15 @@ export class AdminSeeder {
 
       const defaultAdmins = [
         {
+          firstname: 'Djlo',
+          lastname: 'Alohou',
+          email_address: 'dalohou@wonderteck.com',
+          phone_number: '+22991000000',
+          password: '12345678',    // Le mot de passe sera hashé par le middleware
+          user_type: UserType.ADMIN,
+          role: adminRole._id,
+        },
+         {
           firstname: 'Super',
           lastname: 'Admin',
           email_address: 'admin@example.com',
