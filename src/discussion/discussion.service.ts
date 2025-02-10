@@ -8,13 +8,16 @@ import { DiscussionMessage, DiscussionMessageDocument } from 'src/Schemas/discus
 import { DiscussionResponseDto } from './dto/discussion-response.dto';
 import { CreateDiscussionMessageDto, DiscussionMessageResponseDto } from './dto/discussion-message.dto';
 import { Message } from 'src/Schemas/message/message.schema';
+import { UsersService } from 'src/users/users.service';
+import { sendNotification } from 'src/services/helpers.service';
 
 @Injectable()
 export class DiscussionService {
 
   constructor(
     @InjectModel(Discussion.name) private discussionModel: Model<DiscussionDocument>,
-    @InjectModel(DiscussionMessage.name) private messageModel: Model<DiscussionMessageDocument>
+    @InjectModel(DiscussionMessage.name) private messageModel: Model<DiscussionMessageDocument>,
+    private readonly usersService: UsersService,
   ) { }
 
   async createDiscussion(createDiscussionDto: CreateDiscussionDto, userId: string): Promise<DiscussionResponseDto> {
@@ -83,6 +86,8 @@ export class DiscussionService {
       throw new NotFoundException('Discussion non trouvée');
     }
 
+    const sender = await this.usersService.findOne(userId);
+
     const newMessage = new this.messageModel({
       content: createDiscussionMessageDto.content,
       discussion: createDiscussionMessageDto.discussionId,
@@ -92,6 +97,19 @@ export class DiscussionService {
     const savedMessage = await newMessage.save();
     discussion.messages.push(savedMessage._id.toString());
     await discussion.save();
+
+    if (sender.user_type === 'admin') {
+      const title = "Nouveau message de l'admin";
+      const body = `Message de l'admin dans la discussion ${discussion.title}`;
+
+      const creator = await this.usersService.findOne(discussion.creator);
+
+      if (creator.fcm_token) {
+        await sendNotification(title, body, creator.fcm_token, {
+          discussionId: discussion._id.toString()
+        })
+      }
+    }
     
     return this.toDiscussionMessageDto(savedMessage);
   }
