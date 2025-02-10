@@ -64,7 +64,7 @@ export class DiscussionService {
       .find()
       .populate('creator')
       .exec();
-  
+
     return discussions.map(discussion => this.toDiscussionDto(discussion));
   }
 
@@ -99,18 +99,19 @@ export class DiscussionService {
     await discussion.save();
 
     if (sender.user_type === 'admin') {
-      const title = "Nouveau message de l'admin";
-      const body = `Message de l'admin dans la discussion ${discussion.title}`;
+      const title = `Discussion: ${discussion.title}`;
+      const body = `Message: ${createDiscussionMessageDto.content}`;
 
       const creator = await this.usersService.findOne(discussion.creator);
 
       if (creator.fcm_token) {
-        await sendNotification(title, body, creator.fcm_token, {
-          discussionId: discussion._id.toString()
-        })
+        const send_data = {
+          _id: discussion._id.toString(),
+        }
+        await sendNotification(title, body, creator.fcm_token, send_data)
       }
     }
-    
+
     return this.toDiscussionMessageDto(savedMessage);
   }
 
@@ -126,11 +127,11 @@ export class DiscussionService {
       })
       .lean()
       .exec();
-  
+
     if (!discussion) {
       throw new NotFoundException('Discussion non trouvée');
     }
-  
+
     return discussion.messages.map((message: any) => ({
       id: message._id.toString(),
       content: message.content,
