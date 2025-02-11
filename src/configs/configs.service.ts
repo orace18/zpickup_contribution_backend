@@ -18,7 +18,7 @@ export class ConfigsService {
   }
 
   findAll() {
-    return `This action returns all configs`;
+    return this.configModel.find().exec();
   }
 
   findOne(id: number) {

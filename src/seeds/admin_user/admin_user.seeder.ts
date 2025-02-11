@@ -44,7 +44,7 @@ export class AdminSeeder {
           lastname: 'Admin',
           email_address: 'admin@example.com',
           phone_number: '+22900000000',
-          password: 'Admin123!',    // Le mot de passe sera hashé par le middleware
+          password: 'Admin123!',   
           user_type: UserType.ADMIN,
           role: adminRole._id,
         },

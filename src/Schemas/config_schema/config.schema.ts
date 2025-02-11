@@ -11,6 +11,9 @@ export class Config {
   value: string
 
   @Prop({ required: true })
+  type: string
+
+  @Prop({ required: true })
   description: string
 
   @Prop({ default: new Date() })
