@@ -30,8 +30,12 @@ export class ConfigsService {
     return await this.configModel.findOne({ "key": key_value }).exec();
   }
 
-  update(id: number, updateConfigDto: UpdateConfigDto) {
-    return `This action updates a #${id} config`;
+  update(id: string, updateConfigDto: UpdateConfigDto) {
+    return this.configModel.findByIdAndUpdate(
+      id,
+      {... updateConfigDto, updated_at: new Date()},
+      {new: true}
+    ).exec();
   }
 
   remove(id: number) {
