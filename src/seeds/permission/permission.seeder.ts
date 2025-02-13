@@ -91,6 +91,35 @@ export class PermissionSeeder {
           description: 'Permet de voir les paramètres du système',
           group: 'Settings'
         },
+
+        
+        {
+          key: 'view_cgu',
+          name: 'Voir les CGU',
+          description: 'Permet de voir les condition générales d\'utilisatieon',
+          group: 'Settings'
+        },
+        
+        {
+          key: 'view_policy',
+          name: 'Voir les politique d\'utilisation',
+          description: 'Permet de voir les politique d\'utilisation',
+          group: 'Settings'
+        },
+        
+        {
+          key: 'view_configs',
+          name: 'Voir les configurations',
+          description: 'Permet de voir les configurations',
+          group: 'Settings'
+        },
+
+        {
+          key: 'view_cartes',
+          name: 'Voir la carte',
+          description: 'Permet de voir la carte',
+          group: 'Cartes'
+        },
       ];
 
       const bulkOps = permissions.map((permission) => ({
