@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AdminService } from '../../users/admin/admin.service';
 import { ConfigService } from '@nestjs/config';
+import { first, last } from 'rxjs';
 
 @Injectable()
 export class AdminAuthService {
@@ -59,6 +60,8 @@ export class AdminAuthService {
       console.log('✓ Authentification réussie');
       const result = {
         _id: admin._id,
+        firstname: admin.firstname,
+        lastname: admin.lastname,
         phone_number: admin.phone_number,
         email_address: admin.email_address,
         user_type: admin.user_type,
@@ -119,6 +122,8 @@ export class AdminAuthService {
         access_token: token,
         user: {
           _id: user._id,
+          lastname: user.lastname,
+          firstname: user.firstname,
           phone_number: user.phone_number,
           email_address: user.email_address,
           user_type: user.user_type,

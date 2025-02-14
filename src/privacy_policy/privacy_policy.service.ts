@@ -11,9 +11,17 @@ export class PrivacyPolicyService {
     @InjectModel(PrivacyPolicy.name) private privacyPolicyModel: Model<PrivacyPolicyDocument>,
   ) {}
 
+  private generateUniqueKey(baseKey: string = 'privacy-policy'): string {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    return `${baseKey}-${timestamp}-${randomString}`;
+  }
+
   async create(createPrivacyPolicyDto: CreatePrivacyPolicyDto) {
+    const uniqueKey = this.generateUniqueKey(createPrivacyPolicyDto.key);
     const createdPolicy = new this.privacyPolicyModel({
       ...createPrivacyPolicyDto,
+      key: uniqueKey,
       created_at: new Date(),
       updated_at: new Date(),
     });

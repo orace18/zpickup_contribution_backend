@@ -30,15 +30,9 @@ export class RoleSeeder {
       const permissionsByKey = new Map<string, Types.ObjectId>(
         permissions.map(p => [p.key, p._id])
       );
-    //.map(key => permissionsByKey.get(key)).filter(Boolean),
 
       const roles = [
-        //{
-          // key: 'super_admin',
-          // name: 'Super Administrateur',
-          // description: 'Accès complet au système',
-          // permissions: permissions.map(p => p._id),
-        //},
+       
         {
           key: 'admin',
           name: 'Administrateur',
@@ -53,8 +47,13 @@ export class RoleSeeder {
             'view_gains',
             'view_finances',
             'manage_courses',
+            'manage_settings',
             'view_settings',
-            'manage_faqs'
+            'manage_faqs',
+            'view_policy',
+            'view_configs',
+            'view_cgu',
+            'view_cartes',
           ]
         },
         {

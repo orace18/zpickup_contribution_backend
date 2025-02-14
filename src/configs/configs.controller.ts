@@ -31,4 +31,9 @@ export class ConfigsController {
   remove(@Param('id') id: string) {
     return this.configsService.remove(+id);
   }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateConfigDto: UpdateConfigDto){
+    return this.configsService.update(id, updateConfigDto);
+  }
 }

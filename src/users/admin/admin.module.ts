@@ -8,10 +8,20 @@ import { UsersModule } from '../users.module';
 import { RoleModule } from '../../roles/roles.module';
 import { RoleService } from '../../roles/roles.service';
 import { Permission, PermissionSchema } from '../../Schemas/permission_schema/Permission.schema';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 
 @Module({
   imports: [
+     JwtModule.registerAsync({
+          imports: undefined,
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => ({
+            secret: configService.get<string>('JWT_SECRET'),
+            signOptions: { expiresIn: '24h', algorithm: 'HS256' },
+          })
+        }),
     MongooseModule.forFeature([
       { name: Users.name, schema: UserSchema },
       { name: Role.name, schema: RoleSchema },

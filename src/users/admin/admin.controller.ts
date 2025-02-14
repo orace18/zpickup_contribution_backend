@@ -8,12 +8,12 @@ import { UserType } from '../../Schemas/users_schema/Users.schema';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { PermissionsGuard } from '../../common/guards/permission.guard';
 import { UsersService } from '../users.service';
-//import { RequirePermissions } from '../../common/decorators/permission.decorator';
+import { RequirePermissions } from '../../common/decorators/permission.decorator';
 import { Role } from '../../Schemas/roles_schema/Role.schema';
 import { RoleService } from '../../roles/roles.service';
 
 @Controller('admin')
-//@UseGuards(RolesGuard, PermissionsGuard)
+@UseGuards(RolesGuard, PermissionsGuard)
 @Roles(UserType.ADMIN)
 export class AdminController {
   constructor(
@@ -52,13 +52,13 @@ export class AdminController {
   }
 
   @Get('users')
-  //@RequirePermissions('view_users')
+  @RequirePermissions('view_users')
   async findAllAdmins() {
     return this.adminService.findAllAdmins();
   }
 
   @Get('users/:id')
- // @RequirePermissions('view_users')
+  @RequirePermissions('view_users')
   async findUserById(@Param('id') id: string) {
     const user = await this.adminService.findUserById(id);
     if (!user) {
@@ -68,7 +68,7 @@ export class AdminController {
   }
 
   @Patch('users/:id')
-  //@RequirePermissions('manage_users')
+  @RequirePermissions('manage_users')
   async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const user = await this.adminService.updateUser(id, updateUserDto);
     if (!user) {
@@ -78,7 +78,7 @@ export class AdminController {
   }
 
   @Delete('users/:id')
-  //@RequirePermissions('manage_users')
+  @RequirePermissions('manage_users')
   async deleteUser(@Param('id') id: string) {
     const user = await this.adminService.deleteUser(id);
     if (!user) {

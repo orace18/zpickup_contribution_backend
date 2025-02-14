@@ -17,9 +17,13 @@ export class AdminSeeder {
 
       const adminRole = await this.roleModel.findOne({ key: 'admin' });
 
-      //const adminSuperRole = await this.roleModel.findOne({ key: 'super_admin' });
+      const adminSuperRole = await this.roleModel.findOne({ key: 'manager' });
 
       if (!adminRole) {
+        throw new Error('Le rôle admin doit être créé avant de seed les utilisateurs admin');
+      }
+
+      if (!adminSuperRole) {
         throw new Error('Le rôle admin doit être créé avant de seed les utilisateurs admin');
       }
 
@@ -40,7 +44,7 @@ export class AdminSeeder {
           lastname: 'Admin',
           email_address: 'admin@example.com',
           phone_number: '+22900000000',
-          password: 'Admin123!',    // Le mot de passe sera hashé par le middleware
+          password: 'Admin123!',   
           user_type: UserType.ADMIN,
           role: adminRole._id,
         },
@@ -52,6 +56,24 @@ export class AdminSeeder {
           password: 'Admin123!',
           user_type: UserType.ADMIN,
           role: adminRole._id,
+        },
+        {
+          firstname: 'Patrick',
+          lastname: 'AMOUSSOU',
+          email_address: 'patou@admin.com',
+          phone_number: '+22900000002',
+          password: 'Admin123!',
+          user_type: UserType.ADMIN,
+          role: adminRole._id,
+        },
+        {
+          firstname: 'Tony',
+          lastname: 'GOMEZ',
+          email_address: 'tony@admin.com',
+          phone_number: '+22900000004',
+          password: 'Admin123!',
+          user_type: UserType.ADMIN,
+          role: adminSuperRole._id,
         }
       ];
 
