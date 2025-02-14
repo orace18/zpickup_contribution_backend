@@ -98,15 +98,22 @@ export class DiscussionService {
     discussion.messages.push(savedMessage._id.toString());
     await discussion.save();
 
+    const message = await this.messageModel.findById(savedMessage._id).populate({
+      path: 'sender',
+      select: 'user_type _id'
+    });
+
     if (sender.user_type === 'admin') {
       const title = `Discussion: ${discussion.title}`;
-      const body = `Message: ${createDiscussionMessageDto.content}`;
+      const body = `${createDiscussionMessageDto.content}`;
 
       const creator = await this.usersService.findOne(discussion.creator);
 
       if (creator.fcm_token) {
         const send_data = {
           _id: discussion._id.toString(),
+          type: "new_message",
+          value: JSON.stringify(message),
         }
         await sendNotification(title, body, creator.fcm_token, send_data)
       }
