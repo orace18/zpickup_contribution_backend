@@ -1,54 +1,21 @@
-/* import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { Observable } from 'rxjs';
-import { UserType } from '../../Schemas/users_schema/Users.schema';
-
-
-@Injectable()
-export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<UserType[]>('roles', context.getHandler());
-    if (!requiredRoles) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
-
-    if (!user) {
-      throw new ForbiddenException('Utilisateur non authentifié');
-    }
-
-    if (!user.user_type || !requiredRoles.includes(user.user_type)) {
-      throw new ForbiddenException(`Rôle requis: ${requiredRoles.join(', ')}`);
-    }
-
-    return true;
-  }
-}
- */
-
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Role } from 'src/Schemas/roles_schema/Role.schema';
-
+import { UserType } from '../../Schemas/users_schema/Users.schema';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private jwtService: JwtService,
-    @InjectModel(Role.name) private roleModel: Model<Role>
+    private jwtService: JwtService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
-    if (!requiredRoles) {
+    // Récupérer les rôles requis depuis les métadonnées
+    const requiredRoles = this.reflector.get<UserType[]>('roles', context.getHandler());
+    
+    // Si aucun rôle n'est spécifié, autoriser l'accès
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
@@ -63,24 +30,29 @@ export class RolesGuard implements CanActivate {
       // Décode le token
       const payload = await this.jwtService.verifyAsync(token);
       
-      // Vérifie si le rôle existe dans le token
-      if (!payload.role) {
-        throw new ForbiddenException('Aucun rôle trouvé dans le token');
+      // Vérifie si le type d'utilisateur est présent dans le token
+      if (!payload.user_type) {
+        throw new ForbiddenException('Type d\'utilisateur non trouvé dans le token');
       }
 
-      // Récupère le rôle complet depuis la base de données
-      const userRole = await this.roleModel.findById(payload.role).populate('permissions');
+      // Vérifie si le type d'utilisateur est inclus dans les rôles requis
+      const hasRole = requiredRoles.includes(payload.user_type);
       
-      if (!userRole) {
-        throw new ForbiddenException('Rôle non trouvé');
+      if (!hasRole) {
+        throw new ForbiddenException(`Accès refusé. Rôles autorisés: ${requiredRoles.join(', ')}`);
       }
+      
+      // Attache les informations utilisateur à la requête pour usage ultérieur
+      request.user = {
+        ...payload,
+        user_type: payload.user_type
+      };
 
-      // Attache le rôle à la requête pour une utilisation ultérieure si nécessaire
-      request['userRole'] = userRole;
-
-      // Vérifie si le rôle de l'utilisateur correspond à l'un des rôles requis
-      return requiredRoles.includes(userRole.name);
+      return true;
     } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw error;
+      }
       throw new ForbiddenException('Token invalide ou expiré');
     }
   }

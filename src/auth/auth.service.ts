@@ -60,7 +60,7 @@ export class AuthService {
     const payload = {
       sub: userData._id.toString(),
       phone_number: userData.phone_number,
-      user_type: userData.user_type,
+      user_type: userData.user_type
     };
 
     console.log('Generated payload:', payload);

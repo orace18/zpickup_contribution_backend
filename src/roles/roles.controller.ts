@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { RoleService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
-import { Roles } from '../common/decorators/role.decorator';
+
 import { UserType } from '../Schemas/users_schema/Users.schema';
+import { RequiredRoles } from 'src/common/decorators/role.decorator';
 
 @Controller('role')
 export class RoleController {
@@ -13,19 +14,19 @@ export class RoleController {
   }
 
   @Get()
-  @Roles(UserType.ADMIN)
+  @RequiredRoles(UserType.ADMIN)
   async getAllRoles() {
     return this.rolesService.findAll();
   }
 
   @Get()
-  @Roles(UserType.ADMIN)
+  @RequiredRoles(UserType.ADMIN)
   async getRoleById(role_id) {
     return this.rolesService.findById(role_id)
   }
 
   @Put(':id')
-  @Roles(UserType.ADMIN)
+  @RequiredRoles(UserType.ADMIN)
   async updateRole(
     @Param('id') id: string,
     @Body() updateRoleDto: Partial<CreateRoleDto>
@@ -36,7 +37,7 @@ export class RoleController {
   }
 
   @Delete(':id')
-  @Roles(UserType.ADMIN)
+  @RequiredRoles(UserType.ADMIN)
   async deleteRole(@Param('id') id: string) {
     return this.rolesService.deleteRole(id);
   }
