@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Patch, Delete, Body, UseGuards, HttpException, HttpStatus, Post } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from '../../common/guards/role.guard';
-import { Roles } from '../../common/decorators/role.decorator';
+
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserType } from '../../Schemas/users_schema/Users.schema';
@@ -11,10 +11,11 @@ import { UsersService } from '../users.service';
 import { RequirePermissions } from '../../common/decorators/permission.decorator';
 import { Role } from '../../Schemas/roles_schema/Role.schema';
 import { RoleService } from '../../roles/roles.service';
+import { RequiredRoles } from 'src/common/decorators/role.decorator';
 
 @Controller('admin')
-@UseGuards(RolesGuard, PermissionsGuard)
-@Roles(UserType.ADMIN)
+@UseGuards(PermissionsGuard)
+@RequiredRoles(UserType.ADMIN)
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
@@ -24,6 +25,8 @@ export class AdminController {
   ) {}
 
   @Post('create-admin')
+  @UseGuards(PermissionsGuard)
+  @RequiredRoles(UserType.ADMIN)
   async createAdmin(@Body() createUserDto: CreateUserDto) {
     const { phone_number, email_address, role } = createUserDto;
 
@@ -53,12 +56,14 @@ export class AdminController {
 
   @Get('users')
   @RequirePermissions('view_users')
+  @UseGuards(PermissionsGuard)
   async findAllAdmins() {
     return this.adminService.findAllAdmins();
   }
 
   @Get('users/:id')
   @RequirePermissions('view_users')
+  @UseGuards(PermissionsGuard)
   async findUserById(@Param('id') id: string) {
     const user = await this.adminService.findUserById(id);
     if (!user) {
@@ -69,6 +74,7 @@ export class AdminController {
 
   @Patch('users/:id')
   @RequirePermissions('manage_users')
+  @UseGuards(PermissionsGuard)
   async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const user = await this.adminService.updateUser(id, updateUserDto);
     if (!user) {
@@ -79,6 +85,7 @@ export class AdminController {
 
   @Delete('users/:id')
   @RequirePermissions('manage_users')
+  @UseGuards(PermissionsGuard, RolesGuard)
   async deleteUser(@Param('id') id: string) {
     const user = await this.adminService.deleteUser(id);
     if (!user) {

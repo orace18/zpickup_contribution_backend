@@ -57,8 +57,6 @@ export class PermissionSeeder {
           description: 'Permet de créer, modifier et supprimer des rôles',
           group: 'Roles'
         },
-
-        // Permissions Courses
         {
           key: 'create_course',
           name: 'Créer une course',
@@ -113,7 +111,6 @@ export class PermissionSeeder {
           description: 'Permet de voir les configurations',
           group: 'Settings'
         },
-
         {
           key: 'view_cartes',
           name: 'Voir la carte',

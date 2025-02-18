@@ -2,11 +2,10 @@ import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Role } from 'src/Schemas/roles_schema/Role.schema';
 import { Users } from 'src/Schemas/users_schema/Users.schema';
 
-// Interface pour les permissions peuplées
 interface PopulatedPermission extends String{}
 
 @Injectable()
@@ -25,74 +24,72 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
 
-    /* if (!request.user?._id) {
-      throw new ForbiddenException('Utilisateur non authentifié');
+    if (!authHeader) {
+      throw new ForbiddenException('Token manquant');
     }
 
+    const token = authHeader.replace('Bearer ', '');
+    let decodedToken;
+    
+    try {
+      decodedToken = this.jwtService.verify(token);
+    } catch (error) {
+      throw new ForbiddenException('Token invalide');
+    }
+
+    const userId = decodedToken.sub;
+    if (!userId) {
+      throw new ForbiddenException('Token invalide: identifiant utilisateur manquant');
+    }
+
+    // Trouver l'utilisateur et peupler le rôle
     const user = await this.userModel
-      .findById(request.user._id)
+      .findById(userId)
       .populate('role')
       .lean()
       .exec();
 
-    if (!user || !user.role) {
-      throw new ForbiddenException('Utilisateur sans rôle');
-    } */
+    if (!user) {
+      throw new ForbiddenException(`Utilisateur non trouvé pour l'ID: ${userId}`);
+    }
 
-      const authHeader = request.headers.authorization;
+    if (!user.role) {
+      throw new ForbiddenException(`L'utilisateur n'a pas de rôle associé`);
+    }
 
-      if (!authHeader) {
-        throw new ForbiddenException('Token manquant');
-      }
-  
-      const token = authHeader.replace('Bearer ', '');
-      let decodedToken;
-      
-      try {
-        decodedToken = this.jwtService.verify(token);
-        console.log(decodedToken);
-      } catch (error) {
-        throw new ForbiddenException('Token invalide');
-      }
-  
-      const userId = decodedToken.sub; 
-      console.log(userId);
-  
-      const user = await this.userModel
-        .findById(userId)
-        .populate('role')
-        .lean()
-        .exec()
+    // Vérifier que le rôle est un objet avec un _id
+    if (!user.role._id) {
+      throw new ForbiddenException('Format de rôle invalide');
+    }
 
     const roleId = user.role._id.toString();
+    
+    // Récupérer le rôle avec les permissions
     const role = await this.roleModel
       .findById(roleId)
       .populate<{ permissions: PopulatedPermission[] }>('permissions') 
       .lean()
       .exec();
-      console.log("Le role",role);
 
-    if (!role || !role.permissions) {
-      throw new ForbiddenException('Rôle invalide ou sans permissions');
+    if (!role) {
+      throw new ForbiddenException(`Rôle non trouvé pour l'ID: ${roleId}`);
     }
 
+    if (!role.permissions || !Array.isArray(role.permissions)) {
+      throw new ForbiddenException('Le rôle n\'a pas de permissions valides');
+    }
+
+    // Vérifier les permissions
     const userPermissionKeys = role.permissions;
     const hasAllPermissions = requiredPermissions.every(perm => 
       userPermissionKeys.includes(perm)
     );
-
-    console.log("Les permissions",userPermissionKeys);
     
     if (!hasAllPermissions) {
-      throw new ForbiddenException('Permissions insuffisantes');
+      throw new ForbiddenException(`Permissions insuffisantes. Requises: ${requiredPermissions.join(', ')}`);
     }
-
-    
-
-    /* if (!hasAllPermissions) {
-      throw new ForbiddenException('Permissions insuffisantes');
-    } */
 
     return true;
   }
