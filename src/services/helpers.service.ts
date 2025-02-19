@@ -118,10 +118,36 @@ export async function sendNotificationForSeveralTokens(title, body, tokens, data
   }
 }
 
+// ************************ Implementation de l'api LeTexto ******************************
+
+const prodUrl = "https://apis.letexto.com"
+const token = "1b7ffb13e4a8b135f51a3a25984e9472"
+const sender = "ZPICKUP"
+
+export async function sendSMSLetexto(content: string, phoneNumber: string) {
+  const url = encodeURI(
+    `${prodUrl}/v1/messages/send?from=${sender}&to=${phoneNumber}&content=${content}&token=${token}`
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {},
+    });
+
+    const data = await response.json();
+    console.log('SMS envoyé avec succès:', JSON.stringify(data));
+    return data;
+  } catch (error) {
+    console.error("Erreur d'envoi SMS:", error);
+    throw error;
+  }
+}
+
+// ************************ Fin de l'Implementation de l'api LeTexto ******************************
 
 
-
-export async function sendMessage(body, to) {
+/* export async function sendMessage(body, to) {
   try {
     const client = twilio(accountSid, authToken);
     const message = await client.messages.create({
@@ -133,7 +159,7 @@ export async function sendMessage(body, to) {
   } catch (error) {
     console.error(error);
   }
-}
+} */
 
 export async function callZem(phoneNumber) {
   const client = twilio(accountSid, authToken);
