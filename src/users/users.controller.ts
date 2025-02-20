@@ -26,8 +26,12 @@ import { GSMNumberFormatService } from 'src/gsmnumber-format/gsmnumber-format.se
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { unlink } from 'fs/promises';
+import { PermissionsGuard } from 'src/common/guards/permission.guard';
+import { RequiredRoles } from 'src/common/decorators/role.decorator';
 
 @Controller('users')
+@UseGuards(PermissionsGuard)
+@RequiredRoles(UserType.ADMIN, UserType.ZEM, UserType.CUSTOMER)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
