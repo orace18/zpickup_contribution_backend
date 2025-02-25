@@ -19,7 +19,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { TwilioService } from '../services/twilio.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { sendMessage } from '../services/helpers.service';
+import { sendSMSLetexto } from '../services/helpers.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 import { GSMNumberFormatService } from 'src/gsmnumber-format/gsmnumber-format.service';
@@ -87,7 +87,7 @@ export class UsersController {
 
     try {
       // Envoie du code par SMS
-      sendMessage(
+      sendSMSLetexto(
         'Votre code de vérification ZPickup : ' + verification_code,
         phone_number,
       );
@@ -134,7 +134,7 @@ export class UsersController {
     await this.usersService.update(user._id.toString(), { verification_code });
 
     // Envoie du code par SMS
-    sendMessage(
+    sendSMSLetexto(
       'Votre code de vérification ZPickup : ' + verification_code,
       phone_number,
     );
