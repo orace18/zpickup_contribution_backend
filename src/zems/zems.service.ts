@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Zems } from '../Schemas/zems_schema/Zems.schema';
@@ -35,7 +35,6 @@ export class ZemsService {
     return `This action removes a #${id} zem`;
   }
 
-
   async sendNotificationForAllUserInRay(zem_id){
     const zem = await this.findOne(zem_id);
     const ray = await this.configModel.findOne({ key: 'ray' }).exec();
@@ -58,7 +57,7 @@ export class ZemsService {
             zem.service_latitude,
             zem.service_longitude
         );
-        return distance <= parseFloat(ray.value); // Comparaison
+        return (zem.ray==null ? (distance <= parseFloat(ray.value)) : (distance <= zem.ray));
       });
       const tokens = [];
       let body_notification_zem =
@@ -89,5 +88,15 @@ export class ZemsService {
         );
       }
     }
+  }
+
+  async updateSearchRadius(zemId: string, newRadius: number): Promise<Zems> {
+    const updatedZem = await this.zemModel.findByIdAndUpdate(
+      zemId,
+      { $set: { ray: newRadius } },
+      { new: true }
+    );
+
+    return updatedZem;
   }
 }

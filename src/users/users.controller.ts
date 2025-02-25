@@ -19,23 +19,49 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { TwilioService } from '../services/twilio.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { sendMessage } from '../services/helpers.service';
+import { sendSMSLetexto } from '../services/helpers.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
+import { GSMNumberFormatService } from 'src/gsmnumber-format/gsmnumber-format.service';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { unlink } from 'fs/promises';
 
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly twilioService: TwilioService,
-  ) {}
+    private readonly referenceHistoryService: ReferenceHistoryService,
+    private readonly gsmNumberFormatService: GSMNumberFormatService,
+  ) { }
 
   @Post('register/phone_number')
   async registerWithPhoneNumber(
     @Body() { phone_number }: { phone_number: string },
   ) {
-    // on vérifie si le numéro de téléphone existe déjà
-    const existingUser = await this.usersService.findByPhone(phone_number);
-    if (existingUser) {
+
+    // Vérification des caractères spéciaux et lettres
+    if (!/^\+?\d+$/.test(phone_number)) {
+      throw new HttpException(
+        'Le numéro de téléphone ne doit contenir que des chiffres',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Vérification du format GSM béninois
+    const isValidPrefix = await this.gsmNumberFormatService.isValidPrefix(phone_number);
+    if (!isValidPrefix) {
+      throw new HttpException(
+        'Le format du numéro de téléphone n\'est pas valide',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+
+    // on vérifie si le numéro de téléphone existe déjà avec un compte validé
+    const existingUser = await this.usersService.findByPhone(phone_number, true);
+    if (existingUser && existingUser.validated_at) {
       throw new HttpException(
         'Ce numéro de téléphone est déjà attribué à un compte',
         HttpStatus.BAD_REQUEST,
@@ -59,11 +85,15 @@ export class UsersController {
       }
     }
 
-    // Envoie du code par SMS
-    sendMessage(
-      'Votre code de vérification ZPickup : ' + verification_code,
-      phone_number,
-    );
+    try {
+      // Envoie du code par SMS
+      sendSMSLetexto(
+        'Votre code de vérification ZPickup : ' + verification_code,
+        phone_number,
+      );
+    } catch (error) {
+      console.error(error);
+    }
 
     // Création d'un utilisateur temporaire avec le minimum d'informations
     const user = await this.usersService.createTemporary({
@@ -104,7 +134,7 @@ export class UsersController {
     await this.usersService.update(user._id.toString(), { verification_code });
 
     // Envoie du code par SMS
-    sendMessage(
+    sendSMSLetexto(
       'Votre code de vérification ZPickup : ' + verification_code,
       phone_number,
     );
@@ -123,12 +153,16 @@ export class UsersController {
       verification_code: string;
     },
   ) {
-    const user = await this.usersService.findByPhone(phone_number);
+    const user = await this.usersService.findByPhone(phone_number, false);
+
     if (!user) {
       throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
     }
 
-    if (user.verification_code !== verification_code) {
+    console.log('Code reçu:', verification_code);
+    console.log('Code stocké:', user.verification_code);
+
+    if (!user.verification_code || user.verification_code !== verification_code) {
       throw new HttpException(
         'Code de vérification incorrect',
         HttpStatus.BAD_REQUEST,
@@ -136,10 +170,17 @@ export class UsersController {
     }
 
     // Mise à jour de `validated_at` et suppression de `verification_code`
-    await this.usersService.update(user._id.toString(), {
+    const updatedUser = await this.usersService.update(user._id.toString(), {
       validated_at: new Date(),
       verification_code: null,
     });
+
+    if (!updatedUser) {
+      throw new HttpException(
+        'Erreur lors de la validation du compte',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
 
     return { message: 'Code vérifié avec succès', userId: user._id };
   }
@@ -180,35 +221,78 @@ export class UsersController {
   }
 
   @Patch('complete-registration/:id')
-  @UseInterceptors(FileInterceptor('user_profile_image'))
+  @UseInterceptors(FileInterceptor('user_profile_image', {
+    storage: diskStorage({
+      destination: './uploads/users',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `user_profile_image-${uniqueSuffix}${extname(file.originalname)}`);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+        return cb(new Error('Seuls les fichiers jpg, jpeg et png sont autorisés!'), false);
+      }
+      cb(null, true);
+    },
+  }))
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    // Récupère l'utilisateur par ID
-    const user = await this.usersService.findOne(id);
-    if (!user) {
-      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
-    }
+    try {
+      const user = await this.usersService.findOne(id);
+      if (!user) {
+        throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+      }
 
-    // Si un fichier est envoyé, on met à jour l'image de profil avec le chemin du fichier
-    if (file) {
-      updateUserDto.user_profile_image = file.path;
-    }
+      if (file) {
+        // Supprimer l'ancienne image si elle existe
+        if (user.user_profile_image) {
+          try {
+            await unlink(join(process.cwd(), user.user_profile_image));
+          } catch (error) {
+            console.log('Erreur lors de la suppression de l\'ancienne image:', error);
+          }
+        }
+        updateUserDto.user_profile_image = file.path.replace(/\\/g, '/');
+      }
 
-    // Si le code de parrainage n'existe pas, en génère un
-    if (!user.sponsorship_code) {
-      const sponsorship_code =
-        await this.usersService.generateUniqueSponsorshipCode();
-      updateUserDto = { ...updateUserDto, sponsorship_code };
-    }
+      // Générer un code de parrainage unique si l'utilisateur n'en a pas
+      if (!user.sponsorship_code) {
+        const sponsorship_code = await this.usersService.generateUniqueCode();
+        updateUserDto.sponsorship_code = sponsorship_code;
+      }
 
-    // Mettez à jour l'utilisateur avec les nouvelles données
-    return await this.usersService.update(id, {
-      ...updateUserDto,
-      updated_at: new Date(),
-    });
+      // Gérer le code de parrainage si fourni
+      if (updateUserDto.referal_code) {
+        // Utiliser findBySponsorshipCode au lieu de findOne
+        const referrer = await this.usersService.findBySponsorshipCode(updateUserDto.referal_code);
+
+        if (referrer) {
+          await this.referenceHistoryService.createReferenceHistory(
+            referrer._id.toString(),
+            id
+          );
+        } else {
+          throw new HttpException('Code de parrainage invalide', HttpStatus.BAD_REQUEST);
+        }
+      }
+
+      // Mettre à jour l'utilisateur
+      const updatedUser = await this.usersService.update(id, {
+        ...updateUserDto,
+        updated_at: new Date(),
+      });
+
+      return updatedUser;
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Une erreur est survenue',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post('forgot-password/send-code')
@@ -312,5 +396,28 @@ export class UsersController {
     await this.usersService.update(id, { user_type, updated_at: new Date() });
 
     return { message: 'Type d’utilisateur mis à jour avec succès' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete-account')
+  async deleteAccount(@Request() req) {
+    try {
+      const userId = req.user.userId;
+      const user = await this.usersService.findOne(userId);
+
+      if (!user) {
+        throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+      }
+
+      // Utiliser la nouvelle méthode deleteAccount
+      await this.usersService.deleteAccount(userId);
+
+      return { message: 'Compte supprimé avec succès' };
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Une erreur est survenue',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

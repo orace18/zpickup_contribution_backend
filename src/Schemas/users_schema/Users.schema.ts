@@ -6,6 +6,7 @@ import { PrimaryGeneratedColumn } from 'typeorm/typeorm-model-shim.js';
 export enum UserType {
   CUSTOMER = 'customer',
   ZEM = 'zem',
+  ADMIN = 'admin'
 }
 
 @Schema()
@@ -32,15 +33,18 @@ export class Users {
   email_address?: string;
 
   @Prop({ default: null })
+  referal_code?: string;
+  
+  @Prop({ default: null })
   password?: string;
 
-  @Prop()
+  @Prop({ type: String })
   verification_code: string;
 
   @Prop({ default: null })
   birthday?: string;
 
-  @Prop()
+  @Prop({ default: null })
   sponsorship_code?: string;
 
   @Prop()
@@ -61,6 +65,9 @@ export class Users {
   @Prop({ default: null })
   validated_at?: Date;
 
+  @Prop({ default: null })
+  deleted_at?: Date;
+
   @Prop({ default: 0 })
   token_version: number;
 
@@ -75,6 +82,10 @@ export class Users {
 
   @Prop()
   code_pin: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Role' })
+  role: Types.ObjectId;
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(Users);
@@ -86,10 +97,32 @@ UserSchema.pre('save', async function (next) {
   }
 
   try {
+    console.log('Hachage du mot de passe dans le middleware pre-save');
+    console.log('Mot de passe avant hachage:', this.password);
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
+    console.log('Mot de passe après hachage:', this.password);
     next();
   } catch (error) {
     next(error);
   }
 });
+
+// Supprimer l'ancien index unique sur phone_number s'il existe
+UserSchema.index({ phone_number: 1 }, { unique: false });
+
+// Créer un nouvel index composé
+UserSchema.index(
+  { 
+    phone_number: 1,
+    validated_at: 1,
+    deleted_at: 1
+  },
+  { 
+    unique: true,
+    partialFilterExpression: { 
+      validated_at: { $ne: null },
+      deleted_at: null
+    }
+  }
+);

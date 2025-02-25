@@ -2,7 +2,7 @@ import {BadRequestException, Injectable, NotFoundException,} from '@nestjs/commo
 import {UpdateCounterDto} from './dto/update-counter.dto';
 import {InjectModel} from '@nestjs/mongoose';
 import {Counter} from '../Schemas/counter_schema/counter.schema';
-import {Model, Types} from 'mongoose';
+import {HydratedDocument, Model, Types} from 'mongoose';
 import {Payment, PaymentStatus} from '../Schemas/payment/payment.schema';
 import {Zems} from '../Schemas/zems_schema/Zems.schema';
 import {CoursesStatus, Races} from '../Schemas/races_schema/races.schema';
@@ -14,6 +14,7 @@ import {UsersService} from '../users/users.service';
 import {sendNotification} from '../services/helpers.service';
 import {CounterType} from "../Schemas/counter-history_schema/counter_history.schema";
 import {CounterHistoryService} from "../counter-history/counter-history.service";
+import {Users} from "../Schemas/users_schema/Users.schema";
 
 @Injectable()
 export class CounterService {
@@ -40,11 +41,13 @@ export class CounterService {
       );
     }
 
-    const existingCounter = await this.counterModel.findOne({
+    let existingCounter = await this.counterModel.findOne({
       zem: new Types.ObjectId(zemId),
     });
+    const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
+    const km_kdo_for_zem = await this.configModel.findOne({ key: 'km-kdo-for-zem' }).exec();
+
     if (!existingCounter) {
-      const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
 
       const counter = new this.counterModel({
         zem: new Types.ObjectId(zemId),
@@ -53,7 +56,11 @@ export class CounterService {
         total_km_traveled: 0,
       });
 
-      return counter.save();
+      existingCounter = await counter.save();
+    }
+
+    if(existingCounter && parseInt(km_kdo_for_zem.value)==1){
+      await this.counterHistoryService.create({counter: existingCounter._id, counter_type:CounterType.INPUT,value:parseFloat(free_km.value), reference: `Km kdo de bienvenu`});
     }
 
 
@@ -91,9 +98,7 @@ export class CounterService {
         'card_number',
         'profile_validation_status',
       ])
-
       .lean()
-
       .exec();
 
     console.log('Found Counter:', counter);
@@ -405,7 +410,7 @@ export class CounterService {
         counter.total_km_traveled += kilometers;
         break;
       case CounterType.INPUT:
-        counter.balance_km -= kilometers;
+        counter.balance_km += kilometers;
         break;
     }
 
@@ -465,6 +470,10 @@ export class CounterService {
     await this.counterHistoryService.create({counter: counter._id, counter_type:type,value:kilometers, reference: reference});
 
     return counter;
+  }
+
+  async findByZem(zem_id: string): Promise<Counter | null> {
+    return this.counterModel.findOne({ zem: new Types.ObjectId(zem_id), }).exec();
   }
 
   async getTotalKilometers(zemId: string) {

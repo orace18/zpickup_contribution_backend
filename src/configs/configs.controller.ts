@@ -27,13 +27,13 @@ export class ConfigsController {
     return this.configsService.findConfigOneByKey(key_value);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateConfigDto: UpdateConfigDto) {
-    return this.configsService.update(+id, updateConfigDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.configsService.remove(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateConfigDto: UpdateConfigDto){
+    return this.configsService.update(id, updateConfigDto);
   }
 }

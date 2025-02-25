@@ -19,12 +19,23 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivationHistoryModule } from './activation_history/activation_history.module';
 import { ConfigModule } from '@nestjs/config';
+import { AdminAuthModule } from './auth/admin/admin.module';
+import { AdminModule } from './users/admin/admin.module';
+import { PermissionModule } from './permission/permission.module';
+import { RoleModule } from './roles/roles.module';
 import { SeedsModule } from './seeds/seed.module';
 import { RacesModule } from './races/races.module';
 import { PaymentModule } from './payment/payment.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { notificationConfig } from './notifications/notification.config';
+import { ReferenceHistoryModule } from './reference_history/reference_history.module';
+import { MessageModule } from './message/message.module';
+import { RaceHistoryModule } from './race_history/race_history.module';
+import { GSMNumberFormatModule } from './gsmnumber-format/gsmnumber-format.module';
+import { PrivacyPolicyModule } from './privacy_policy/privacy_policy.module';
+import { TermsConditionsModule } from './terms_conditions/terms_conditions.module';
+import { DiscussionModule } from './discussion/discussion.module';
 
 @Module({
   imports: [
@@ -60,6 +71,17 @@ import { notificationConfig } from './notifications/notification.config';
     CounterModule,
     PaymentModule,
     NotificationsModule,
+    RoleModule,
+    PermissionModule,
+    AdminModule,
+    AdminAuthModule,
+    ReferenceHistoryModule,
+    MessageModule,
+    RaceHistoryModule,
+    GSMNumberFormatModule,
+    PrivacyPolicyModule,
+    TermsConditionsModule,
+    DiscussionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

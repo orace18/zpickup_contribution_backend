@@ -13,7 +13,7 @@ export enum ProfileValidationStatus {
   VALIDATED = 'validated',
 }
 
-@Schema()
+@Schema({ timestamps: true })
 export class Zems {
   @Prop({ required: true, enum: CardType, default: CardType.PASSPORT_CARD })
   card_type: CardType;
@@ -63,6 +63,9 @@ export class Zems {
 
   @Prop({ type: Number, required: false })
   service_duration: number;
+
+  @Prop({ type: Number, required: false, default:null })
+  ray: number;
 
   @Prop({ default: null })
   validated_at: Date;

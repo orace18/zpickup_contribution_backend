@@ -1,17 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
+export type FAQDocument = FAQ & Document;
+
 @Schema()
 export class FAQ {
+  @Prop({})
+  key: string;
+
   @Prop({
     required: true,
     unique: true,
   })
   title: string;
 
-  @Prop()
+  @Prop({})
   description?: string;
 
-  @Prop()
+  @Prop({})
   youtube_video_link?: string;
 
   @Prop({ default: new Date() })

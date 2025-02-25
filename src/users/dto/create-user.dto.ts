@@ -1,7 +1,7 @@
 import {
   IsDate,
   IsEmail,
-  IsEnum,
+  IsEnum, IsMongoId,
   IsNotEmpty,
   IsNumberString,
   IsOptional,
@@ -37,6 +37,10 @@ export class CreateUserDto {
   @IsString()
   @IsEmail()
   email_address?: string;
+
+  @IsOptional()
+  @IsString()
+  referal_code?: string;
 
   @IsOptional()
   @IsString()
@@ -80,5 +84,14 @@ export class CreateUserDto {
   validated_at?: Date;
 
   @IsOptional()
+  @IsDate()
+  deleted_at?: Date;
+
+  @IsOptional()
   token_version?: number;
+
+
+  @IsOptional()
+  @IsMongoId()
+  role?: Types.ObjectId;
 }

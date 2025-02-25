@@ -13,7 +13,7 @@ import { UsersModule } from '../users/users.module';
     PassportModule.register({ defaultStrategy: 'local' }),
     JwtModule.register({
       secret: 'secret_jwt',
-      signOptions: { expiresIn: '24h', algorithm: 'HS256' },
+      signOptions: { expiresIn: '730h', algorithm: 'HS256' },
     }),
   ],
   controllers: [AuthController],

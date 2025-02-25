@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { RacesService } from './races.service';
 import { RacesController } from './races.controller';
 import {MongooseModule} from "@nestjs/mongoose";
@@ -17,11 +17,15 @@ import {CounterService} from "../counter/counter.service";
 import {Payment, PaymentSchema} from "../Schemas/payment/payment.schema";
 import {CounterHistoryService} from "../counter-history/counter-history.service";
 import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_schema/counter_history.schema";
+import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
+import {RaceHistoryModule} from "../race_history/race_history.module";
+import {UsersModule} from "../users/users.module";
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Races.name, schema: RacesSchema }]),
     MongooseModule.forFeature([{ name: Users.name, schema: UserSchema }]),
+    UsersModule,
     MongooseModule.forFeature([{ name: Zems.name, schema: ZemsSchema }]),
     MongooseModule.forFeature([{ name: Config.name, schema: ConfigSchema }]),
     MongooseModule.forFeature([{ name: Notification.name, schema: NotificationSchema }]),
@@ -30,8 +34,10 @@ import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_s
     MongooseModule.forFeature([{ name: CounterHistory.name, schema: CounterHistorySchema }]),
     WebsocketModule,
     WalletModule,
+    forwardRef(() => ReferenceHistoryModule),
   ],
+
   controllers: [RacesController],
-  providers: [RacesService, UsersService, ZemsService,NotificationService,CounterService,CounterHistoryService],
+  providers: [RacesService,UsersService, ZemsService,NotificationService,CounterService,CounterHistoryService],
 })
 export class RacesModule {}

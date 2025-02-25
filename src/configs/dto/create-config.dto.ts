@@ -11,6 +11,10 @@ export class CreateConfigDto {
 
   @IsString()
   @IsNotEmpty()
+  type: string
+
+  @IsString()
+  @IsNotEmpty()
   description: string
 
   @IsDateString()

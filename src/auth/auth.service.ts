@@ -17,6 +17,11 @@ export class AuthService {
       return null;
     }
 
+    // Vérifier si le compte a été supprimé
+    if (user.deleted_at) {
+      throw new UnauthorizedException('Ce compte n\'existe plus sur notre serveur');
+    }
+
     // on vérifie si le compte est validé
     if (!user.validated_at) {
       throw new UnauthorizedException('Compte non validé');
@@ -47,9 +52,15 @@ export class AuthService {
       );
     }
 
+    // Vérifier à nouveau si le compte n'a pas été supprimé
+    if (userData.deleted_at) {
+      throw new UnauthorizedException('Ce compte n\'existe plus sur notre serveur');
+    }
+
     const payload = {
       sub: userData._id.toString(),
       phone_number: userData.phone_number,
+      user_type: userData.user_type
     };
 
     console.log('Generated payload:', payload);
