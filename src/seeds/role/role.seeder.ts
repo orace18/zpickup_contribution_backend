@@ -42,6 +42,7 @@ export class RoleSeeder {
             'manage_users',
             'view_user_details',
             'manage_roles',
+            'manage_chats',
             'create_course',
             'view_courses',
             'view_gains',

@@ -1,12 +1,10 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { DiscussionService } from './discussion.service';
 import { CreateDiscussionDto } from './dto/create-discussion.dto';
-import { UpdateDiscussionDto } from './dto/update-discussion.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DiscussionResponseDto } from './dto/discussion-response.dto';
-import { IUser } from 'src/users/interface/user.interface';
-import { User } from 'src/users/decorator/user.decorator';
 import { CreateDiscussionMessageDto, DiscussionMessageResponseDto } from './dto/discussion-message.dto';
+import { UpdateDiscussionStatusDto } from './dto/update-discussion-status.dto';
 
 
 
@@ -58,6 +56,15 @@ async getUserDiscussions(@Param('userId') userId: string): Promise<DiscussionRes
 async getDiscussionMessages(@Param('id') discussionId: string) {
   return this.discussionService.getDiscussionMessages(discussionId);
 }
+
+@Patch('status/:id')
+    @UseGuards(JwtAuthGuard)
+    async updateDiscussionStatus(
+        @Param('id') id: string,
+        @Body() updateStatusDto: UpdateDiscussionStatusDto
+    ): Promise<DiscussionResponseDto> {
+        return this.discussionService.updateDiscussionStatus(id, updateStatusDto.is_open);
+    }
   
 
   @Delete(':id')

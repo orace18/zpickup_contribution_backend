@@ -196,6 +196,10 @@ export class UsersService {
     return user;
   }
 
+  async findAllAdmins() {
+    return this.userModel.find({ user_type: 'admin' }).exec();
+  }
+
 
   /* Correction de la méthode findOne pour retourner un utilisateur */
 /*  async findOne(id: string): Promise<Users | null> {
