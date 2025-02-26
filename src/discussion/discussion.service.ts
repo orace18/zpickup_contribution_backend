@@ -64,7 +64,6 @@ export class DiscussionService {
       .find()
       .populate('creator')
       .exec();
-
     return discussions.map(discussion => this.toDiscussionDto(discussion));
   }
 
@@ -129,9 +128,10 @@ export class DiscussionService {
         path: 'messages',
         populate: {
           path: 'sender',
-          select: 'user_type _id'
+          select: 'user_type _id user'
         }
       })
+     
       .lean()
       .exec();
 
