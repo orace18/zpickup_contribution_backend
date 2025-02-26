@@ -18,6 +18,9 @@ export class Discussion {
     @Prop({ type: String, required: true }) // Changé en String pour simplifier
     creator: string;
 
+    @Prop({ type: Boolean, default: false })
+    is_open: boolean;
+
     @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'DiscussionMessage' }], default: [] })
     messages: string[];
 
