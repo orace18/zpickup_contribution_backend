@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { UsersService } from 'src/users/users.service';
-import { callZem, sendMessage, sendNotification } from 'src/services/helpers.service';
+import { callZem, sendNotification, sendSMSLetexto } from 'src/services/helpers.service';
 
 @Injectable()
 export class MessageService {
@@ -26,7 +26,7 @@ export class MessageService {
       const messageContent = `Message de: ${client.firstname} ${client.lastname}\n\n${message}`;
 
       // Envoyer le SMS via Twilio 
-      sendMessage(messageContent, zemPhoneNumber);
+      sendSMSLetexto(messageContent, zemPhoneNumber);
 
       // Si on trouve le zem dans la base de données, on envoie aussi une notification push
       if (zem?.fcm_token) {

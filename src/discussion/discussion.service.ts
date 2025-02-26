@@ -34,6 +34,7 @@ export class DiscussionService {
         id: savedDiscussion._id.toString(),
         title: savedDiscussion.title,
         creator: savedDiscussion.creator,
+        is_open: savedDiscussion.is_open,
         messages: savedDiscussion.messages,
         created_at: savedDiscussion.created_at,
         updated_at: savedDiscussion.updated_at
@@ -87,6 +88,11 @@ export class DiscussionService {
 
     const sender = await this.usersService.findOne(userId);
 
+    if (sender.user_type === 'admin') {
+      discussion.is_open = false;
+      await discussion.save();
+    }
+
     const newMessage = new this.messageModel({
       content: createDiscussionMessageDto.content,
       discussion: createDiscussionMessageDto.discussionId,
@@ -115,6 +121,25 @@ export class DiscussionService {
           value: JSON.stringify(message),
         }
         await sendNotification(title, body, creator.fcm_token, send_data)
+      }
+    } else {
+      // Si c'est un utilisateur qui envoie le message, notifier les admins
+      const title = `Nouvelle réponse de ${sender.firstname} ${sender.lastname}`;
+      const body = `${createDiscussionMessageDto.content}`;
+
+      // Récupérer tous les admins
+      const admins = await this.usersService.findAllAdmins();
+
+      // Envoyer la notification à chaque admin
+      for (const admin of admins) {
+        if (admin.fcm_token) {
+          const send_data = {
+            _id: discussion._id.toString(),
+            type: "new_message",
+            value: JSON.stringify(message),
+          }
+          await sendNotification(title, body, admin.fcm_token, send_data);
+        }
       }
     }
 
@@ -161,12 +186,26 @@ export class DiscussionService {
     await discussion.deleteOne();
   }
 
+  async updateDiscussionStatus(id: string, is_open: boolean): Promise<DiscussionResponseDto> {
+    const discussion = await this.discussionModel.findById(id);
+
+    if (!discussion) {
+      throw new NotFoundException('Discussion non trouvée');
+    }
+
+    discussion.is_open = is_open;
+    const updatedDiscussion = await discussion.save();
+
+    return this.toDiscussionDto(updatedDiscussion);
+  }
+
 
   private toDiscussionDto(discussion: DiscussionDocument): DiscussionResponseDto {
     return {
       id: discussion._id.toString(),
       title: discussion.title,
       creator: discussion.creator.toString(),
+      is_open: discussion.is_open,
       messages: discussion.messages.map(message => message.toString()),
       created_at: discussion.created_at,
       updated_at: discussion.updated_at,
