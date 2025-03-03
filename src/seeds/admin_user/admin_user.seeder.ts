@@ -27,17 +27,16 @@ export class AdminSeeder {
         throw new Error('Le rôle admin doit être créé avant de seed les utilisateurs admin');
       }
 
-
-
       const defaultAdmins = [
         {
           firstname: 'Djlo',
           lastname: 'Alohou',
           email_address: 'dalohou@wonderteck.com',
           phone_number: '+22991000000',
-          password: '12345678',    // Le mot de passe sera hashé par le middleware
+          password: '12345678',   
           user_type: UserType.ADMIN,
           role: adminRole._id,
+          fcm_token: ''
         },
          {
           firstname: 'Super',
@@ -47,6 +46,7 @@ export class AdminSeeder {
           password: 'Admin123!',   
           user_type: UserType.ADMIN,
           role: adminRole._id,
+          fcm_token: ''
         },
         {
           firstname: 'Orace',
@@ -56,6 +56,7 @@ export class AdminSeeder {
           password: 'Admin123!',
           user_type: UserType.ADMIN,
           role: adminRole._id,
+          fcm_token: ''
         },
         {
           firstname: 'Patrick',
@@ -65,6 +66,7 @@ export class AdminSeeder {
           password: 'Admin123!',
           user_type: UserType.ADMIN,
           role: adminRole._id,
+          fcm_token: ''
         },
         {
           firstname: 'Tony',
@@ -74,6 +76,7 @@ export class AdminSeeder {
           password: 'Admin123!',
           user_type: UserType.ADMIN,
           role: adminSuperRole._id,
+          fcm_token: ''
         }
       ];
 
