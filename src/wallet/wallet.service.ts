@@ -43,7 +43,7 @@ export class WalletService {
   ) {
     const wallet = await this.getWalletBalance(userId);
 
-    wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
+    wallet.wallet_amount += amount;
     wallet.updated_at = new Date();
     await wallet.save();
 
@@ -100,10 +100,6 @@ export class WalletService {
     switch (type){
       case TransactionType.BONUS:
       case TransactionType.WITHDRAWAL:
-        wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
-        break;
-      case TransactionType.DEBIT:
-        wallet.wallet_amount = Number(wallet.wallet_amount) - Number(amount);
          mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
         wallet.wallet_amount = mont;
 
