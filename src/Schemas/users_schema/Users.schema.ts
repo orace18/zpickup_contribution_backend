@@ -97,11 +97,11 @@ UserSchema.pre('save', async function (next) {
   }
 
   try {
-    console.log('Hachage du mot de passe dans le middleware pre-save');
-    console.log('Mot de passe avant hachage:', this.password);
+ /*    console.log('Hachage du mot de passe dans le middleware pre-save');
+    console.log('Mot de passe avant hachage:', this.password); */
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
-    console.log('Mot de passe après hachage:', this.password);
+   /*  console.log('Mot de passe après hachage:', this.password); */
     next();
   } catch (error) {
     next(error);
