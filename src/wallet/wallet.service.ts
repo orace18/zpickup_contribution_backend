@@ -47,6 +47,8 @@ export class WalletService {
     wallet.updated_at = new Date();
     await wallet.save();
 
+    console.log("wallet",wallet);
+
     const transaction = await this.creditWalletModel.create({
       user: new Types.ObjectId(userId),
       transaction_type,
@@ -94,7 +96,7 @@ export class WalletService {
     msg:string, type:TransactionType,
   ) {
     const wallet = await this.getWalletBalance(userId);
-
+    let mont = 0;
     switch (type){
       case TransactionType.BONUS:
       case TransactionType.WITHDRAWAL:
@@ -102,11 +104,19 @@ export class WalletService {
         break;
       case TransactionType.DEBIT:
         wallet.wallet_amount = Number(wallet.wallet_amount) - Number(amount);
+         mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
+        wallet.wallet_amount = mont;
+
+        break;
+      case TransactionType.DEBIT:
+         mont = parseFloat(wallet.wallet_amount.toString()) - parseFloat(amount.toString());
+        wallet.wallet_amount = mont;
         break;
 
     }
     wallet.updated_at = new Date();
     await wallet.save();
+
 
     const transaction = await this.walletTransactionModel.create({
       user: new Types.ObjectId(userId),
@@ -228,7 +238,7 @@ export class WalletService {
   }
 
   update(creditWalletDto: CreditWalletDto) {
-    return this.creditWalletUserCustomBalance(creditWalletDto.user.toString(),creditWalletDto.amount,"Recharge","Votre portefeuille a été rechargeé avec succès.",TransactionType.WITHDRAWAL);
+    return this.creditWalletUserCustomBalance(creditWalletDto.user.toString(),creditWalletDto.amount,"Recharge","Votre portefeuille a été rechargé avec succès.",TransactionType.WITHDRAWAL);
   }
 
   remove(id: number) {
