@@ -78,6 +78,12 @@ export class Zems {
 
   @Prop({ default: new Date() })
   updated_at: Date;
+
+  @Prop({ type: Boolean, default: false})
+  is_ambassador: Boolean;
+
+  @Prop()
+  contrat_picture: string;
 }
 
 export const ZemsSchema = SchemaFactory.createForClass(Zems);

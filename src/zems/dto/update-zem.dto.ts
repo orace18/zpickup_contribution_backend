@@ -27,4 +27,7 @@ export class UpdateZemDto extends PartialType(CreateZemDto) {
 
   @IsOptional()
   service_longitude: number;
+ 
+  @IsOptional()
+  is_ambassador?: boolean;
 }

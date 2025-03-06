@@ -41,6 +41,14 @@ export class CreateZemDto {
   ifu_number: string;
 
   @IsOptional()
+  @IsBoolean()
+  is_ambassador:  boolean = false;
+
+  @IsOptional()
+  @ApiProperty({ type: 'string', format: 'binary' })
+  contrat_picture: any;
+
+  @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
   ifu_number_image: any;
 

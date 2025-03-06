@@ -99,4 +99,14 @@ export class ZemsService {
 
     return updatedZem;
   }
+
+  async makeAmbassador(zemId: string): Promise<Zems> {
+    const updatedZem = await this.zemModel.findByIdAndUpdate
+    (
+      zemId,
+      { $set: { is_ambassador: true } },
+      { new: true }
+    ); 
+    return updatedZem;  
+  }
 }

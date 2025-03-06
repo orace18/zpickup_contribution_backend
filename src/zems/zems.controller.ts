@@ -186,4 +186,19 @@ export class ZemsController {
       };
     }
   }
+
+  @Patch('make_ambassador/:id')
+  async makeAmbassador(@Param('id') id: string) {
+    try {
+      const updatedZem = await this.zemsService.makeAmbassador(id);
+      return {
+        result: updatedZem,
+        message: 'Zem promu ambassadeur avec succès'
+      };
+    } catch (error) {
+      return {
+        error: error.message
+      };
+    }
+  }
 }

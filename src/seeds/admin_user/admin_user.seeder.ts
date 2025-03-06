@@ -69,13 +69,13 @@ export class AdminSeeder {
           fcm_token: ''
         },
         {
-          firstname: 'Tony',
-          lastname: 'GOMEZ',
-          email_address: 'tony@admin.com',
-          phone_number: '+22900000004',
+          firstname: 'Orace Juscard',
+          lastname: 'EDJO',
+          email_address: 'oedjo@wonderteck.com',
+          phone_number: '+22968894947',
           password: 'Admin123!',
           user_type: UserType.ADMIN,
-          role: adminSuperRole._id,
+          role: adminRole._id,
           fcm_token: ''
         }
       ];

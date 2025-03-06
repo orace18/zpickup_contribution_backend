@@ -40,8 +40,8 @@ import { DiscussionModule } from './discussion/discussion.module';
 @Module({
   imports: [
     MongooseModule.forRoot(
-      'mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
-      //'mongodb+srv://zpickupbenin:KvhHqBHmEMItQLie@cluster0.vd0hs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+      //'mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+      'mongodb+srv://zpickupbenin:KvhHqBHmEMItQLie@cluster0.vd0hs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
     ),
     ConfigModule.forRoot({
       isGlobal: true,
