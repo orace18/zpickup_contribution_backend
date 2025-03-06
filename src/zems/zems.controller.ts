@@ -54,6 +54,8 @@ export class ZemsController {
       }),
     }),
   )
+
+
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Zems with files',
@@ -184,6 +186,33 @@ export class ZemsController {
       return {
         error: error.message
       };
+    }
+  }
+
+  // nouvelle route pour creer un zem temporairement
+  @UseGuards(JwtAuthGuard)
+  @Post('create-temporary')
+  async createTemporaryZem(@Body() createZemDto: CreateZemDto, @Request() req) {
+    const user_id = req.user.userId;
+    createZemDto.user = user_id;
+    createZemDto.is_temporal = true; // Indiquer que c'est une validation temporaire
+
+    try {
+      const zem = await this.zemsService.create(createZemDto);
+      this.usersService.update(user_id, {
+        zem: zem['_id'],
+        user_type: UserType.ZEM,
+      });
+
+      await this.counterService.createCounter(zem['_id'].toString());
+
+      return zem;
+    } catch (error) {
+      console.error('Erreur lors de la création de Zem temporaire :', error);
+      throw new HttpException(
+        'Erreur lors de la création du compte temporaire',
+        HttpStatus.NOT_FOUND,
+      );
     }
   }
 }
