@@ -15,31 +15,31 @@ export enum ProfileValidationStatus {
 
 @Schema({ timestamps: true })
 export class Zems {
-  @Prop({ enum: CardType, default: CardType.PASSPORT_CARD })
+  @Prop({ required: true, enum: CardType, default: CardType.PASSPORT_CARD })
   card_type: CardType;
 
-  @Prop({ default: null })
+  @Prop({ required: true })
   card_number: string;
 
-  @Prop({ default: null })
+  @Prop({ required: true })
   card_image: string;
 
-  @Prop({ default: null })
+  @Prop({ required: true })
   zem_profile_image: string;
 
-  @Prop({ default: null })
+  @Prop({})
   image_of_residence_certificate: string;
 
-  @Prop({ default: null, length: 11 })
+  @Prop({ length: 11 })
   ifu_number: string;
 
-  @Prop({ default: null })
+  @Prop({})
   ifu_number_image: string;
 
-  @Prop({ default: null })
+  @Prop({ required: true })
   number_plate: string;
 
-  @Prop({ default: null })
+  @Prop({ required: true })
   plate_picture: string;
 
   @Prop({
@@ -69,12 +69,6 @@ export class Zems {
 
   @Prop({ default: null })
   validated_at: Date;
-
-  @Prop({ default: null })
-  temporal_validated_at: Date;
-
-  @Prop({ default: false })
-  is_temporal: boolean;
 
   @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
   user: Types.ObjectId;
