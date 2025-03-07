@@ -3,9 +3,9 @@ import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProfileValidationStatus, Zems } from '../Schemas/zems_schema/Zems.schema';
 import { Model } from 'mongoose';
-import {calculateDistance, sendNotificationForSeveralTokens} from "../services/helpers.service";
-import {Config} from "../Schemas/config_schema/config.schema";
-import {CoursesStatus, Races} from "../Schemas/races_schema/races.schema";
+import { calculateDistance, sendNotificationForSeveralTokens } from "../services/helpers.service";
+import { Config } from "../Schemas/config_schema/config.schema";
+import { CoursesStatus, Races } from "../Schemas/races_schema/races.schema";
 
 @Injectable()
 export class ZemsService {
@@ -55,8 +55,6 @@ export class ZemsService {
     }
   }
 
-
-
   findAll() {
     return this.zemModel.find();
   }
@@ -73,7 +71,7 @@ export class ZemsService {
     return `This action removes a #${id} zem`;
   }
 
-  async sendNotificationForAllUserInRay(zem_id){
+  async sendNotificationForAllUserInRay(zem_id) {
     const zem = await this.findOne(zem_id);
     const ray = await this.configModel.findOne({ key: 'ray' }).exec();
     const races: Races[] = await this.racesModel
@@ -87,7 +85,7 @@ export class ZemsService {
         ])
         .lean()
         .exec();
-    if(zem.service_latitude!=null &&  zem.service_longitude !=null){
+    if (zem.service_latitude != null && zem.service_longitude != null) {
       const filteredZems = races.filter(service => {
         const distance = calculateDistance(
             service.initial_latitude,
@@ -95,7 +93,7 @@ export class ZemsService {
             zem.service_latitude,
             zem.service_longitude
         );
-        return (zem.ray==null ? (distance <= parseFloat(ray.value)) : (distance <= zem.ray));
+        return (zem.ray == null ? (distance <= parseFloat(ray.value)) : (distance <= zem.ray));
       });
       const tokens = [];
       let body_notification_zem =
@@ -103,18 +101,18 @@ export class ZemsService {
       let more_action_zem = 'available_zem';
       for (let i = 0; i < filteredZems.length; i++) {
         const user = filteredZems[i]['user'];
-        console.log("user",user);
+        console.log("user", user);
         if (user) {
-          if (user['fcm_token'] && user['user_type']=="customer") {
+          if (user['fcm_token'] && user['user_type'] == "customer") {
             if (!tokens.includes(user['fcm_token'])) {
               tokens.push(user['fcm_token']);
             }
           }
         }
       }
-      console.log("tokens",tokens);
+      console.log("tokens", tokens);
 
-      if(tokens.length>0){
+      if (tokens.length > 0) {
         const send_data = {
           more_action: more_action_zem,
         };
@@ -138,13 +136,25 @@ export class ZemsService {
     return updatedZem;
   }
 
-  async makeAmbassador(zemId: string): Promise<Zems> {
-    const updatedZem = await this.zemModel.findByIdAndUpdate
-    (
+  async makeAmbassador(zemId: string, contratDocumentPath?: string): Promise<Zems> {
+    // Création de l'objet de mise à jour
+    const updateData: any = { is_ambassador: true };
+    
+    // Ajouter le chemin du document de contrat s'il est fourni
+    if (contratDocumentPath) {
+      updateData.contrat_document = contratDocumentPath;
+    }
+    
+    const updatedZem = await this.zemModel.findByIdAndUpdate(
       zemId,
-      { $set: { is_ambassador: true } },
+      { $set: updateData },
       { new: true }
-    ); 
-    return updatedZem;  
+    );
+    
+    if (!updatedZem) {
+      throw new NotFoundException(`Zem with ID ${zemId} not found`);
+    }
+    
+    return updatedZem;
   }
 }

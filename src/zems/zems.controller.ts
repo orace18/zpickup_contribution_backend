@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   Request,
   UploadedFiles,
+  UploadedFile,
   UseGuards,
   HttpException,
   HttpStatus,
@@ -17,7 +18,7 @@ import {
 import { ZemsService } from './zems.service';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { UpdateZemDto } from './dto/update-zem.dto';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -25,9 +26,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { UserType } from '../Schemas/users_schema/Users.schema';
 import { ZemValidationService } from './zem-validation.service';
-import {CounterService} from "../counter/counter.service";
-import {count} from "rxjs";
-import {Counter} from "../Schemas/counter_schema/counter.schema";
+import { CounterService } from "../counter/counter.service";
 
 @Controller('zems')
 export class ZemsController {
@@ -137,27 +136,26 @@ export class ZemsController {
         } else {
           if (updateZemDto.service) {
             const counter = await this.counterService.findByZem(id);
-            console.log("counter",counter);
+            console.log("counter", counter);
 
-            if (counter==null || counter.balance_km<=0){
-              throw new BadRequestException({message: 'Veuillez recharger votre compteur avant de pourvoir travailler',
+            if (counter == null || counter.balance_km <= 0) {
+              throw new BadRequestException({
+                message: 'Veuillez recharger votre compteur avant de pourvoir travailler',
               });
-            }else{
+            } else {
               if (
-                  !updateZemDto.service_latitude ||
-                  !updateZemDto.service_longitude
+                !updateZemDto.service_latitude ||
+                !updateZemDto.service_longitude
               ) {
                 throw new BadRequestException({
                   message:
-                      'Veuillez renseigner tous les champs pour la mise en service',
+                    'Veuillez renseigner tous les champs pour la mise en service',
                 });
               }
               this.zemsService.sendNotificationForAllUserInRay(id);
-
             }
           }
         }
-
         break;
     }
 
@@ -213,16 +211,67 @@ export class ZemsController {
     }
   }
 
-
+  @UseInterceptors(
+    FileInterceptor('contrat_document', {
+      storage: diskStorage({
+        destination: './uploads/contracts',
+        filename: (req, file, callback) => {
+          // Vérifier si le fichier est un PDF
+          if (file.mimetype !== 'application/pdf') {
+            return callback(
+              new BadRequestException('Seuls les fichiers PDF sont acceptés'),
+              null
+            );
+          }
+          
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(
+            null,
+            `contrat-${uniqueSuffix}${extname(file.originalname)}`,
+          );
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB maximum
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        contrat_document: {
+          type: 'string',
+          format: 'binary',
+          description: 'Document de contrat au format PDF',
+        },
+      },
+    },
+  })
   @Patch('make_ambassador/:id')
-  async makeAmbassador(@Param('id') id: string) {
+  async makeAmbassador(
+    @Param('id') id: string,
+    @UploadedFile() contratDocument: Express.Multer.File,
+  ) {
     try {
-      const updatedZem = await this.zemsService.makeAmbassador(id);
+      // Vérifier si le fichier a été téléchargé
+      if (!contratDocument) {
+        throw new BadRequestException('Le document de contrat (PDF) est requis');
+      }
+      
+      // Appeler le service avec le chemin du fichier
+      const updatedZem = await this.zemsService.makeAmbassador(id, contratDocument.path);
+      
       return {
         result: updatedZem,
-        message: 'Zem promu ambassadeur avec succès'
+        message: 'Zem promu ambassadeur avec succès',
+        contrat_document: contratDocument.path
       };
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       return {
         error: error.message
       };
