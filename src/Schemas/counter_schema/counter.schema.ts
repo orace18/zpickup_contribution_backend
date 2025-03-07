@@ -21,6 +21,9 @@ export class Counter {
   @Prop({ default: 0 })
   total_km_traveled: number;
 
+  @Prop({ default: 0 })
+  balance_abs_km: number;
+
   @Prop({ default: new Date() })
   created_at: Date;
 
