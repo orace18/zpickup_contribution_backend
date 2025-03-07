@@ -117,6 +117,12 @@ export class ConfigSeeder {
         type: "string",
         description: 'description de l\'etape 2',
       },
+      {
+        key: 'monthly-km-for-ambassador',
+        value: '100',
+        type: 'number',
+        description: 'Nombre de kilomètres offerts chaque mois aux ambassadeurs',
+      },
     ];
     const bulkOps = tabs.map((item) => ({
       updateOne: {

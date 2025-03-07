@@ -19,9 +19,11 @@ async function bootstrap() {
     await app.listen(port, '0.0.0.0', () => {
       console.log('Application is running on port '+port);
     });
+
   } catch (error) {
     console.error('Error starting server:', error);
     process.exit(1);
   }
+  
 }
 bootstrap();

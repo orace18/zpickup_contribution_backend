@@ -42,6 +42,6 @@ import { UsersModule } from 'src/users/users.module';
   ],
   controllers: [CounterController],
   providers: [CounterService, NotificationService,CounterHistoryService],
-  exports: [CounterService],
+  exports: [CounterService, MongooseModule],
 })
 export class CounterModule {}

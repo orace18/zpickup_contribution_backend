@@ -36,12 +36,13 @@ import { GSMNumberFormatModule } from './gsmnumber-format/gsmnumber-format.modul
 import { PrivacyPolicyModule } from './privacy_policy/privacy_policy.module';
 import { TermsConditionsModule } from './terms_conditions/terms_conditions.module';
 import { DiscussionModule } from './discussion/discussion.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     MongooseModule.forRoot(
-      //'mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
-      'mongodb+srv://zpickupbenin:KvhHqBHmEMItQLie@cluster0.vd0hs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+      'mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+     // 'mongodb+srv://zpickupbenin:KvhHqBHmEMItQLie@cluster0.vd0hs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
     ),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -51,6 +52,7 @@ import { DiscussionModule } from './discussion/discussion.module';
       rootPath: join(__dirname, '..', 'uploads'), // Chemin vers le dossier uploads
       serveRoot: '/uploads', // URL pour accéder aux fichiers
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     CustomersModule,
