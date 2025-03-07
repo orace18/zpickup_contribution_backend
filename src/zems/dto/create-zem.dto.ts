@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsOptional,
   IsString,
@@ -43,7 +44,7 @@ export class CreateZemDto {
 
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
-  contrat_picture: any;
+  contrat_document: any;
 
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })

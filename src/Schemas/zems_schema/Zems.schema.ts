@@ -89,7 +89,7 @@ export class Zems {
   is_ambassador: Boolean;
 
   @Prop()
-  contrat_picture: string;
+  contrat_document: string;
 }
 
 export const ZemsSchema = SchemaFactory.createForClass(Zems);
