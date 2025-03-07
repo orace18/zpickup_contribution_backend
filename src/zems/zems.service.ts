@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Zems } from '../Schemas/zems_schema/Zems.schema';
+import { ProfileValidationStatus, Zems } from '../Schemas/zems_schema/Zems.schema';
 import { Model } from 'mongoose';
 import {calculateDistance, sendNotificationForSeveralTokens} from "../services/helpers.service";
 import {Config} from "../Schemas/config_schema/config.schema";
@@ -15,9 +15,47 @@ export class ZemsService {
   ) {}
 
   create(createZemDto: CreateZemDto) {
-    const created = new this.zemModel(createZemDto);
+    const now = new Date();
+    const fortyFiveDaysLater = new Date(now);
+    fortyFiveDaysLater.setDate(now.getDate() + 45);
+
+    const zemData = {
+      ...createZemDto,
+      profile_validation_status: createZemDto.is_temporal
+        ? ProfileValidationStatus.VALIDATED
+        : ProfileValidationStatus.IN_PROGRESS,
+      temporal_validated_at: createZemDto.is_temporal ? now : null,
+      validated_at: createZemDto.is_temporal ? fortyFiveDaysLater : null,
+    };
+
+    const created = new this.zemModel(zemData);
+    created.save().then(() => {
+      console.log('Account created with validated_at:', fortyFiveDaysLater);
+    });
     return created.save();
   }
+
+  async checkTemporalValidation(zemId: string) {
+    const zem = await this.zemModel.findById(zemId).exec();
+    if (!zem) {
+      throw new NotFoundException('Zem not found');
+    }
+
+    if (zem.is_temporal && zem.temporal_validated_at) {
+      const now = new Date();
+      if (now > zem.temporal_validated_at) {
+        // Le compte est expiré, le bloquer
+        await this.zemModel.findByIdAndUpdate(zemId, {
+          profile_validation_status: ProfileValidationStatus.REJECTED,
+          temporal_validated_at: null,
+          validated_at: null,
+        });
+        throw new Error('Temporary validation has expired');
+      }
+    }
+  }
+
+
 
   findAll() {
     return this.zemModel.find();

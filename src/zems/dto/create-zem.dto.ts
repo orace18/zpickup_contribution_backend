@@ -62,4 +62,9 @@ export class CreateZemDto {
   @IsOptional()
   @ApiProperty({ type: 'string', format: 'binary' })
   plate_picture: any;
+
+  @IsOptional()
+  is_temporal: boolean;
+
+
 }

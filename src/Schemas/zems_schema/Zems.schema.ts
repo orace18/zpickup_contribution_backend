@@ -84,6 +84,14 @@ export class Zems {
 
   @Prop()
   contrat_document: string;
+
+
+  @Prop({ default: null })
+  temporal_validated_at: Date;
+
+  @Prop({ default: false })
+  is_temporal: boolean;
+
 }
 
 export const ZemsSchema = SchemaFactory.createForClass(Zems);
