@@ -503,6 +503,10 @@ export class CounterService {
     };
   }
 
+  async findCounterByUser(userId: string) {
+    return this.counterModel.findOne({ user: userId }).exec();
+  }
+
   findAll() {
     return `This action returns all counter`;
   }

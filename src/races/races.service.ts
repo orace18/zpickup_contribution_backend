@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import {CreateRaceDto} from './dto/create-race.dto';
-import {UpdateRaceDto} from './dto/update-race.dto';
-import {InjectModel} from '@nestjs/mongoose';
-import {Model, Types} from 'mongoose';
-import {CoursesStatus, Races} from '../Schemas/races_schema/races.schema';
+import { CreateRaceDto } from './dto/create-race.dto';
+import { UpdateRaceDto } from './dto/update-race.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
 import {
   calculateDistance,
   estimateDuration,
@@ -11,16 +11,16 @@ import {
   sendNotification,
   sendNotificationForSeveralTokens,
 } from '../services/helpers.service';
-import {UsersService} from '../users/users.service';
-import {Zems} from '../Schemas/zems_schema/Zems.schema';
-import {Config} from '../Schemas/config_schema/config.schema';
-import {ZemsService} from '../zems/zems.service';
-import {WalletService} from '../wallet/wallet.service';
-import {NotificationService} from "../notifications/notification.service";
+import { UsersService } from '../users/users.service';
+import { Zems } from '../Schemas/zems_schema/Zems.schema';
+import { Config } from '../Schemas/config_schema/config.schema';
+import { ZemsService } from '../zems/zems.service';
+import { WalletService } from '../wallet/wallet.service';
+import { NotificationService } from "../notifications/notification.service";
 import * as process from "node:process";
-import {CounterService} from "../counter/counter.service";
-import {CounterType} from "../Schemas/counter-history_schema/counter_history.schema";
-import {TransactionType} from "../Schemas/wallet_schema/wallet_transaction.schema";
+import { CounterService } from "../counter/counter.service";
+import { CounterType } from "../Schemas/counter-history_schema/counter_history.schema";
+import { TransactionType } from "../Schemas/wallet_schema/wallet_transaction.schema";
 
 @Injectable()
 export class RacesService {
@@ -377,274 +377,322 @@ export class RacesService {
       }
 
       return race;
-    }catch (e){
+    } catch (e) {
 
     }
   }
 
 
-    async addWalletPercentWinForEndedRace(race_id: string){
+  async addWalletPercentWinForEndedRace(race_id: string) {
 
-      const customer_race_bonus = await this.configModel.findOne({ key: 'percent-share-customer' }).exec();
-      const zem_race_bonus = await this.configModel.findOne({ key: 'percent-share-zem' }).exec();
-      const km_price = await this.configModel.findOne({ key: 'km-price' }).exec();
+    const customer_race_bonus = await this.configModel.findOne({ key: 'percent-share-customer' }).exec();
+    const zem_race_bonus = await this.configModel.findOne({ key: 'percent-share-zem' }).exec();
+    const km_price = await this.configModel.findOne({ key: 'km-price' }).exec();
 
-      const race = await this.findOne(race_id);
+    const race = await this.findOne(race_id);
 
-      if (race["status"] == "end") {
-        let zem_user = await this.userService.findUserOneByPayload({ zem: race["zem"]["_id"] });
-        const race_user = await this.userService.findUserOneByPayload({ _id: race["user"].toString() });
-        let amount_for_admin = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]));
-        let amount_for_zem = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(zem_race_bonus["value"]) / 100));
-        let amount_for_user = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(customer_race_bonus["value"]) / 100));
-        amount_for_zem = parseFloat(amount_for_zem.toFixed(2));
-        amount_for_user = parseFloat(amount_for_user.toFixed(2));
-        amount_for_admin = parseFloat(amount_for_admin.toFixed(2));
-        let amount_for_admin_percent = parseFloat(((parseFloat(amount_for_admin.toFixed(2)) - amount_for_zem - amount_for_user)).toFixed(2));
+    if (race["status"] == "end") {
+      let zem_user = await this.userService.findUserOneByPayload({ zem: race["zem"]["_id"] });
+      const race_user = await this.userService.findUserOneByPayload({ _id: race["user"].toString() });
+      let amount_for_admin = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]));
+      let amount_for_zem = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(zem_race_bonus["value"]) / 100));
+      let amount_for_user = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(customer_race_bonus["value"]) / 100));
+      amount_for_zem = parseFloat(amount_for_zem.toFixed(2));
+      amount_for_user = parseFloat(amount_for_user.toFixed(2));
+      amount_for_admin = parseFloat(amount_for_admin.toFixed(2));
+      let amount_for_admin_percent = parseFloat(((parseFloat(amount_for_admin.toFixed(2)) - amount_for_zem - amount_for_user)).toFixed(2));
 
-        this.racesModel.findByIdAndUpdate(race["_id"].toString(), {
-          zem_bonus: amount_for_zem,
-          customer_bonus: amount_for_user,
-          admin_bonus: amount_for_admin_percent,
-          zem_percent: parseFloat(zem_race_bonus["value"]),
-          customer_percent: parseFloat(customer_race_bonus["value"]),
-          admin_percent: (100 - parseFloat(customer_race_bonus["value"]) - parseFloat(zem_race_bonus["value"])),
-          amount_per_km: parseFloat(km_price["value"]),
-          amount_total_bonus: parseFloat(amount_for_admin.toFixed(2)),
-        }).exec();
+      this.racesModel.findByIdAndUpdate(race["_id"].toString(), {
+        zem_bonus: amount_for_zem,
+        customer_bonus: amount_for_user,
+        admin_bonus: amount_for_admin_percent,
+        zem_percent: parseFloat(zem_race_bonus["value"]),
+        customer_percent: parseFloat(customer_race_bonus["value"]),
+        admin_percent: (100 - parseFloat(customer_race_bonus["value"]) - parseFloat(zem_race_bonus["value"])),
+        amount_per_km: parseFloat(km_price["value"]),
+        amount_total_bonus: parseFloat(amount_for_admin.toFixed(2)),
+      }).exec();
 
-        if (zem_user.length > 0) {
-          this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
+      // Attribution du bonus client
+      if (race_user.length > 0) {
+        this.walletService.creditWalletUserCustomBalance(race_user[0]["_id"].toString(), amount_for_user, "Course bonus", "Vous avez obtenu un gain de " + amount_for_user + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
+      }
+
+      // Nouvelle logique pour l'attribution du bonus au Zem
+      if (zem_user.length > 0) {
+        const zemId = zem_user[0]["_id"].toString();
+
+        // On récupère le compteur du zem pour verifier si il est ambassadeur
+        const zemCounter = await this.counterService.findCounterByUser(zemId);
+
+        // On verifie si le zem est ambassadeur
+        if (zemCounter && zemCounter.balance_abs_km > 0) {
+          // Le Zem est ambassadeur, on vérifie si balance_abs_km sera réduit à 0 après cette course
+          const kmTraveled = parseFloat(race["distance_traveled"].toFixed(2));
+          const newBalanceAbsKm = zemCounter.balance_abs_km - kmTraveled;
+
+          if (newBalanceAbsKm <= 0) {
+            // Si après cette course balance_abs_km sera <= 0, on attribue le bonus sur la partie qui dépasse 0
+            // Car cette partie n'est plus couverte par les km gratuits
+            const bonusKm = Math.abs(Math.min(0, newBalanceAbsKm));
+
+            if (bonusKm > 0) {
+              // Calculer le bonus seulement sur les km qui dépassent balance_abs_km
+              const partialBonus = parseFloat((bonusKm * parseFloat(km_price["value"]) * (parseFloat(zem_race_bonus["value"]) / 100)).toFixed(2));
+
+              if (partialBonus > 0) {
+                this.walletService.creditWalletUserCustomBalance(
+                  zemId,
+                  partialBonus,
+                  "Course bonus partiel",
+                  "Vous avez obtenu un gain de " + partialBonus + " XOF suite à votre course " + race["reference"] + " pour " + bonusKm.toFixed(2) + " km. ZPickup vous remercie de nous avoir choisi",
+                  TransactionType.BONUS
+                );
+              }
+            }
+          }
+          // Dans tous les autres cas, pas de bonus car toujours en train d'utiliser les km gratuits
+        } else {
+          // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits, 
+          // on lui attribue le bonus complet
+          this.walletService.creditWalletUserCustomBalance(
+            zemId, 
+            amount_for_zem, 
+            "Course bonus", 
+            "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", 
+            TransactionType.BONUS
+          );
         }
-        if (race_user.length > 0) {
-          this.walletService.creditWalletUserCustomBalance(race_user[0]["_id"].toString(), amount_for_user, "Course bonus", "Vous avez obtenu un gain de " + amount_for_user + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
-        }
+
+       // this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
       }
 
     }
 
-    remove(id: number){
-      return `This action removes a #${id} race`;
-    }
+  }
 
-    async availableZems(id: string){
-      const race = await this.racesModel.findById(id).exec();
-      const ray = await this.configModel.findOne({ key: 'ray' }).exec();
-      const zems: Zems[] = await this.zemsModel
-        .find({
-          validated_at: { $ne: null },
-          profile_validation_status: 'validated',
-          service: true,
-        })
-        .populate('user', [
-          '_id',
-          'phone_number',
-          'firstname',
-          'lastname',
-          'race',
-        ])
-        .lean()
-        .exec();
+  remove(id: number) {
+    return `This action removes a #${id} race`;
+  }
 
-      const available_zems = [];
-      for (let i = 0; i < zems.length; i++) {
-        const zem = zems[i];
-        let can_add = false;
-        if (zem.user['race'] == null) {
+  async availableZems(id: string) {
+    const race = await this.racesModel.findById(id).exec();
+    const ray = await this.configModel.findOne({ key: 'ray' }).exec();
+    const zems: Zems[] = await this.zemsModel
+      .find({
+        validated_at: { $ne: null },
+        profile_validation_status: 'validated',
+        service: true,
+      })
+      .populate('user', [
+        '_id',
+        'phone_number',
+        'firstname',
+        'lastname',
+        'race',
+      ])
+      .lean()
+      .exec();
+
+    const available_zems = [];
+    for (let i = 0; i < zems.length; i++) {
+      const zem = zems[i];
+      let can_add = false;
+      if (zem.user['race'] == null) {
+        can_add = true;
+      } else {
+        if (zem.user['race'] == undefined) {
           can_add = true;
         } else {
-          if (zem.user['race'] == undefined) {
+          if (zem.user['race'].toString() == race._id.toString()) {
             can_add = true;
-          } else {
-            if (zem.user['race'].toString() == race._id.toString()) {
-              can_add = true;
-            }
-          }
-        }
-
-        if (can_add) {
-          const km = calculateDistance(
-            race.initial_latitude,
-            race.initial_longitude,
-            zem.service_latitude,
-            zem.service_longitude,
-          );
-
-          if (zem.ray == null) {
-            if (km <= parseFloat(ray.value)) {
-              zem.service_km = km;
-              zem.service_duration = estimateDuration(km).minutes;
-              available_zems.push(zem);
-            }
-          } else {
-            if (km <= zem.ray) {
-              zem.service_km = km;
-              zem.service_duration = estimateDuration(km).minutes;
-              available_zems.push(zem);
-            }
           }
         }
       }
-      available_zems.sort((a, b) => a.service_km - b.service_km);
 
-      return available_zems;
-    }
-
-    async availableRaces(req){
-      const zem = await this.zemsModel
-        .findOne({ user: req.user.userId })
-        .lean()
-        .exec();
-
-      const ray = await this.configModel.findOne({ key: 'ray' }).exec();
-      const races: Races[] = await this.racesModel
-        .find({
-          status: CoursesStatus.PENDING,
-        })
-        .populate('user', [
-          '_id',
-          'phone_number',
-          'firstname',
-          'lastname',
-          'race',
-        ])
-        .lean()
-        .exec();
-
-      const availables = [];
-      for (let i = 0; i < races.length; i++) {
-        const race = races[i];
+      if (can_add) {
         const km = calculateDistance(
           race.initial_latitude,
           race.initial_longitude,
           zem.service_latitude,
           zem.service_longitude,
         );
+
         if (zem.ray == null) {
           if (km <= parseFloat(ray.value)) {
-            race.service_km = km;
-            race.service_duration = estimateDuration(km).minutes;
-            availables.push(race);
+            zem.service_km = km;
+            zem.service_duration = estimateDuration(km).minutes;
+            available_zems.push(zem);
           }
         } else {
           if (km <= zem.ray) {
-            race.service_km = km;
-            race.service_duration = estimateDuration(km).minutes;
-            availables.push(race);
+            zem.service_km = km;
+            zem.service_duration = estimateDuration(km).minutes;
+            available_zems.push(zem);
           }
         }
       }
-      availables.sort((a, b) => a.service_km - b.service_km);
-
-      return availables;
     }
+    available_zems.sort((a, b) => a.service_km - b.service_km);
 
-    async getRaceHistory(zemId:string){
-      if (!Types.ObjectId.isValid(zemId)) {
-        throw new NotFoundException('ID Zem invalide');
-      }
-      const races = await this.racesModel
-        .find({
-          zem: new Types.ObjectId(zemId),
-          status: CoursesStatus.END,
-        })
-        .sort({ ended_at: -1 })
-        .lean()
-        .exec();
-      const formattedRaces = races.map((race) => ({
-        _id: race._id,
-        reference: race.reference,
-        initial_location: {
-          longitude: race.initial_longitude,
-          latitude: race.initial_latitude,
-          datetime: race.initial_datetime,
-        },
-        start_location: {
-          longitude: race.longitude_start,
-          latitude: race.latitude_start,
-          datetime: race.started_at,
-        },
-        end_location: {
-          longitude: race.longitude_end,
-          latitude: race.latitude_end,
-          datetime: race.ended_at,
-        },
-        service_km: race.service_km,
-        status: race.status,
-        timeline: {
-          created_at: race.created_at,
-          pending_at: race.pending_at,
-          accepted_at: race.accepted_at,
-          started_at: race.started_at,
-          ended_at: race.ended_at,
-          stopped_at: race.stopped_at,
-        },
-      }));
-      return {
-        total_races: races.length,
-        total_kilometers: races.reduce(
-          (sum, race) => sum + (race.distance_traveled || 0),
-          0,
-        ),
-        races: formattedRaces,
-      };
-    }
-
-    async findAllRacesByZem(zemId:string){
-      console.log(`ZemId reçu : ${zemId}`);
-      const objectId = new Types.ObjectId(zemId);
-      const races = await this.racesModel
-        .find({ zem: objectId, status: "end" })
-        .populate('user')
-        .populate({
-          path: 'zem',
-          populate: {
-            path: 'user',
-          },
-        })
-        .sort({ created_at: -1 })
-        .lean()
-        .exec();
-      console.log(`Résultat trouvé pour le zemId ${zemId}:`, races);
-      if (!races || races.length === 0) {
-        throw new NotFoundException(`Aucune course trouvée pour ce zem.`);
-      }
-      return races;
-    }
-
-    async findAllRacesByUser(userId: string){
-      const races = await this.racesModel
-        .find({
-          user: userId,
-          status: "end"
-        })
-        .populate({
-          path: 'zem',
-          populate: {
-            path: 'user',
-          },
-        })
-        .sort({ created_at: -1 })
-        .lean()
-        .exec();
-      if (!races || races.length === 0) {
-        throw new NotFoundException(
-          `Aucune course trouvée pour cet utilisateur.`,
-        );
-      }
-      return races;
-    }
-
-    async updateZemRay(userId: string, ray:number){
-      const zem = await this.zemsModel.findOne({ user: userId }).exec();
-
-      if (ray < 0) {
-        throw new BadRequestException('Le rayon doit être un nombre positif');
-      }
-
-      await this.zemsModel.findByIdAndUpdate(zem._id, { ray: ray }).exec();
-
-      return ray;
-    }
-
+    return available_zems;
   }
+
+  async availableRaces(req) {
+    const zem = await this.zemsModel
+      .findOne({ user: req.user.userId })
+      .lean()
+      .exec();
+
+    const ray = await this.configModel.findOne({ key: 'ray' }).exec();
+    const races: Races[] = await this.racesModel
+      .find({
+        status: CoursesStatus.PENDING,
+      })
+      .populate('user', [
+        '_id',
+        'phone_number',
+        'firstname',
+        'lastname',
+        'race',
+      ])
+      .lean()
+      .exec();
+
+    const availables = [];
+    for (let i = 0; i < races.length; i++) {
+      const race = races[i];
+      const km = calculateDistance(
+        race.initial_latitude,
+        race.initial_longitude,
+        zem.service_latitude,
+        zem.service_longitude,
+      );
+      if (zem.ray == null) {
+        if (km <= parseFloat(ray.value)) {
+          race.service_km = km;
+          race.service_duration = estimateDuration(km).minutes;
+          availables.push(race);
+        }
+      } else {
+        if (km <= zem.ray) {
+          race.service_km = km;
+          race.service_duration = estimateDuration(km).minutes;
+          availables.push(race);
+        }
+      }
+    }
+    availables.sort((a, b) => a.service_km - b.service_km);
+
+    return availables;
+  }
+
+  async getRaceHistory(zemId: string) {
+    if (!Types.ObjectId.isValid(zemId)) {
+      throw new NotFoundException('ID Zem invalide');
+    }
+    const races = await this.racesModel
+      .find({
+        zem: new Types.ObjectId(zemId),
+        status: CoursesStatus.END,
+      })
+      .sort({ ended_at: -1 })
+      .lean()
+      .exec();
+    const formattedRaces = races.map((race) => ({
+      _id: race._id,
+      reference: race.reference,
+      initial_location: {
+        longitude: race.initial_longitude,
+        latitude: race.initial_latitude,
+        datetime: race.initial_datetime,
+      },
+      start_location: {
+        longitude: race.longitude_start,
+        latitude: race.latitude_start,
+        datetime: race.started_at,
+      },
+      end_location: {
+        longitude: race.longitude_end,
+        latitude: race.latitude_end,
+        datetime: race.ended_at,
+      },
+      service_km: race.service_km,
+      status: race.status,
+      timeline: {
+        created_at: race.created_at,
+        pending_at: race.pending_at,
+        accepted_at: race.accepted_at,
+        started_at: race.started_at,
+        ended_at: race.ended_at,
+        stopped_at: race.stopped_at,
+      },
+    }));
+    return {
+      total_races: races.length,
+      total_kilometers: races.reduce(
+        (sum, race) => sum + (race.distance_traveled || 0),
+        0,
+      ),
+      races: formattedRaces,
+    };
+  }
+
+  async findAllRacesByZem(zemId: string) {
+    console.log(`ZemId reçu : ${zemId}`);
+    const objectId = new Types.ObjectId(zemId);
+    const races = await this.racesModel
+      .find({ zem: objectId, status: "end" })
+      .populate('user')
+      .populate({
+        path: 'zem',
+        populate: {
+          path: 'user',
+        },
+      })
+      .sort({ created_at: -1 })
+      .lean()
+      .exec();
+    console.log(`Résultat trouvé pour le zemId ${zemId}:`, races);
+    if (!races || races.length === 0) {
+      throw new NotFoundException(`Aucune course trouvée pour ce zem.`);
+    }
+    return races;
+  }
+
+  async findAllRacesByUser(userId: string) {
+    const races = await this.racesModel
+      .find({
+        user: userId,
+        status: "end"
+      })
+      .populate({
+        path: 'zem',
+        populate: {
+          path: 'user',
+        },
+      })
+      .sort({ created_at: -1 })
+      .lean()
+      .exec();
+    if (!races || races.length === 0) {
+      throw new NotFoundException(
+        `Aucune course trouvée pour cet utilisateur.`,
+      );
+    }
+    return races;
+  }
+
+  async updateZemRay(userId: string, ray: number) {
+    const zem = await this.zemsModel.findOne({ user: userId }).exec();
+
+    if (ray < 0) {
+      throw new BadRequestException('Le rayon doit être un nombre positif');
+    }
+
+    await this.zemsModel.findByIdAndUpdate(zem._id, { ray: ray }).exec();
+
+    return ray;
+  }
+
+}
