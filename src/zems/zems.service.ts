@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/commo
 import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProfileValidationStatus, Zems } from '../Schemas/zems_schema/Zems.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { calculateDistance, sendNotificationForSeveralTokens } from "../services/helpers.service";
 import { Config } from "../Schemas/config_schema/config.schema";
 import { CoursesStatus, Races } from "../Schemas/races_schema/races.schema";
@@ -270,7 +270,11 @@ export class ZemsService {
     }
 
     // Trouver et mettre à jour le compteur
-    const counter = await this.counterModel.findOne({ zem: zemId }).exec();
+    console.log('Searching for counter with zemId:', zemId);
+    const counter = await this.counterModel.findOne({ zem: new Types.ObjectId(zemId) }).exec();
+
+    console.log('Found Counter:', counter);
+
     if (!counter) {
       throw new Error('Compteur non trouvé pour cet ambassadeur');
     }

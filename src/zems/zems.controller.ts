@@ -297,6 +297,7 @@ export class ZemsController {
     @UseGuards(JwtAuthGuard)
     @Post('add-manual-km/:id')
     async addManualKmToAmbassador(@Param('id') id: string) {
+        console.log('Received Zem ID:', id);
         try {
             const zem = await this.zemsService.findOne(id);
             if (!zem) {
