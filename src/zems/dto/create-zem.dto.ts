@@ -67,4 +67,7 @@ export class CreateZemDto {
   @IsOptional()
   is_temporal: boolean;
 
+  @IsOptional()
+  expired: Date;
+
 }

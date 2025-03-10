@@ -115,6 +115,33 @@ export class ZemsController {
         return this.zemsService.findOne(id);
     }
 
+
+/*     @Get('check-expiration/:id')
+async checkExpiration(@Param('id') id: string) {
+  try {
+    const zem = await this.zemsService.findOne(id);
+    if (!zem || !zem.is_temporal) {
+      return {
+        is_temporal: false,
+        message: 'Ce n\'est pas un Zem temporaire'
+      };
+    }
+    
+    return {
+      is_temporal: true,
+      remaining_days: zem.remaining_days,
+      expired_at: zem.expired_at,
+      is_expired: zem.remaining_days <= 0
+    };
+  } catch (error) {
+    throw new HttpException(
+      'Erreur lors de la vérification de l\'expiration',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+} */
+
+
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
     async update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
@@ -282,70 +309,7 @@ export class ZemsController {
         }
     }
 
-    /* @UseGuards(JwtAuthGuard)
-    @Get('test/add-monthly-km')
-    async testAddMonthlyKm() {
-        try {
-            const result = await this.zemsService.addMonthlyKmToAmbassadors();
-            return {
-                success: true,
-                message: 'La fonction d\'ajout de km a été exécutée avec succès',
-                result
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: 'Une erreur est survenue lors de l\'exécution de la fonction',
-                error: error.message
-            };
-        }
-    } */
-
-    /* @UseGuards(JwtAuthGuard)
-    @Patch('assign-km/:id')
-    async assignKmToAmbassador(@Param('id') id: string) {
-        try {
-            const zem = await this.zemsService.findOne(id);
-            if (!zem) {
-                throw new HttpException('Zem non trouvé', HttpStatus.NOT_FOUND);
-            }
-
-            if (!zem.is_ambassador) {
-                throw new BadRequestException('Ce zem n\'est pas un ambassadeur');
-            }
-
-            const result = await this.zemsService.addMonthlyKmToAmbassadors(id);
-
-            return result;
-
-        } catch (error) {
-            return {
-                success: false,
-                error: error.message,
-            };
-        }
-    } */
-
-    /* @UseGuards(JwtAuthGuard)
-    @Post('assign-km-to-all')
-    async assignKmToAllAmbassadors() {
-        try {
-            const result = await this.zemsService.addMonthlyKmToAmbassadors();
-
-            return {
-                success: true,
-                ambassadorsCount: result.ambassadorsCount,
-                updatedCounters: result.updatedCounters,
-                message: `${result.kmAdded} km ont été ajoutés à ${result.updatedCounters} ambassadeur(s)`
-            };
-        } catch (error) {
-            return {
-                success: false,
-                error: error.message,
-            };
-        }
-    } */
-
+    
     @UseGuards(JwtAuthGuard)
     @Post('add-manual-km/:id')
     async addManualKmToAmbassador(@Param('id') id: string) {
