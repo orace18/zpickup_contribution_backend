@@ -112,7 +112,7 @@ export class ZemsService {
         .populate('user', [
           '_id',
           'fcm_token',
-            'user_type'
+          'user_type'
         ])
         .lean()
         .exec();
