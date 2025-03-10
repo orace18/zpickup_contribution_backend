@@ -230,7 +230,7 @@ export class ZemsController {
         }
     }
 
-    @UseGuards(JwtAuthGuard)
+    /* @UseGuards(JwtAuthGuard)
     @Get('test/add-monthly-km')
     async testAddMonthlyKm() {
         try {
@@ -247,9 +247,9 @@ export class ZemsController {
                 error: error.message
             };
         }
-    }
+    } */
 
-    @UseGuards(JwtAuthGuard)
+    /* @UseGuards(JwtAuthGuard)
     @Patch('assign-km/:id')
     async assignKmToAmbassador(@Param('id') id: string) {
         try {
@@ -272,9 +272,9 @@ export class ZemsController {
                 error: error.message,
             };
         }
-    }
+    } */
 
-    @UseGuards(JwtAuthGuard)
+    /* @UseGuards(JwtAuthGuard)
     @Post('assign-km-to-all')
     async assignKmToAllAmbassadors() {
         try {
@@ -290,6 +290,30 @@ export class ZemsController {
             return {
                 success: false,
                 error: error.message,
+            };
+        }
+    } */
+
+    @UseGuards(JwtAuthGuard)
+    @Post('add-manual-km/:id')
+    async addManualKmToAmbassador(@Param('id') id: string) {
+        try {
+            const zem = await this.zemsService.findOne(id);
+            if (!zem) {
+                throw new HttpException('Zem non trouvé', HttpStatus.NOT_FOUND);
+            }
+
+            if (!zem.is_ambassador) {
+                throw new BadRequestException('Ce zem n\'est pas un ambassadeur');
+            }
+
+            const result = await this.zemsService.addManualKmToAmbassador(id);
+
+            return result;
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message
             };
         }
     }
