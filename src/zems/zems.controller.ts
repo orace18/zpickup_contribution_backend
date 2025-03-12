@@ -29,6 +29,7 @@ import { ZemValidationService } from './zem-validation.service';
 import { CounterService } from "../counter/counter.service";
 import { count } from "rxjs";
 import { Counter } from "../Schemas/counter_schema/counter.schema";
+import { ProfileValidationStatus } from 'src/Schemas/zems_schema/Zems.schema';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { RequiredRoles } from 'src/common/decorators/role.decorator';
 
@@ -105,6 +106,85 @@ export class ZemsController {
                     HttpStatus.NOT_FOUND,
                 );
             });
+    }
+
+
+    @UseGuards(JwtAuthGuard)
+    @UseInterceptors(
+        AnyFilesInterceptor({
+            storage: diskStorage({
+                destination: './uploads',
+                filename: (req, file, callback) => {
+                    const uniqueSuffix =
+                        Date.now() + '-' + Math.round(Math.random() * 1e9);
+                    callback(
+                        null,
+                        `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`,
+                    );
+                },
+            }),
+        }),
+    )
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        description: 'Update temporal Zem with documents',
+        type: UpdateZemDto,
+    })
+    @Patch('update-temporal-documents/:id')
+    async updateTemporalZemWithDocuments(
+        @Param('id') id: string,
+        @Body() updateZemDto: UpdateZemDto,
+        @UploadedFiles() files: Array<Express.Multer.File>,
+        @Request() req,
+    ) {
+        // Traiter les fichiers
+        files.forEach((file) => {
+            switch (file.fieldname) {
+                case 'card_image':
+                    updateZemDto.card_image = file.path;
+                    break;
+                case 'zem_profile_image':
+                    updateZemDto.zem_profile_image = file.path;
+                    break;
+                case 'image_of_residence_certificate':
+                    updateZemDto.image_of_residence_certificate = file.path;
+                    break;
+                case 'ifu_number_image':
+                    updateZemDto.ifu_number_image = file.path;
+                    break;
+                case 'plate_picture':
+                    updateZemDto.plate_picture = file.path;
+                    break;
+            }
+        });
+
+        const userZemId = req.user.zemId;
+
+        try {
+            // Vérifier si l'ID du ZEM appartient bien à l'utilisateur connecté
+            const zem = await this.zemsService.findOne(id);
+
+            if (!zem) {
+                throw new HttpException('Zem not found', HttpStatus.NOT_FOUND);
+            }
+
+            // Mettre à jour le ZEM avec les documents
+            updateZemDto.is_temporal = false; // Passer de temporaire à permanent
+            updateZemDto.profile_validation_status = ProfileValidationStatus.IN_PROGRESS; // Remettre en validation
+
+            const updatedZem = await this.zemsService.update(id, updateZemDto);
+
+            return {
+                result: updatedZem,
+                message: 'Documents soumis avec succès, en attente de validation'
+            };
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour du ZEM :', error);
+            throw new HttpException(
+                error.message || 'Erreur lors de la soumission des documents',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
     }
 
     @Get()

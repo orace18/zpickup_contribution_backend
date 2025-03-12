@@ -568,6 +568,9 @@ export class RacesService {
         zem.service_latitude,
         zem.service_longitude,
       );
+      console.log("KM: ", km);
+      console.log("ZEM: ", zem);
+      console.log("RACE: ", race);
       if (zem.ray == null) {
         if (km <= parseFloat(ray.value)) {
           race.service_km = km;

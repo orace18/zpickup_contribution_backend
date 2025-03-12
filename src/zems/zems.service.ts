@@ -61,6 +61,7 @@ export class ZemsService {
   }
  */
 
+<<<<<<< HEAD
   async create(createZemDto: CreateZemDto) {
     const now = new Date();
     const fortyFiveDaysLater = new Date(now);
@@ -125,6 +126,8 @@ export class ZemsService {
   }
   
 
+=======
+>>>>>>> origin/develop-uriel-backend
   findAll() {
     return this.zemModel.find();
   }
