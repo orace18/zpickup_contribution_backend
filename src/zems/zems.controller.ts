@@ -19,7 +19,7 @@ import { ZemsService } from './zems.service';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { UpdateZemDto } from './dto/update-zem.dto';
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -29,6 +29,8 @@ import { ZemValidationService } from './zem-validation.service';
 import { CounterService } from "../counter/counter.service";
 import { count } from "rxjs";
 import { Counter } from "../Schemas/counter_schema/counter.schema";
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { RequiredRoles } from 'src/common/decorators/role.decorator';
 
 @Controller('zems')
 export class ZemsController {
@@ -334,4 +336,16 @@ async checkExpiration(@Param('id') id: string) {
             };
         }
     }
+
+    @Post('add-km-to-all')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RequiredRoles(UserType.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Add manual km to all ambassadors' })
+    @ApiResponse({ status: 200, description: 'Kilometers successfully added to all ambassadors' })
+    async addKmToAllAmbassadors() {
+      return this.zemsService.addManualKmToAllAmbassadors();
+    
 }
+}
+

@@ -14,6 +14,8 @@ import { ReferenceHistoryModule } from '../reference_history/reference_history.m
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 
 // Créer le répertoire des contrats s'il n'existe pas
 const contractsDir = './uploads/contracts';
@@ -23,6 +25,14 @@ if (!fs.existsSync(contractsDir)) {
 
 @Module({
   imports: [
+    JwtModule.registerAsync({
+              imports: undefined,
+              inject: [ConfigService],
+              useFactory: (configService: ConfigService) => ({
+                secret: configService.get<string>('JWT_SECRET'),
+                signOptions: { expiresIn: '24h', algorithm: 'HS256' },
+              })
+            }),
     MongooseModule.forFeature([
       { name: Zems.name, schema: ZemsSchema },
       { name: Config.name, schema: ConfigSchema },

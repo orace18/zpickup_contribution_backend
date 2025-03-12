@@ -1,8 +1,8 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProfileValidationStatus, Zems } from '../Schemas/zems_schema/Zems.schema';
-import { Model, Types } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { calculateDistance, sendNotificationForSeveralTokens } from "../services/helpers.service";
 import { Config } from "../Schemas/config_schema/config.schema";
 import { CoursesStatus, Races } from "../Schemas/races_schema/races.schema";
@@ -130,16 +130,33 @@ export class ZemsService {
   }
 
   async findOne(id: string) {
+    // Vérifier si id est défini et valide
+    if (!id) {
+      throw new BadRequestException('ID is required');
+    }
+    
+    // Vérifier si l'id est un ObjectId valide
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(`Invalid ID format: ${id}`);
+    }
+    
     const zem = await this.zemModel.findById(id).exec();
-    if (zem && zem.is_temporal) {
+    
+    // Vérifier si le zem existe
+    if (!zem) {
+      throw new NotFoundException(`Zem with ID ${id} not found`);
+    }
+    
+    if (zem.is_temporal) {
       const remainingDays = await this.getRemainingDays(id);
       return {
         ...zem.toObject(),
         remaining_days: remainingDays,
       };
     }
+    
     return zem;
-  }
+}
 
   async convertTemporalToValidated(zemId: string) {
     const zem = await this.zemModel.findById(zemId).exec();
@@ -354,4 +371,74 @@ export class ZemsService {
       message: `${kmToAdd} km ajoutés avec succès à l'ambassadeur`
     };
   }
+
+
+
+  async addManualKmToAllAmbassadors() {
+    // Récupérer la valeur configurée pour les km à ajouter
+    const balance_abs_km = await this.configModel.findOne({ key: 'monthly-km-for-ambassador' }).exec();
+    let kmToAdd = 100; // Valeur par défaut si la configuration n'existe pas
+
+    if (balance_abs_km && balance_abs_km.value) {
+      kmToAdd = parseFloat(balance_abs_km.value);
+    }
+
+    // Trouver tous les Zems qui sont des ambassadeurs
+    const ambassadors = await this.zemModel.find({ is_ambassador: true }).exec();
+    console.log(`Found ${ambassadors.length} ambassadors`);
+
+    const results = {
+      success: true,
+      totalAmbassadors: ambassadors.length,
+      processedAmbassadors: 0,
+      failedAmbassadors: 0,
+      kmAdded: kmToAdd,
+      message: `${kmToAdd} km ajoutés avec succès à tout les ambassadeurs`,
+      details: []
+    };
+
+    // Pour chaque ambassadeur, ajouter les kilomètres
+    for (const ambassador of ambassadors) {
+      try {
+        // Trouver le compteur pour cet ambassadeur
+        const counter = await this.counterModel.findOne({ zem: ambassador._id }).exec();
+        
+        if (!counter) {
+          console.log(`Counter not found for ambassador ${ambassador._id}`);
+          results.details.push({
+            zemId: ambassador._id,
+            success: false,
+            message: 'Compteur non trouvé pour cet ambassadeur'
+          });
+          results.failedAmbassadors++;
+          continue;
+        }
+
+        // Ajouter les km
+        counter.balance_km += kmToAdd;
+        counter.balance_abs_km += kmToAdd;
+        await counter.save();
+
+        results.details.push({
+          zemId: ambassador._id,
+          success: true,
+          currentBalance: counter.balance_km,
+        });
+        results.processedAmbassadors++;
+        
+        console.log(`Added ${kmToAdd} km to ambassador ${ambassador._id}`);
+      } catch (error) {
+        console.error(`Error processing ambassador ${ambassador._id}:`, error);
+        results.details.push({
+          zemId: ambassador._id,
+          success: false,
+          message: error.message
+        });
+        results.failedAmbassadors++;
+      }
+    }
+
+    return results;
+  }
+
 }
