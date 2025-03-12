@@ -60,8 +60,6 @@ export class ZemsService {
     }
   }
 
-
-
   findAll() {
     return this.zemModel.find();
   }
@@ -178,77 +176,6 @@ export class ZemsService {
       );
     return updatedZem;
   }
-
-  /* @Cron('0 0 1 * *') // Exécute à minuit (00:00) le 1er jour de chaque mois
-  async automaticMonthlyKmForAmbassadors() {
-    console.log('Exécution automatique de l\'ajout des km pour les ambassadeurs');
-    await this.addMonthlyKmToAmbassadors();
-    console.log('Ajout des km terminé avec succès');
-  } */
-
-  /* async addMonthlyKmToAmbassadors(zemId?: string) {
-    // Vérification de la date du jour
-    const today = new Date();
-    const isFirstDayOfMonth = today.getDate() === 1;
-  
-    // Si ce n'est pas le 1er du mois, on arrête
-    if (!isFirstDayOfMonth) {
-      console.log(`Aujourd'hui (${today.toISOString().split('T')[0]}) n'est pas le 1er du mois, aucune action n'est effectuée`);
-      return {
-        success: false,
-        message: `L'ajout de kilomètres aux ambassadeurs n'est autorisé que le 1er du mois (date actuelle: ${today.toISOString().split('T')[0]})`
-      };
-    }
-
-    // Récupération de la configuration pour le nombre de km à ajouter
-    const balance_abs_km = await this.configModel.findOne({ key: 'monthly-km-for-ambassador' }).exec();
-    let kmToAdd = 100; // Valeur par défaut si la configuration n'existe pas
-    
-    if (balance_abs_km && balance_abs_km.value) {
-      kmToAdd = parseFloat(balance_abs_km.value);
-    } else {
-      console.log('Configuration "monthly-km-for-ambassador" non trouvée, utilisation de la valeur par défaut de 100 km');
-    }
-
-    // Construction de la requête pour trouver les ambassadeurs
-    const query = zemId ? { _id: zemId, is_ambassador: true } : { is_ambassador: true };
-    const ambassadors = await this.zemModel.find(query).exec();
-    
-    if (ambassadors.length === 0) {
-      return {
-        success: false,
-        message: zemId 
-          ? `Aucun ambassadeur trouvé avec l'ID ${zemId}`
-          : 'Aucun ambassadeur trouvé dans le système'
-      };
-    }
-    
-    console.log(`${ambassadors.length} ambassadeurs trouvés pour l'ajout de ${kmToAdd} km`);
-    let updatedCounters = 0;
-
-    // Ajout des km à chaque ambassadeur
-    for (const ambassador of ambassadors) {
-      const counter = await this.counterModel.findOne({ zem: ambassador._id }).exec();
-      if (counter) {
-        counter.balance_km += kmToAdd;
-        counter.balance_abs_km += kmToAdd;
-        await counter.save();
-        updatedCounters++;
-        console.log(`${kmToAdd} km ajoutés à l'ambassadeur ${ambassador._id}`);
-      } else {
-        console.log(`Aucun compteur trouvé pour l'ambassadeur ${ambassador._id}`);
-      }
-    }
-
-    return {
-      success: true,
-      ambassadorsCount: ambassadors.length,
-      updatedCounters: updatedCounters,
-      kmAdded: kmToAdd,
-      message: `${kmToAdd} km ajoutés à ${updatedCounters}/${ambassadors.length} ambassadeurs`
-    };
-  } */
-
 
   async addManualKmToAmbassador(zemId: string) {
     // Vérifier si le zem existe et est un ambassadeur
