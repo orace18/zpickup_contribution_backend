@@ -17,51 +17,7 @@ export class ZemsService {
     @InjectModel(Counter.name) private counterModel: Model<Counter>,
   ) { }
 
-/*   async create(createZemDto: CreateZemDto) {
-    const now = new Date();
-    const fortyFiveDaysLater = new Date(now);
-    fortyFiveDaysLater.setDate(now.getDate() + 45);
 
-    const zemData = {
-      ...createZemDto,
-      profile_validation_status: createZemDto.is_temporal
-        ? ProfileValidationStatus.VALIDATED
-        : ProfileValidationStatus.IN_PROGRESS,
-      temporal_validated_at: createZemDto.is_temporal ? now : null,
-      validated_at: createZemDto.is_temporal ? fortyFiveDaysLater : null,
-    };
-
-    const created = new this.zemModel(zemData);
-
-    // Retourner une seule promesse de sauvegarde au lieu de deux
-    return created.save().then(savedDoc => {
-      console.log('Account created with validated_at:', fortyFiveDaysLater);
-      return savedDoc; // Retourner le document sauvegardé
-    });
-  }
-
-  async checkTemporalValidation(zemId: string) {
-    const zem = await this.zemModel.findById(zemId).exec();
-    if (!zem) {
-      throw new NotFoundException('Zem not found');
-    }
-
-    if (zem.is_temporal && zem.temporal_validated_at) {
-      const now = new Date();
-      if (now > zem.temporal_validated_at) {
-        // Le compte est expiré, le bloquer
-        await this.zemModel.findByIdAndUpdate(zemId, {
-          profile_validation_status: ProfileValidationStatus.REJECTED,
-          temporal_validated_at: null,
-          validated_at: null,
-        });
-        throw new Error('Temporary validation has expired');
-      }
-    }
-  }
- */
-
-<<<<<<< HEAD
   async create(createZemDto: CreateZemDto) {
     const now = new Date();
     const fortyFiveDaysLater = new Date(now);
@@ -126,9 +82,7 @@ export class ZemsService {
   }
   
 
-=======
->>>>>>> origin/develop-uriel-backend
-  findAll() {
+ findAll() {
     return this.zemModel.find();
   }
 
@@ -219,23 +173,6 @@ export class ZemsService {
     };
   }
 
-  /* async getRemainingDays(zemId: string): Promise<number | null> {
-    const zem = await this.zemModel.findById(zemId).exec();
-    if (!zem || !zem.is_temporal || !zem.validated_at) {
-      console.log('No temporal validation or validated_at is missing');
-      return null;
-    }
-
-    const now = new Date();
-    const expirationDate = new Date(zem.validated_at);
-    console.log('Current date:', now);
-    console.log('Expiration date:', expirationDate);
-
-    const diffTime = expirationDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? diffDays : 0;
-  } */
 
   update(id: string, updateData: Partial<Zems>) {
     return this.zemModel.findByIdAndUpdate(id, updateData).exec();
