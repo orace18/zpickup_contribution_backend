@@ -1,13 +1,14 @@
-import {BadRequestException, forwardRef, Inject, Injectable} from '@nestjs/common';
-import {InjectModel} from '@nestjs/mongoose';
-import {Model, Types} from 'mongoose';
-import {Wallet} from '../Schemas/wallet_schema/wallet.schema';
-import {TransactionType, WalletTransaction,} from '../Schemas/wallet_schema/wallet_transaction.schema';
-import {CreditWallet} from '../Schemas/wallet_schema/credit-wallet.schema';
-import {NotificationService} from '../notifications/notification.service';
-import {UsersService} from '../users/users.service';
-import {sendNotification} from '../services/helpers.service';
-import {CreditWalletDto} from "./dto/credit-wallet.dto";
+import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Wallet } from '../Schemas/wallet_schema/wallet.schema';
+import { TransactionType, WalletTransaction, } from '../Schemas/wallet_schema/wallet_transaction.schema';
+import { CreditWallet } from '../Schemas/wallet_schema/credit-wallet.schema';
+import { NotificationService } from '../notifications/notification.service';
+import { UsersService } from '../users/users.service';
+import { sendNotification } from '../services/helpers.service';
+import { CreditWalletDto } from "./dto/credit-wallet.dto";
+import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
 
 @Injectable()
 export class WalletService {
@@ -17,22 +18,27 @@ export class WalletService {
     private walletTransactionModel: Model<WalletTransaction>,
     @InjectModel(CreditWallet.name)
     private creditWalletModel: Model<CreditWallet>,
+    @InjectModel(Zems.name) private zemsModel: Model<Zems>,
     private notificationService: NotificationService,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
-  ) {}
+  ) { }
 
-  async getWalletBalance(userId: string) {
+  async getWalletBalance(userId: string, type: string = 'user') {
     let wallet = await this.walletModel.findOne({
       user: new Types.ObjectId(userId),
+      type: type,
     });
-
+  
     if (!wallet) {
+      // Créer le portefeuille demandé pour le parrain
       wallet = await this.walletModel.create({
         user: new Types.ObjectId(userId),
+        type: type,
         wallet_amount: 0,
       });
     }
+    
     return wallet;
   }
 
@@ -47,7 +53,7 @@ export class WalletService {
     wallet.updated_at = new Date();
     await wallet.save();
 
-    console.log("wallet",wallet);
+    console.log("wallet", wallet);
 
     const transaction = await this.creditWalletModel.create({
       user: new Types.ObjectId(userId),
@@ -92,24 +98,26 @@ export class WalletService {
   async creditWalletUserCustomBalance(
     userId: string,
     amount: number,
-    title:string,
-    msg:string, type:TransactionType,
+    title: string,
+    msg: string, 
+    type: TransactionType, 
+    wallet_type: string = 'user'
   ) {
-    const wallet = await this.getWalletBalance(userId);
+    const wallet = await this.getWalletBalance(userId, wallet_type);
     let mont = 0;
-    switch (type){
+    switch (type) {
       case TransactionType.BONUS:
       case TransactionType.WITHDRAWAL:
         wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
         break;
       case TransactionType.DEBIT:
         wallet.wallet_amount = Number(wallet.wallet_amount) - Number(amount);
-         mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
+        mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
         wallet.wallet_amount = mont;
 
         break;
       case TransactionType.DEBIT:
-         mont = parseFloat(wallet.wallet_amount.toString()) - parseFloat(amount.toString());
+        mont = parseFloat(wallet.wallet_amount.toString()) - parseFloat(amount.toString());
         wallet.wallet_amount = mont;
         break;
 
@@ -121,18 +129,20 @@ export class WalletService {
     const transaction = await this.walletTransactionModel.create({
       user: new Types.ObjectId(userId),
       amount: amount,
-      type :type
+      type: type,
+      wallet_type: wallet_type 
     });
 
     await this.notificationService.createNotification(
       userId,
       title,
-        msg,
+      msg,
       'payment_confirmation',
       {
         transactionId: transaction._id,
         amount: amount,
         newBalance: wallet.wallet_amount,
+        wallet_type: wallet_type,
       },
     );
 
@@ -141,10 +151,11 @@ export class WalletService {
       const send_data = {
         _id: user._id.toString(),
         more_action: 'credited',
+        wallet_type: wallet_type,
       };
       sendNotification(
-          title,
-          msg,
+        title,
+        msg,
         user.fcm_token,
         send_data,
       );
@@ -154,6 +165,7 @@ export class WalletService {
       message: msg,
       transaction,
       new_balance: wallet.wallet_amount,
+      wallet_type: wallet_type,
     };
   }
 
@@ -163,8 +175,9 @@ export class WalletService {
     phone_number: string,
     type: TransactionType.WITHDRAWAL,
     minWithdrawalAmount = 10000,
+    wallet_type: string = 'user'
   ): Promise<{ newBalance: number; transaction: any }> {
-    const wallet = await this.getWalletBalance(userId);
+    const wallet = await this.getWalletBalance(userId, wallet_type);
 
     if (wallet.wallet_amount < amount) {
       throw new BadRequestException('Solde insuffisant');
@@ -191,6 +204,7 @@ export class WalletService {
       amount,
       type,
       phone_number,
+      wallet_type: wallet_type ,
     });
 
     await this.notificationService.createNotification(
@@ -202,6 +216,7 @@ export class WalletService {
         transactionId: transaction._id,
         amount: amount,
         newBalance: wallet.wallet_amount,
+        wallet_type: wallet_type,
       },
     );
 
@@ -210,6 +225,7 @@ export class WalletService {
       const send_data = {
         _id: user._id.toString(),
         more_action: 'withdraw',
+        wallet_type: wallet_type,
       };
       sendNotification(
         'Retrait effectué',
@@ -238,7 +254,7 @@ export class WalletService {
   }
 
   update(creditWalletDto: CreditWalletDto) {
-    return this.creditWalletUserCustomBalance(creditWalletDto.user.toString(),creditWalletDto.amount,"Recharge","Votre portefeuille a été rechargé avec succès.",TransactionType.WITHDRAWAL);
+    return this.creditWalletUserCustomBalance(creditWalletDto.user.toString(), creditWalletDto.amount, "Recharge", "Votre portefeuille a été rechargé avec succès.", TransactionType.WITHDRAWAL, "user");
   }
 
   remove(id: number) {

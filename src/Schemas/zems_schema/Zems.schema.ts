@@ -92,6 +92,10 @@ export class Zems {
   @Prop({ default: false })
   is_temporal: boolean;
 
+  @Prop({ default: new Date() })
+  expired_at: Date;
+  
+
 }
 
 export const ZemsSchema = SchemaFactory.createForClass(Zems);

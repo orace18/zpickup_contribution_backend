@@ -5,12 +5,16 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ReferenceHistory, ReferenceHistorySchema } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
 import { Config, ConfigSchema } from 'src/Schemas/config_schema/config.schema';
 import { WalletModule } from 'src/wallet/wallet.module';
+import { Zems, ZemsSchema } from 'src/Schemas/zems_schema/Zems.schema';
+import { Races, RacesSchema } from 'src/Schemas/races_schema/races.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: ReferenceHistory.name, schema: ReferenceHistorySchema },
-      { name: Config.name, schema: ConfigSchema }
+      { name: Config.name, schema: ConfigSchema },
+      { name: Zems.name, schema: ZemsSchema },
+      { name: Races.name, schema: RacesSchema },
     ]),
     forwardRef(() => WalletModule),
   ],

@@ -12,6 +12,18 @@ export class ReferenceHistory {
   @Prop({ required: true })
   bonus_amount: number;
 
+  @Prop({ default: false })
+  is_ambassador_referral: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  zem_validation_bonus_paid: boolean;
+
+  @Prop({ type: Number })
+  zem_validation_bonus_amount: number;
+
+  @Prop({ type: Date })
+  zem_validation_bonus_paid_at: Date;
+
   @Prop({ default: new Date() })
   created_at: Date;
 

@@ -88,10 +88,10 @@ export class Users {
 
 }
 
-export const UserSchema = SchemaFactory.createForClass(Users);
+export const UsersSchema = SchemaFactory.createForClass(Users);
 
 // Middleware pour hasher le mot de passe
-UserSchema.pre('save', async function (next) {
+UsersSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -109,10 +109,10 @@ UserSchema.pre('save', async function (next) {
 });
 
 // Supprimer l'ancien index unique sur phone_number s'il existe
-UserSchema.index({ phone_number: 1 }, { unique: false });
+UsersSchema.index({ phone_number: 1 }, { unique: false });
 
 // Créer un nouvel index composé
-UserSchema.index(
+UsersSchema.index(
   { 
     phone_number: 1,
     validated_at: 1,

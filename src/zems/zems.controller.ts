@@ -13,12 +13,13 @@ import {
     HttpException,
     HttpStatus,
     BadRequestException,
+    UploadedFile,
 } from '@nestjs/common';
 import { ZemsService } from './zems.service';
 import { CreateZemDto } from './dto/create-zem.dto';
 import { UpdateZemDto } from './dto/update-zem.dto';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -29,6 +30,8 @@ import { CounterService } from "../counter/counter.service";
 import { count } from "rxjs";
 import { Counter } from "../Schemas/counter_schema/counter.schema";
 import { ProfileValidationStatus } from 'src/Schemas/zems_schema/Zems.schema';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { RequiredRoles } from 'src/common/decorators/role.decorator';
 
 @Controller('zems')
 export class ZemsController {
@@ -154,8 +157,6 @@ export class ZemsController {
                     break;
             }
         });
-
-        const userZemId = req.user.zemId;
 
         try {
             // Vérifier si l'ID du ZEM appartient bien à l'utilisateur connecté
@@ -294,85 +295,73 @@ export class ZemsController {
         }
     }
 
+    @UseInterceptors(
+        FileInterceptor('contrat_document', {
+            storage: diskStorage({
+                destination: './uploads/contracts',
+                filename: (req, file, callback) => {
+                    // Vérifier si le fichier est un PDF
+                    if (file.mimetype !== 'application/pdf') {
+                        return callback(
+                            new BadRequestException('Seuls les fichiers PDF sont acceptés'),
+                            null
+                        );
+                    }
 
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                    callback(
+                        null,
+                        `contrat-${uniqueSuffix}${extname(file.originalname)}`,
+                    );
+                },
+            }),
+            limits: {
+                fileSize: 5 * 1024 * 1024, // 5MB maximum
+            },
+        }),
+    )
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                contrat_document: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Document de contrat au format PDF',
+                },
+            },
+        },
+    })
     @Patch('make_ambassador/:id')
-    async makeAmbassador(@Param('id') id: string) {
+    async makeAmbassador(
+        @Param('id') id: string,
+        @UploadedFile() contratDocument: Express.Multer.File,
+    ) {
         try {
-            const updatedZem = await this.zemsService.makeAmbassador(id);
+            // Vérifier si le fichier a été téléchargé
+            if (!contratDocument) {
+                throw new BadRequestException('Le document de contrat (PDF) est requis');
+            }
+
+            // Appeler le service avec le chemin du fichier
+            const updatedZem = await this.zemsService.makeAmbassador(id, contratDocument.path);
+
             return {
                 result: updatedZem,
-                message: 'Zem promu ambassadeur avec succès'
+                message: 'Zem promu ambassadeur avec succès',
+                contrat_document: contratDocument.path
             };
         } catch (error) {
+            if (error instanceof BadRequestException) {
+                throw error;
+            }
             return {
                 error: error.message
             };
         }
     }
 
-    /* @UseGuards(JwtAuthGuard)
-    @Get('test/add-monthly-km')
-    async testAddMonthlyKm() {
-        try {
-            const result = await this.zemsService.addMonthlyKmToAmbassadors();
-            return {
-                success: true,
-                message: 'La fonction d\'ajout de km a été exécutée avec succès',
-                result
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: 'Une erreur est survenue lors de l\'exécution de la fonction',
-                error: error.message
-            };
-        }
-    } */
-
-    /* @UseGuards(JwtAuthGuard)
-    @Patch('assign-km/:id')
-    async assignKmToAmbassador(@Param('id') id: string) {
-        try {
-            const zem = await this.zemsService.findOne(id);
-            if (!zem) {
-                throw new HttpException('Zem non trouvé', HttpStatus.NOT_FOUND);
-            }
-
-            if (!zem.is_ambassador) {
-                throw new BadRequestException('Ce zem n\'est pas un ambassadeur');
-            }
-
-            const result = await this.zemsService.addMonthlyKmToAmbassadors(id);
-
-            return result;
-
-        } catch (error) {
-            return {
-                success: false,
-                error: error.message,
-            };
-        }
-    } */
-
-    /* @UseGuards(JwtAuthGuard)
-    @Post('assign-km-to-all')
-    async assignKmToAllAmbassadors() {
-        try {
-            const result = await this.zemsService.addMonthlyKmToAmbassadors();
-
-            return {
-                success: true,
-                ambassadorsCount: result.ambassadorsCount,
-                updatedCounters: result.updatedCounters,
-                message: `${result.kmAdded} km ont été ajoutés à ${result.updatedCounters} ambassadeur(s)`
-            };
-        } catch (error) {
-            return {
-                success: false,
-                error: error.message,
-            };
-        }
-    } */
 
     @UseGuards(JwtAuthGuard)
     @Post('add-manual-km/:id')
@@ -398,4 +387,16 @@ export class ZemsController {
             };
         }
     }
+
+    @Post('add-km-to-all')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @RequiredRoles(UserType.ADMIN)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Add manual km to all ambassadors' })
+    @ApiResponse({ status: 200, description: 'Kilometers successfully added to all ambassadors' })
+    async addKmToAllAmbassadors() {
+        return this.zemsService.addManualKmToAllAmbassadors();
+
+    }
 }
+

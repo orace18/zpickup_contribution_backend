@@ -9,6 +9,9 @@ export class Wallet {
   @Prop({ required: true })
   wallet_amount: number;
 
+  @Prop({ default: 'user' })
+  type: string;
+
   @Prop({ default: new Date() })
   created_at: Date;
 

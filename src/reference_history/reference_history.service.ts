@@ -8,6 +8,9 @@ import { Config } from 'src/Schemas/config_schema/config.schema';
 import { WalletService } from 'src/wallet/wallet.service';
 import { NotificationService } from 'src/notifications/notification.service';
 import { TransactionType } from 'src/Schemas/wallet_schema/wallet_transaction.schema';
+import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
+import { CoursesStatus, Races } from 'src/Schemas/races_schema/races.schema';
+import { UserType } from 'src/Schemas/users_schema/Users.schema';
 
 @Injectable()
 export class ReferenceHistoryService {
@@ -15,43 +18,140 @@ export class ReferenceHistoryService {
     @InjectModel(ReferenceHistory.name)
     private referenceHistoryModel: Model<ReferenceHistory>,
     @InjectModel(Config.name) private configModel: Model<Config>,
+    @InjectModel(Zems.name) private zemsModel: Model<Zems>,
+    @InjectModel(Races.name) private racesModel: Model<Races>,
     private walletService: WalletService,
   ) { }
 
   async createReferenceHistory(referrerId: string, referredId: string) {
     try {
-      // Récupérer le montant du bonus depuis la configuration
-      const bonusConfig = await this.configModel.findOne({ key: 'referal-code-bonus' }).exec();
-      const bonusAmount = bonusConfig ? parseFloat(bonusConfig.value) : 20; // Valeur par défaut si non trouvée
+      console.log('ReferrerId:', referrerId);
   
-      // Vérifier que bonusAmount est bien un nombre
-      if (isNaN(bonusAmount)) {
-        throw new Error('Le montant du bonus doit être un nombre');
+      // 1. Rechercher le Zem avec une requête plus flexible
+      const referrerZem = await this.zemsModel
+        .findOne({
+          $or: [
+            { user: referrerId }, // Recherche avec la chaîne
+            { user: new Types.ObjectId(referrerId) } // Recherche avec ObjectId
+          ]
+        })
+        .lean()
+        .exec();
+  
+      console.log('Zem trouvé:', referrerZem);
+  
+      if (!referrerZem) {
+        console.log('Aucun Zem trouvé. Vérification de la collection...');
+        const allZems = await this.zemsModel.find().lean().exec();
+        console.log('Tous les Zems dans la base:', allZems);
+        
+        // Utiliser le bonus standard si pas de Zem trouvé
+        return this.handleRegularBonus(referrerId, referredId);
       }
   
-      // Créer l'historique de parrainage
-      const referenceHistory = await this.referenceHistoryModel.create({
-        referrer: new Types.ObjectId(referrerId),
-        referred: new Types.ObjectId(referredId),
-        bonus_amount: bonusAmount, // Utiliser directement le nombre
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      const isAmbassador = referrerZem.is_ambassador === true;
+      console.log('Est ambassadeur:', isAmbassador);
   
-      // Créditer le wallet du parrain
-      await this.walletService.creditWalletUserCustomBalance(
-        referrerId,
-        bonusAmount,
-        'Bonus Parrainage',
-        `Vous avez reçu ${bonusAmount} XOF pour avoir parrainé un nouvel utilisateur`,
-        TransactionType.BONUS,
-      );
-  
-      return referenceHistory;
+      if (isAmbassador) {
+        return this.handleAmbassadorBonus(referrerId, referredId, referrerZem);
+      } else {
+        return this.handleRegularBonus(referrerId, referredId);
+      }
     } catch (error) {
-      console.error('Erreur lors de la création de l\'historique de parrainage:', error);
+      console.error('Erreur détaillée:', error);
       throw error;
     }
+  }
+  
+  private async handleAmbassadorBonus(referrerId: string, referredId: string, referrerZem: any) {
+    const ambassadorBonusConfig = await this.configModel
+      .findOne({ key: 'ambassador-customer-affiliation-bonus' })
+      .exec();
+  
+    console.log('Configuration bonus ambassadeur:', ambassadorBonusConfig);
+  
+    const referenceHistory = await this.referenceHistoryModel.create({
+      referrer: new Types.ObjectId(referrerId),
+      referred: new Types.ObjectId(referredId),
+      bonus_amount: parseFloat(ambassadorBonusConfig.value),
+      is_ambassador_referral: true
+    });
+  
+    await this.walletService.creditWalletUserCustomBalance(
+      referrerId,
+      parseFloat(ambassadorBonusConfig.value),
+      'Bonus Affiliation Ambassadeur',
+      `Bonus d'affiliation client - ${ambassadorBonusConfig.value} XOF`,
+      TransactionType.BONUS,
+      'ambassador'
+    );
+  
+    return referenceHistory;
+  }
+  
+  private async handleRegularBonus(referrerId: string, referredId: string) {
+    const regularBonusConfig = await this.configModel
+      .findOne({ key: 'referal-code-bonus' })
+      .exec();
+  
+    const referenceHistory = await this.referenceHistoryModel.create({
+      referrer: new Types.ObjectId(referrerId),
+      referred: new Types.ObjectId(referredId),
+      bonus_amount: parseFloat(regularBonusConfig.value),
+      is_ambassador_referral: false
+    });
+  
+    await this.walletService.creditWalletUserCustomBalance(
+      referrerId,
+      parseFloat(regularBonusConfig.value),
+      'Bonus Parrainage',
+      `Bonus de parrainage standard - ${regularBonusConfig.value} XOF`,
+      TransactionType.BONUS,
+      'user'
+    );
+  
+    return referenceHistory;
+  }
+
+  
+
+  async getReferralDetails(referrerId: string) {
+    const referrerZem = await this.zemsModel
+      .findOne({ user: new Types.ObjectId(referrerId) })
+      .exec();
+
+    const referrals = await this.referenceHistoryModel
+      .find({ 
+        referrer: new Types.ObjectId(referrerId),
+        ...(referrerZem?.is_ambassador ? { is_ambassador_referral: true } : {})
+      })
+      .populate({
+        path: 'referred',
+        select: 'firstname lastname phone_number user_type'
+      })
+      .lean();
+
+    const detailedReferrals = await Promise.all(
+      referrals.map(async (referral) => {
+        const completedRaces = await this.racesModel.countDocuments({
+          user: referral.referred._id,
+          status: CoursesStatus.END
+        });
+
+        const requiredRaces = parseInt((await this.configModel.findOne({ 
+          key: 'ambassador-required-races' 
+        })).value);
+
+        return {
+          ...referral,
+          completed_races: completedRaces,
+          progress_percentage: (completedRaces / requiredRaces) * 100,
+          is_goal_reached: completedRaces >= requiredRaces
+        };
+      })
+    );
+
+    return detailedReferrals;
   }
 
   async findAll() {
@@ -68,12 +168,28 @@ export class ReferenceHistoryService {
       .populate('referred', 'firstname lastname phone_number');
   }
 
+  async findOneWithReferrer(conditions: any) {
+    return this.referenceHistoryModel
+      .findOne(conditions)
+      .populate({
+        path: 'referrer',
+        select: '_id'
+      })
+      .exec();
+  }
+
   async update(id: number, updateReferenceHistoryDto: UpdateReferenceHistoryDto) {
     return this.referenceHistoryModel.findByIdAndUpdate(
       id,
       updateReferenceHistoryDto,
       { new: true }
     );
+  }
+
+  async findByIdAndUpdate(id: string, updateData: Partial<ReferenceHistory>) {
+    return this.referenceHistoryModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .exec();
   }
 
   async remove(id: number) {

@@ -7,7 +7,7 @@ import { FAQ, FAQSchema } from 'src/Schemas/FAQ_schema/FAQ.schema';
 import { FaqSeeder } from './faq/faq.seeder';
 import { Role, RoleSchema } from '../Schemas/roles_schema/Role.schema';
 import { Permission, PermissionSchema } from '../Schemas/permission_schema/Permission.schema';
-import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
+import { Users, UsersSchema } from '../Schemas/users_schema/Users.schema';
 import { ConfigSeeder } from './config/config.seeder';
 import { AdminSeeder } from './admin_user/admin_user.seeder';
 import { GSMNumberFormat, GSMNumberFormatSchema } from 'src/Schemas/gsm_number_format_schema/gsm_number_format.schema';
@@ -28,7 +28,7 @@ import { PrivacyPolicySeeder } from './privacy_policy/privacy-policy.seeder';
       { name: PrivacyPolicy.name, schema: PrivacyPolicySchema },
       { name: Role.name, schema: RoleSchema },
       { name: Permission.name, schema: PermissionSchema },
-      { name: Users.name, schema: UserSchema },
+      { name: Users.name, schema: UsersSchema },
 
 
     ]),

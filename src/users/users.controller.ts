@@ -224,6 +224,7 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  
   @Patch('complete-registration/:id')
   @UseInterceptors(FileInterceptor('user_profile_image', {
     storage: diskStorage({
@@ -284,11 +285,18 @@ export class UsersController {
         }
       }
 
+      
       // Mettre à jour l'utilisateur
-      const updatedUser = await this.usersService.update(id, {
+      await this.usersService.update(id, {
         ...updateUserDto,
         updated_at: new Date(),
-      });
+    });
+
+    // Récupérer l'utilisateur mis à jour avec toutes ses informations
+    const updatedUser = await this.usersService.findOne(id);
+    if (!updatedUser) {
+        throw new HttpException('Erreur lors de la mise à jour', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
       return updatedUser;
     } catch (error) {

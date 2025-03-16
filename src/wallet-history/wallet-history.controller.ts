@@ -18,6 +18,16 @@ export class WalletHistoryController {
     return this.walletHistoryService.getTransactionHistory(userId);
   }
 
+  @Get('ambassador/:userId')
+  @ApiOperation({ summary: 'Historique des transactions du portefeuille ambassadeur' })
+  @ApiResponse({
+    status: 200,
+    description: "Retourne l'historique des transactions du portefeuille ambassadeur",
+  })
+  async getAmbassadorHistory(@Param('userId') userId: string) {
+    return this.walletHistoryService.getTransactionHistory(userId, 'ambassador');
+  }
+
   @Post()
   create(@Body() createWalletHistoryDto: CreateWalletHistoryDto) {
     return this.walletHistoryService.create(createWalletHistoryDto);

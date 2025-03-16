@@ -1,4 +1,4 @@
-import {forwardRef, Module} from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { WalletController } from './wallet.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -14,9 +14,11 @@ import {
 } from '../Schemas/wallet_schema/credit-wallet.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersService } from '../users/users.service';
-import { Users, UserSchema } from '../Schemas/users_schema/Users.schema';
-import {UsersModule} from "../users/users.module";
+import { Users, UsersSchema } from '../Schemas/users_schema/Users.schema';
+import { UsersModule } from "../users/users.module";
 import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
+import { Zems, ZemsSchema } from 'src/Schemas/zems_schema/Zems.schema';
+import { ZemsModule } from 'src/zems/zems.module';
 
 @Module({
   imports: [
@@ -25,9 +27,14 @@ import { ReferenceHistoryModule } from 'src/reference_history/reference_history.
       { name: Config.name, schema: ConfigSchema },
       { name: WalletTransaction.name, schema: WalletTransactionSchema },
       { name: CreditWallet.name, schema: CreditWalletSchema },
-      { name: Users.name, schema: UserSchema }, 
+      { name: Users.name, schema: UsersSchema }, 
+      {
+        name: Zems.name, schema: ZemsSchema
+      },
+      
     ]),
     NotificationsModule,
+    ZemsModule,
     forwardRef(() => UsersModule),
     forwardRef(() => ReferenceHistoryModule),
   ],
@@ -35,4 +42,4 @@ import { ReferenceHistoryModule } from 'src/reference_history/reference_history.
   providers: [WalletService],
   exports: [WalletService],
 })
-export class WalletModule {}
+export class WalletModule { }
