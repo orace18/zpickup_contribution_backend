@@ -23,6 +23,7 @@ import {WalletModule} from "../wallet/wallet.module";
 import { ReferenceHistory, ReferenceHistorySchema } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
 import { ReferenceHistoryModule } from 'src/reference_history/reference_history.module';
 import { UsersModule } from 'src/users/users.module';
+import { AbsKmHistory, AbsKmHistorySchema } from 'src/Schemas/abs_km_history/abs_km_history.schema';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UsersModule } from 'src/users/users.module';
       { name: Config.name, schema: ConfigSchema },
       { name: Notification.name, schema: NotificationSchema },
       { name: CounterHistory.name, schema: CounterHistorySchema },
+      { name: AbsKmHistory.name, schema: AbsKmHistorySchema},
     ],
     ),
     forwardRef(() => WalletModule),

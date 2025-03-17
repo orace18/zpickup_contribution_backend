@@ -398,5 +398,27 @@ export class ZemsController {
         return this.zemsService.addManualKmToAllAmbassadors();
 
     }
+
+    @UseGuards(JwtAuthGuard)
+  @Get('km-history/:id')
+  @ApiOperation({ summary: 'Get km addition history for a Zem' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Returns the history of km additions for the specified Zem'
+  })
+  async getKmHistory(@Param('id') id: string) {
+    try {
+      const history = await this.zemsService.getAmbassadorKmHistory(id);
+      return {
+        success: true,
+        data: history
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }
 

@@ -19,6 +19,7 @@ import {UsersModule} from "../users/users.module";
 import {ReferenceHistoryService} from "../reference_history/reference_history.service";
 import {ReferenceHistory} from "../reference_history/entities/reference_history.entity";
 import {ReferenceHistorySchema} from "../Schemas/reference_history_schema/reference_history_schema.schema";
+import { AbsKmHistory, AbsKmHistorySchema } from 'src/Schemas/abs_km_history/abs_km_history.schema';
 
 
 @Module({
@@ -29,7 +30,8 @@ import {ReferenceHistorySchema} from "../Schemas/reference_history_schema/refere
       { name: Zems.name, schema: ZemsSchema },
       { name: Config.name, schema: ConfigSchema },
       { name: Users.name, schema: UsersSchema }, // Ajout du UsersModel
-      { name: ReferenceHistory.name, schema: ReferenceHistorySchema }
+      { name: ReferenceHistory.name, schema: ReferenceHistorySchema },
+      { name: AbsKmHistory.name, schema: AbsKmHistorySchema},
     ]),
     forwardRef(() => RacesModule),
     forwardRef(() => UsersModule),

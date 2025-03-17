@@ -12,6 +12,7 @@ import { ReferenceHistoryService } from 'src/reference_history/reference_history
 import { WalletService } from 'src/wallet/wallet.service';
 import { TransactionType } from 'src/Schemas/wallet_schema/wallet_transaction.schema';
 import { ReferenceHistory } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
+import { AbsKmHistory } from 'src/Schemas/abs_km_history/abs_km_history.schema';
 
 @Injectable()
 export class ZemsService {
@@ -20,6 +21,7 @@ export class ZemsService {
     @InjectModel(Races.name) private racesModel: Model<Races>,
     @InjectModel(Counter.name) private counterModel: Model<Counter>,
     @InjectModel(ReferenceHistory.name) private referenceHistoryModel: Model<ReferenceHistory>,
+    @InjectModel(AbsKmHistory.name) private absKmHistoryModel: Model<AbsKmHistory>,
     private readonly referenceHistoryService: ReferenceHistoryService,
     private readonly walletService: WalletService,
   ) { }
@@ -45,9 +47,9 @@ export class ZemsService {
     const savedZem = await created.save();
 
     // Si le Zem est créé avec le statut validé directement
-  if (savedZem.profile_validation_status === ProfileValidationStatus.VALIDATED) {
-    await this.handleZemValidationBonus(savedZem.user.toString());
-  }
+    if (savedZem.profile_validation_status === ProfileValidationStatus.VALIDATED) {
+      await this.handleZemValidationBonus(savedZem.user.toString());
+    }
 
 
     return savedZem;
@@ -198,9 +200,9 @@ export class ZemsService {
     try {
       // 1. Chercher l'historique de parrainage pour cet utilisateur
       const referralHistory = await this.referenceHistoryModel
-        .findOne({ 
+        .findOne({
           referred: new Types.ObjectId(userId),
-          is_ambassador_referral: true 
+          is_ambassador_referral: true
         })
         .exec();
 
@@ -211,9 +213,9 @@ export class ZemsService {
 
       // 2. Vérifier si le parrain est toujours un ambassadeur
       const referrerZem = await this.zemModel
-        .findOne({ 
+        .findOne({
           user: referralHistory.referrer,
-          is_ambassador: true 
+          is_ambassador: true
         })
         .exec();
 
@@ -339,6 +341,21 @@ export class ZemsService {
     return updatedZem;
   }
 
+  async getAmbassadorKmHistory(zemId: string) {
+    const zem = await this.zemModel.findById(zemId);
+    if (!zem) {
+      throw new NotFoundException('Zem non trouvé');
+    }
+
+    const history = await this.absKmHistoryModel.find({ zem: zemId }).sort({ createdAt: -1 }).exec();
+
+    return {
+      zemId: zemId,
+      is_ambassador: zem.is_ambassador,
+      history: history
+    }
+}
+
   async addManualKmToAmbassador(zemId: string) {
     // Vérifier si le zem existe et est un ambassadeur
     const zem = await this.zemModel.findById(zemId).exec();
@@ -373,12 +390,33 @@ export class ZemsService {
     counter.balance_abs_km += kmToAdd;
     await counter.save();
 
+    try {
+      const historyEntry = new this.absKmHistoryModel({
+          zem: new Types.ObjectId(zemId),  // Assurez-vous que l'ID est converti en ObjectId
+          kmAdded: kmToAdd,
+          type: 'manual',
+          description: 'Ajout manuel de kilomètres'
+      });
+      
+      await historyEntry.save();
+      console.log('Historique créé:', historyEntry);  // Pour le débogage
+  } catch (error) {
+      console.error('Erreur lors de la création de l\'historique:', error);
+      throw error;
+  }
+
+  const verifyHistory = await this.absKmHistoryModel
+        .find({ zem: zemId })
+        .sort({ createdAt: -1 })
+        .exec();
+
     return {
       success: true,
       zemId: zemId,
       kmAdded: kmToAdd,
       currentBalance: counter.balance_km,
-      message: `${kmToAdd} km ajoutés avec succès à l'ambassadeur`
+      message: `${kmToAdd} km ajoutés avec succès à l'ambassadeur`,
+      historyEntry: verifyHistory[0]
     };
   }
 
@@ -428,6 +466,13 @@ export class ZemsService {
         counter.balance_km += kmToAdd;
         counter.balance_abs_km += kmToAdd;
         await counter.save();
+
+        await this.absKmHistoryModel.create({
+          zem: ambassador._id,
+          kmAdded: kmToAdd,
+          type: 'manual',
+          description: 'Ajout manuel de kilomètres'
+        });
 
         results.details.push({
           zemId: ambassador._id,

@@ -4,6 +4,7 @@ import { Races } from '../races_schema/races.schema';
 
 export enum TransactionType {
   BONUS = 'bonus',
+  BONUS_AMBASSADOR = "Bonus d'affiliation",
   WITHDRAWAL = 'withdrawal',
   DEBIT = 'debit',
 }
