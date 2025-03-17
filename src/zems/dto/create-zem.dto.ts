@@ -51,7 +51,7 @@ export class CreateZemDto {
   @ApiProperty({ type: 'string', format: 'binary' })
   ifu_number_image: any;
 
-  
+
   @IsString()
   @IsOptional()
   number_plate: string;
@@ -66,5 +66,8 @@ export class CreateZemDto {
 
   @IsOptional()
   is_temporal: boolean;
+
+  @IsOptional()
+  validated_at: Date;
 
 }
