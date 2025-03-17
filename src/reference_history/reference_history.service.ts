@@ -157,15 +157,15 @@ export class ReferenceHistoryService {
   async findAll() {
     return this.referenceHistoryModel
       .find()
-      .populate('referrer', 'firstname lastname phone_number')
-      .populate('referred', 'firstname lastname phone_number');
+      .populate('referrer', 'firstname lastname phone_number user_type')
+      .populate('referred', 'firstname lastname phone_number user_type');
   }
 
   async findOne(id: number) {
     return this.referenceHistoryModel
       .findById(id)
-      .populate('referrer', 'firstname lastname phone_number')
-      .populate('referred', 'firstname lastname phone_number');
+      .populate('referrer', 'firstname lastname phone_number user_type')
+      .populate('referred', 'firstname lastname phone_number user_type');
   }
 
   async findOneWithReferrer(conditions: any) {
@@ -200,7 +200,7 @@ export class ReferenceHistoryService {
     try {
       const referrals = await this.referenceHistoryModel
         .find({ referrer: new Types.ObjectId(referrerId) })
-        .populate('referred', 'firstname lastname phone_number user_profile_image created_at')
+        .populate('referred', 'firstname lastname phone_number user_profile_image created_at user_type')
         .sort({ created_at: -1 })
         .exec();
 
