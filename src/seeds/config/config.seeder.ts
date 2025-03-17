@@ -123,6 +123,36 @@ export class ConfigSeeder {
         type: 'number',
         description: 'Nombre de kilomètres offerts chaque mois aux ambassadeurs',
       },
+      {
+        key: 'ambassador-customer-affiliation-bonus',
+        value: '100',
+        type: "number",
+        description: 'Bonus pour l\'affiliation d\'un client',
+      },
+      {
+        key: 'ambassador-zem-affiliation-bonus',
+        value: '100',
+        type: "number",
+        description: 'Bonus pour l\'affiliation d\'un transporteur',
+      },
+      {
+        key: 'ambassador-customer-races-bonus',
+        value: '150',
+        type: "number",
+        description: 'Bonus quand un client affilié atteint le nombre de courses requis',
+      },
+      {
+        key: 'ambassador-zem-races-bonus',
+        value: '700',
+        type: "number",
+        description: 'Bonus quand un transporteur affilié atteint le nombre de courses requis',
+      },
+      {
+        key: 'ambassador-required-races',
+        value: '50',
+        type: "number",
+        description: 'Nombre de courses requises pour le bonus',
+      },
     ];
     const bulkOps = tabs.map((item) => ({
       updateOne: {

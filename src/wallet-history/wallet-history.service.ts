@@ -15,10 +15,11 @@ export class WalletHistoryService {
     private creditWalletModel: Model<CreditWallet>,
   ) {}
 
-  async getTransactionHistory(userId: string) {
+  async getTransactionHistory(userId: string, type: string = 'user') {
     const withdrawals = await this.walletTransactionModel
       .find({
         user: new Types.ObjectId(userId),
+        wallet_type: type 
       })
       .sort({ created_at: -1 })
       .lean()

@@ -19,6 +19,9 @@ export class WalletTransaction {
   @Prop({ required: true, enum: TransactionType })
   type: TransactionType;
 
+  @Prop({ required: true, enum: ['user', 'ambassador'], default: 'user' }) // Ajout du type de portefeuille
+  wallet_type: string;
+
   @Prop({ type: Types.ObjectId, ref: 'Races', required: false })
   race?: Races;
 

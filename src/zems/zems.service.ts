@@ -8,6 +8,10 @@ import { Config } from "../Schemas/config_schema/config.schema";
 import { CoursesStatus, Races } from "../Schemas/races_schema/races.schema";
 import { Counter } from 'src/Schemas/counter_schema/counter.schema';
 import { Cron } from '@nestjs/schedule';
+import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
+import { WalletService } from 'src/wallet/wallet.service';
+import { TransactionType } from 'src/Schemas/wallet_schema/wallet_transaction.schema';
+import { ReferenceHistory } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
 
 @Injectable()
 export class ZemsService {
@@ -15,6 +19,9 @@ export class ZemsService {
     @InjectModel(Config.name) private configModel: Model<Config>,
     @InjectModel(Races.name) private racesModel: Model<Races>,
     @InjectModel(Counter.name) private counterModel: Model<Counter>,
+    @InjectModel(ReferenceHistory.name) private referenceHistoryModel: Model<ReferenceHistory>,
+    private readonly referenceHistoryService: ReferenceHistoryService,
+    private readonly walletService: WalletService,
   ) { }
 
 
@@ -34,12 +41,16 @@ export class ZemsService {
     };
   
     const created = new this.zemModel(zemData);
-  
-    // Retourner une seule promesse de sauvegarde
-    return created.save().then(savedDoc => {
-      console.log('Account created with expired_at:', fortyFiveDaysLater);
-      return savedDoc;
-    });
+
+    const savedZem = await created.save();
+
+    // Si le Zem est créé avec le statut validé directement
+  if (savedZem.profile_validation_status === ProfileValidationStatus.VALIDATED) {
+    await this.handleZemValidationBonus(savedZem.user.toString());
+  }
+
+
+    return savedZem;
   }
   
   async checkTemporalValidation(zemId: string) {
@@ -47,7 +58,7 @@ export class ZemsService {
     if (!zem) {
       throw new NotFoundException('Zem not found');
     }
-  
+
     // Vérifier si le zem est temporaire et a une date d'expiration
     if (zem.is_temporal && zem.expired_at) {
       const now = new Date();
@@ -62,25 +73,25 @@ export class ZemsService {
       }
     }
   }
-  
+
   async getRemainingDays(zemId: string): Promise<number | null> {
     const zem = await this.zemModel.findById(zemId).exec();
     if (!zem || !zem.is_temporal || !zem.expired_at) {
       console.log('No temporal validation or expired_at is missing');
       return null;
     }
-  
+
     const now = new Date();
     const expirationDate = new Date(zem.expired_at);
     console.log('Current date:', now);
     console.log('Expiration date:', expirationDate);
-  
+
     const diffTime = expirationDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
     return diffDays > 0 ? diffDays : 0;
   }
-  
+
 
  findAll() {
     return this.zemModel.find();
@@ -91,19 +102,19 @@ export class ZemsService {
     if (!id) {
       throw new BadRequestException('ID is required');
     }
-    
+
     // Vérifier si l'id est un ObjectId valide
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException(`Invalid ID format: ${id}`);
     }
-    
+
     const zem = await this.zemModel.findById(id).exec();
-    
+
     // Vérifier si le zem existe
     if (!zem) {
       throw new NotFoundException(`Zem with ID ${id} not found`);
     }
-    
+
     if (zem.is_temporal) {
       const remainingDays = await this.getRemainingDays(id);
       return {
@@ -111,7 +122,7 @@ export class ZemsService {
         remaining_days: remainingDays,
       };
     }
-    
+
     return zem;
 }
 
@@ -120,13 +131,13 @@ export class ZemsService {
     if (!zem) {
       throw new NotFoundException('Zem not found');
     }
-    
+
     if (!zem.is_temporal) {
       throw new Error('Not a temporal Zem');
     }
     
     const now = new Date();
-    
+
     await this.zemModel.findByIdAndUpdate(zemId, {
       is_temporal: false,
       expired_at: null,
@@ -134,28 +145,28 @@ export class ZemsService {
       validated_at: now,
       profile_validation_status: ProfileValidationStatus.VALIDATED
     });
-    
+
     return {
       success: true,
       message: 'Zem successfully converted to permanent validated status'
     };
   }
-  
+
   // Pour automatiquement vérifier et gérer les Zems temporaires expirés
   @Cron('0 0 * * *') // Exécution quotidienne à minuit
   async handleExpiredTemporalZems() {
     console.log('Checking for expired temporal Zems...');
     const now = new Date();
-    
+
     // Trouver tous les Zems temporaires qui sont expirés
     const expiredZems = await this.zemModel.find({
       is_temporal: true,
       expired_at: { $lt: now },
       profile_validation_status: ProfileValidationStatus.VALIDATED
     }).exec();
-    
+
     console.log(`Found ${expiredZems.length} expired temporal Zems`);
-    
+
     // Mettre à jour leur statut
     for (const zem of expiredZems) {
       await this.zemModel.findByIdAndUpdate(zem._id, {
@@ -163,10 +174,10 @@ export class ZemsService {
         temporal_validated_at: null,
         validated_at: null,
       });
-      
+
       console.log(`Zem ${zem._id} expired status updated`);
     }
-    
+
     return {
       success: true,
       expiredZemsCount: expiredZems.length
@@ -174,8 +185,67 @@ export class ZemsService {
   }
 
 
-  update(id: string, updateData: Partial<Zems>) {
-    return this.zemModel.findByIdAndUpdate(id, updateData).exec();
+  async update(id: string, updateData: Partial<Zems>) {
+    const updatedZem = await this.zemModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .populate('user')
+      .exec();
+
+    return updatedZem;
+  }
+
+  private async handleZemValidationBonus(userId: string) {
+    try {
+      // 1. Chercher l'historique de parrainage pour cet utilisateur
+      const referralHistory = await this.referenceHistoryModel
+        .findOne({ 
+          referred: new Types.ObjectId(userId),
+          is_ambassador_referral: true 
+        })
+        .exec();
+
+      if (!referralHistory) {
+        console.log('Pas d\'historique de parrainage ambassadeur trouvé');
+        return;
+      }
+
+      // 2. Vérifier si le parrain est toujours un ambassadeur
+      const referrerZem = await this.zemModel
+        .findOne({ 
+          user: referralHistory.referrer,
+          is_ambassador: true 
+        })
+        .exec();
+
+      if (!referrerZem) {
+        console.log('Le parrain n\'est pas/plus un ambassadeur');
+        return;
+      }
+
+      // 3. Récupérer le montant du bonus
+      const zemBonusConfig = await this.configModel
+        .findOne({ key: 'ambassador-zem-affiliation-bonus' })
+        .exec();
+
+      if (!zemBonusConfig) {
+        console.error('Configuration du bonus Zem non trouvée');
+        return;
+      }
+
+      // 4. Créditer le portefeuille ambassadeur
+      await this.walletService.creditWalletUserCustomBalance(
+        referralHistory.referrer.toString(),
+        parseFloat(zemBonusConfig.value),
+        'Bonus Validation Zem',
+        `Bonus pour la validation du compte Zem de votre filleul - ${zemBonusConfig.value} XOF`,
+        TransactionType.BONUS,
+        'ambassador'
+      );
+
+      console.log(`Bonus de ${zemBonusConfig.value} XOF crédité au portefeuille ambassadeur de ${referralHistory.referrer}`);
+    } catch (error) {
+      console.error('Erreur lors du traitement du bonus de validation Zem:', error);
+    }
   }
 
   remove(id: string) {
@@ -342,7 +412,7 @@ export class ZemsService {
       try {
         // Trouver le compteur pour cet ambassadeur
         const counter = await this.counterModel.findOne({ zem: ambassador._id }).exec();
-        
+
         if (!counter) {
           console.log(`Counter not found for ambassador ${ambassador._id}`);
           results.details.push({
@@ -365,7 +435,7 @@ export class ZemsService {
           currentBalance: counter.balance_km,
         });
         results.processedAmbassadors++;
-        
+
         console.log(`Added ${kmToAdd} km to ambassador ${ambassador._id}`);
       } catch (error) {
         console.error(`Error processing ambassador ${ambassador._id}:`, error);

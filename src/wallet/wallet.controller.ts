@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -16,12 +17,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WithdrawWalletDto } from './dto/withdraw-wallet.dto';
 import { TransactionType } from '../Schemas/wallet_schema/wallet_transaction.schema';
 import { CreditWalletDto } from './dto/credit-wallet.dto';
+import { ZemsService } from 'src/zems/zems.service';
 
 @ApiTags('wallet')
 @UseGuards(JwtAuthGuard)
 @Controller('wallet')
 export class WalletController {
-  constructor(private readonly walletService: WalletService) {}
+  constructor(private readonly walletService: WalletService,  private readonly zemsService: ZemsService,) {}
 
   @Get('balance/:userId')
   @ApiOperation({ summary: 'Obtenir le solde du portefeuille' })
@@ -61,6 +63,53 @@ export class WalletController {
       TransactionType.WITHDRAWAL,
     );
   }
+
+
+
+  @Get('ambassador/balance/:userId')
+  @ApiOperation({ summary: 'Obtenir le solde du portefeuille ambassadeur' })
+  @ApiResponse({
+    status: 200,
+    description: 'Retourne le solde du portefeuille ambassadeur',
+  })
+  async getAmbassadorBalance(@Param('userId') userId: string) {
+    return this.walletService.getWalletBalance(userId, 'ambassador');
+  }
+
+  @Post('ambassador/credit/:userId')
+  @ApiOperation({ summary: 'Crediter le portefeuille ambassadeur' })
+  @ApiResponse({ status: 200, description: 'Recharge le portefeuille ambassadeur' })
+  async creditAmbassador(
+    @Param('userId') userId: string,
+    @Body() creditWalletDto: CreditWalletDto,
+  ) {
+    return this.walletService.creditWalletUserCustomBalance(
+      userId,
+      creditWalletDto.amount,
+      'Crédit Portefeuille Ambassadeur',
+      'Votre portefeuille ambassadeur a été crédité',
+      TransactionType.BONUS,
+      'ambassador'
+    );
+  }
+
+  @Post('ambassador/withdraw/:userId')
+  @ApiOperation({ summary: "Retirer de l'argent du portefeuille ambassadeur" })
+  @ApiResponse({ status: 200, description: 'Retrait effectué avec succès' })
+  async withdrawAmbassador(
+    @Param('userId') userId: string,
+    @Body() withdrawWalletDto: WithdrawWalletDto,
+  ) {
+    return this.walletService.withdrawWalletBalance(
+      userId,
+      withdrawWalletDto.amount,
+      withdrawWalletDto.phone_number,
+      TransactionType.WITHDRAWAL,
+      10000,
+      'ambassador'
+    );
+  }
+
 
   @Post()
   create(@Body() createWalletDto: CreateWalletDto) {

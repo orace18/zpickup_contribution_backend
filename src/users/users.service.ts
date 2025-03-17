@@ -1,15 +1,19 @@
 import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Users } from '../Schemas/users_schema/Users.schema';
-import { HydratedDocument, Model } from 'mongoose';
+import { Users, UserType } from '../Schemas/users_schema/Users.schema';
+import { HydratedDocument, Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { WalletService } from "../wallet/wallet.service";
 import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
+import { Config } from 'src/Schemas/config_schema/config.schema';
+import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(Users.name) private readonly userModel: Model<Users>,
+    @InjectModel(Config.name) private readonly configModel: Model<Config>,
+    @InjectModel(Zems.name) private readonly zemsModel: Model<Zems>,
     @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
     @Inject(forwardRef(() => ReferenceHistoryService))
@@ -54,8 +58,10 @@ export class UsersService {
     }
   }
 
+
+
   async findByPhone(phone_number: string, checkValidated: boolean = false): Promise<Users> {
-    const query: any = { 
+    const query: any = {
       phone_number,
       deleted_at: null // On cherche uniquement les comptes non supprimés
     };
@@ -63,13 +69,13 @@ export class UsersService {
     if (checkValidated) {
       query.validated_at = { $ne: null };
     }
-    
+
     const user = await this.userModel
-    .findOne(query)
-    .sort({ created_at: -1 }) // Pour obtenir le plus récent en premier
-    .populate('race')
-    .exec();
-    
+      .findOne(query)
+      .sort({ created_at: -1 }) // Pour obtenir le plus récent en premier
+      .populate('race')
+      .exec();
+
     return user;
   }
 
@@ -104,36 +110,36 @@ export class UsersService {
         validated_at: { $ne: null },
         deleted_at: null
       });
-  
+
       if (activeUser) {
         throw new HttpException(
           'Ce numéro de téléphone est déjà attribué à un compte actif',
           HttpStatus.BAD_REQUEST
         );
       }
-  
+
       // Générer un code de parrainage unique
       const sponsorship_code = await this.generateUniqueCode();
       userData.sponsorship_code = sponsorship_code;
-  
+
       // Hasher le mot de passe si présent
       if (userData.password) {
         const salt = await bcrypt.genSalt();
         userData.password = await bcrypt.hash(userData.password, salt);
       }
-  
+
       // Créer un nouvel utilisateur
       const user = new this.userModel(userData);
       const savedUser = await user.save();
-  
+
       // Initialiser le wallet
       await this.walletService.getWalletBalance(savedUser._id.toString());
-  
+
       // Gérer le code de parrainage si fourni
       if (userData.referal_code) {
         await this.handleReferralCode(savedUser._id.toString(), userData.referal_code);
       }
-  
+
       return savedUser;
     } catch (error) {
       if (error instanceof HttpException) {
@@ -184,6 +190,7 @@ export class UsersService {
     }
   }
 
+
   async findBySponsorshipCode(sponsorshipCode: string): Promise<Users | null> {
     return this.userModel.findOne({ sponsorship_code: sponsorshipCode }).exec();
   }
@@ -202,21 +209,21 @@ export class UsersService {
 
 
   /* Correction de la méthode findOne pour retourner un utilisateur */
-/*  async findOne(id: string): Promise<Users | null> {
-    return this.userModel
-      .findById(id)
-      .populate('zem')
-      .populate({
-        path: 'race',
-        match: {
-          status: {
-            $in: ['pending', 'accepted', 'start'],
+  /*  async findOne(id: string): Promise<Users | null> {
+      return this.userModel
+        .findById(id)
+        .populate('zem')
+        .populate({
+          path: 'race',
+          match: {
+            status: {
+              $in: ['pending', 'accepted', 'start'],
+            },
           },
-        },
-      })
-      .lean()
-      .exec();
-  }*/
+        })
+        .lean()
+        .exec();
+    }*/
 
   async findUserOne(
     id: string,

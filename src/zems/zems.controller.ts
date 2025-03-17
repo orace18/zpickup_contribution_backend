@@ -90,6 +90,7 @@ export class ZemsController {
         });
         const user_id = req.user.userId;
         createZemDto.user = user_id;
+        createZemDto.validated_at = null;
         return this.zemsService
             .create(createZemDto)
             .then((zem) => {
@@ -157,8 +158,6 @@ export class ZemsController {
                     break;
             }
         });
-
-        const userZemId = req.user.zemId;
 
         try {
             // Vérifier si l'ID du ZEM appartient bien à l'utilisateur connecté
@@ -324,74 +323,74 @@ async checkExpiration(@Param('id') id: string) {
         }
     }
 
-  @UseInterceptors(
-    FileInterceptor('contrat_document', {
-      storage: diskStorage({
-        destination: './uploads/contracts',
-        filename: (req, file, callback) => {
-          // Vérifier si le fichier est un PDF
-          if (file.mimetype !== 'application/pdf') {
-            return callback(
-              new BadRequestException('Seuls les fichiers PDF sont acceptés'),
-              null
-            );
-          }
-          
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(
-            null,
-            `contrat-${uniqueSuffix}${extname(file.originalname)}`,
-          );
+    @UseInterceptors(
+        FileInterceptor('contrat_document', {
+            storage: diskStorage({
+                destination: './uploads/contracts',
+                filename: (req, file, callback) => {
+                    // Vérifier si le fichier est un PDF
+                    if (file.mimetype !== 'application/pdf') {
+                        return callback(
+                            new BadRequestException('Seuls les fichiers PDF sont acceptés'),
+                            null
+                        );
+                    }
+
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                    callback(
+                        null,
+                        `contrat-${uniqueSuffix}${extname(file.originalname)}`,
+                    );
+                },
+            }),
+            limits: {
+                fileSize: 5 * 1024 * 1024, // 5MB maximum
+            },
+        }),
+    )
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                contrat_document: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Document de contrat au format PDF',
+                },
+            },
         },
-      }),
-      limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB maximum
-      },
-    }),
-  )
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        contrat_document: {
-          type: 'string',
-          format: 'binary',
-          description: 'Document de contrat au format PDF',
-        },
-      },
-    },
-  })
+    })
     @Patch('make_ambassador/:id')
     async makeAmbassador(
-    @Param('id') id: string,
-    @UploadedFile() contratDocument: Express.Multer.File,
-  ) {
+        @Param('id') id: string,
+        @UploadedFile() contratDocument: Express.Multer.File,
+    ) {
         try {
             // Vérifier si le fichier a été téléchargé
-      if (!contratDocument) {
-        throw new BadRequestException('Le document de contrat (PDF) est requis');
-      }
-      
-      // Appeler le service avec le chemin du fichier
-      const updatedZem = await this.zemsService.makeAmbassador(id, contratDocument.path);
-      
+            if (!contratDocument) {
+                throw new BadRequestException('Le document de contrat (PDF) est requis');
+            }
+
+            // Appeler le service avec le chemin du fichier
+            const updatedZem = await this.zemsService.makeAmbassador(id, contratDocument.path);
+
             return {
                 result: updatedZem,
                 message: 'Zem promu ambassadeur avec succès',
-        contrat_document: contratDocument.path
+                contrat_document: contratDocument.path
             };
         } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
+            if (error instanceof BadRequestException) {
+                throw error;
+            }
             return {
                 error: error.message
             };
         }
     }
 
-    
+
     @UseGuards(JwtAuthGuard)
     @Post('add-manual-km/:id')
     async addManualKmToAmbassador(@Param('id') id: string) {
@@ -424,8 +423,8 @@ async checkExpiration(@Param('id') id: string) {
     @ApiOperation({ summary: 'Add manual km to all ambassadors' })
     @ApiResponse({ status: 200, description: 'Kilometers successfully added to all ambassadors' })
     async addKmToAllAmbassadors() {
-      return this.zemsService.addManualKmToAllAmbassadors();
-    
-}
+        return this.zemsService.addManualKmToAllAmbassadors();
+
+    }
 }
 

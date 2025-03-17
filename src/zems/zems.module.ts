@@ -11,45 +11,37 @@ import { Config, ConfigSchema } from "../Schemas/config_schema/config.schema";
 import { Races, RacesSchema } from "../Schemas/races_schema/races.schema";
 import { WalletModule } from "../wallet/wallet.module";
 import { ReferenceHistoryModule } from '../reference_history/reference_history.module';
-import { MulterModule } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-
-// Créer le répertoire des contrats s'il n'existe pas
-const contractsDir = './uploads/contracts';
-if (!fs.existsSync(contractsDir)) {
-  fs.mkdirSync(contractsDir, { recursive: true });
-}
+import { ReferenceHistory, ReferenceHistorySchema } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
+import { Wallet, WalletSchema } from 'src/Schemas/wallet_schema/wallet.schema';
+import { WalletHistoryModule } from 'src/wallet-history/wallet-history.module';
+import { WalletHistory, WalletHistorySchema } from 'src/Schemas/wallet-history_schema/wallet_history.schema';
+import { Users, UsersSchema } from 'src/Schemas/users_schema/Users.schema';
 
 @Module({
   imports: [
     JwtModule.registerAsync({
-              imports: undefined,
-              inject: [ConfigService],
-              useFactory: (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-                signOptions: { expiresIn: '24h', algorithm: 'HS256' },
-              })
-            }),
+      imports: undefined,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+            signOptions: { expiresIn: '730h', algorithm: 'HS256' },
+        })
+      }),
     MongooseModule.forFeature([
       { name: Zems.name, schema: ZemsSchema },
+      { name: Users.name, schema: UsersSchema },
       { name: Config.name, schema: ConfigSchema },
-      { name: Races.name, schema: RacesSchema }
+      { name: Races.name, schema: RacesSchema },
+      { name: ReferenceHistory.name, schema: ReferenceHistorySchema },
+      { name: Wallet.name, schema: WalletSchema },
+      { name: WalletHistory.name, schema: WalletHistorySchema },
     ]),
-    MulterModule.register({
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, `${file.fieldname}-${uniqueSuffix}${file.originalname.slice(file.originalname.lastIndexOf('.'))}`);
-        },
-      }),
-    }),
     forwardRef(() => UsersModule),
     forwardRef(() => WalletModule),
     forwardRef(() => ReferenceHistoryModule),
+    
     CounterModule,
     NotificationsModule,
   ],

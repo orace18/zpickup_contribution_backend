@@ -7,7 +7,7 @@ import { UsersModule } from '../../users/users.module';
 import { AdminModule } from '../../users/admin/admin.module';
 import { AdminService } from '../../users/admin/admin.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Users, UserSchema } from '../../Schemas/users_schema/Users.schema';
+import { Users, UsersSchema } from '../../Schemas/users_schema/Users.schema';
 import { Role, RoleSchema } from '../../Schemas/roles_schema/Role.schema';
 import { ConfigService } from '@nestjs/config';
 import { RoleModule } from '../../roles/roles.module';
@@ -19,7 +19,7 @@ import { PermissionModule } from '../../permission/permission.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Users.name, schema: UserSchema },
+      { name: Users.name, schema: UsersSchema },
       { name: Role.name, schema: RoleSchema },
       { name: Permission.name, schema: PermissionSchema }
     ]),

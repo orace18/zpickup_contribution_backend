@@ -21,6 +21,8 @@ import * as process from "node:process";
 import { CounterService } from "../counter/counter.service";
 import { CounterType } from "../Schemas/counter-history_schema/counter_history.schema";
 import { TransactionType } from "../Schemas/wallet_schema/wallet_transaction.schema";
+import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
+import { Users, UserType } from 'src/Schemas/users_schema/Users.schema';
 
 @Injectable()
 export class RacesService {
@@ -28,11 +30,13 @@ export class RacesService {
     @InjectModel(Races.name) private racesModel: Model<Races>,
     @InjectModel(Zems.name) private zemsModel: Model<Zems>,
     @InjectModel(Config.name) private configModel: Model<Config>,
-    private readonly userService: UsersService,
+    @InjectModel(Users.name) private usersModel: Model<Users>,
+    private readonly usersService: UsersService,
     private readonly zemsService: ZemsService,
     private readonly walletService: WalletService,
     private readonly notificationService: NotificationService,
     private readonly counterService: CounterService,
+    private readonly referenceHistoryService: ReferenceHistoryService,
   ) {
   }
 
@@ -59,7 +63,7 @@ export class RacesService {
     const created = new this.racesModel(createRaceDto);
     const saved = await created.save();
 
-    await this.userService.update(req.user.userId, { race: saved._id });
+    await this.usersService.update(req.user.userId, { race: saved._id });
     this.sendNotificationForAllZemInRay(saved);
     return saved;
   }
@@ -84,7 +88,7 @@ export class RacesService {
       'Nouvelle course disponible';
     let more_action_zem = 'available_race';
     for (let i = 0; i < filteredZems.length; i++) {
-      const zem_user = await this.userService.findOne(filteredZems[i].user.toString());
+      const zem_user = await this.usersService.findOne(filteredZems[i].user.toString());
       if (zem_user) {
         this.notificationService.createNotification(zem_user._id.toString(), "Course disponible", body_notification_zem, process.env.NOTIFICATION_COMMANDE, {});
         if (zem_user.fcm_token && zem_user.user_type == "zem") {
@@ -171,7 +175,7 @@ export class RacesService {
       case 'stopped':
         updateRaceDto.status = CoursesStatus.STOPPED;
         updateRaceDto.stopped_at = new Date();
-        this.userService.update(req.user.userId, { race: null });
+        this.usersService.update(req.user.userId, { race: null });
         body_notification = 'Vous avez arrêté la demande de course';
         break;
 
@@ -184,11 +188,11 @@ export class RacesService {
           .exec();
         updateRaceDto.zem = zem._id;
         const id_object_type = new Types.ObjectId(id);
-        await this.userService.update(req.user.userId, {
+        await this.usersService.update(req.user.userId, {
           race: id_object_type,
         });
 
-        zem_user = await this.userService.findOne(req.user.userId);
+        zem_user = await this.usersService.findOne(req.user.userId);
         const race_accepted = await this.racesModel.findById(id).lean().exec();
         const km = calculateDistance(
           race_accepted.initial_latitude,
@@ -230,7 +234,7 @@ export class RacesService {
         break;
 
       case 'started':
-        const user_started = await this.userService.findUserOneByPayload({
+        const user_started = await this.usersService.findUserOneByPayload({
           user: req.user.userId,
           code_pin: updateRaceDto.code_pin,
         });
@@ -254,7 +258,7 @@ export class RacesService {
         updateRaceDto.status = CoursesStatus.START;
         updateRaceDto.started_at = new Date();
 
-        const zem_started = await this.userService.findOne(
+        const zem_started = await this.usersService.findOne(
           race.zem['user'].toString(),
         );
         zem_user = zem_started;
@@ -289,7 +293,7 @@ export class RacesService {
         break;
 
       case 'ended':
-        const user_ended = await this.userService.findUserOneByPayload({
+        const user_ended = await this.usersService.findUserOneByPayload({
           user: req.user.userId,
           code_pin: updateRaceDto.code_pin,
         });
@@ -320,14 +324,14 @@ export class RacesService {
         updateRaceDto.status = CoursesStatus.END;
         updateRaceDto.ended_at = new Date();
 
-        const zem_final = await this.userService.findOne(
+        const zem_final = await this.usersService.findOne(
           race_ended.zem['user'].toString(),
         );
         zem_user = zem_final;
-        await this.userService.update(race_ended.user['_id'].toString(), {
+        await this.usersService.update(race_ended.user['_id'].toString(), {
           race: null,
         });
-        await this.userService.update(zem_final._id.toString(), { race: null });
+        await this.usersService.update(zem_final._id.toString(), { race: null });
 
         await this.zemsService.update(race_ended.zem['_id'].toString(), {
           service: false,
@@ -347,7 +351,9 @@ export class RacesService {
 
     await this.racesModel.findByIdAndUpdate(id, updateRaceDto).exec();
     const race = await this.findOne(id);
-    const user = await this.userService.findOne(race.user.toString());
+
+
+    const user = await this.usersService.findOne(race.user.toString());
     const title = "Course " + race.reference;
     try {
       if (user.fcm_token) {
@@ -392,8 +398,8 @@ export class RacesService {
     const race = await this.findOne(race_id);
 
     if (race["status"] == "end") {
-      let zem_user = await this.userService.findUserOneByPayload({ zem: race["zem"]["_id"] });
-      const race_user = await this.userService.findUserOneByPayload({ _id: race["user"].toString() });
+      let zem_user = await this.usersService.findUserOneByPayload({ zem: race["zem"]["_id"] });
+      const race_user = await this.usersService.findUserOneByPayload({ _id: race["user"].toString() });
       let amount_for_admin = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]));
       let amount_for_zem = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(zem_race_bonus["value"]) / 100));
       let amount_for_user = parseFloat(race["distance_traveled"].toFixed(2)) * (parseFloat(km_price["value"]) * (parseFloat(customer_race_bonus["value"]) / 100));
@@ -415,7 +421,7 @@ export class RacesService {
 
       // Attribution du bonus client
       if (race_user.length > 0) {
-        this.walletService.creditWalletUserCustomBalance(race_user[0]["_id"].toString(), amount_for_user, "Course bonus", "Vous avez obtenu un gain de " + amount_for_user + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
+        this.walletService.creditWalletUserCustomBalance(race_user[0]["_id"].toString(), amount_for_user, "Course bonus", "Vous avez obtenu un gain de " + amount_for_user + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS, "user");
       }
 
       // Nouvelle logique pour l'attribution du bonus au Zem
@@ -446,7 +452,8 @@ export class RacesService {
                   partialBonus,
                   "Course bonus partiel",
                   "Vous avez obtenu un gain de " + partialBonus + " XOF suite à votre course " + race["reference"] + " pour " + bonusKm.toFixed(2) + " km. ZPickup vous remercie de nous avoir choisi",
-                  TransactionType.BONUS
+                  TransactionType.BONUS,
+                  "user"
                 );
               }
             }
@@ -460,7 +467,8 @@ export class RacesService {
             amount_for_zem, 
             "Course bonus", 
             "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", 
-            TransactionType.BONUS
+            TransactionType.BONUS,
+            "user"
           );
         }
 
