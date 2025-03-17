@@ -90,6 +90,7 @@ export class ZemsController {
         });
         const user_id = req.user.userId;
         createZemDto.user = user_id;
+        createZemDto.validated_at = null;
         return this.zemsService
             .create(createZemDto)
             .then((zem) => {
