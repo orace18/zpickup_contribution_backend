@@ -11,6 +11,7 @@ import { Races, RacesSchema } from '../Schemas/races_schema/races.schema';
 import { NotificationService } from '../notifications/notification.service';
 import { NotificationsModule } from '../notifications/notifications.module';
 import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_schema/counter_history.schema";
+import { AbsKmHistory, AbsKmHistorySchema } from 'src/Schemas/abs_km_history/abs_km_history.schema';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import {CounterHistory, CounterHistorySchema} from "../Schemas/counter-history_s
       { name: Payment.name, schema: PaymentSchema },
       { name: Races.name, schema: RacesSchema },
       { name: CounterHistory.name, schema: CounterHistorySchema },
+      { name: AbsKmHistory.name, schema: AbsKmHistorySchema},
     ]),
   ],
   controllers: [CounterHistoryController],

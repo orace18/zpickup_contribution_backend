@@ -18,6 +18,7 @@ import { Wallet, WalletSchema } from 'src/Schemas/wallet_schema/wallet.schema';
 import { WalletHistoryModule } from 'src/wallet-history/wallet-history.module';
 import { WalletHistory, WalletHistorySchema } from 'src/Schemas/wallet-history_schema/wallet_history.schema';
 import { Users, UsersSchema } from 'src/Schemas/users_schema/Users.schema';
+import { AbsKmHistory, AbsKmHistorySchema } from 'src/Schemas/abs_km_history/abs_km_history.schema';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { Users, UsersSchema } from 'src/Schemas/users_schema/Users.schema';
       { name: ReferenceHistory.name, schema: ReferenceHistorySchema },
       { name: Wallet.name, schema: WalletSchema },
       { name: WalletHistory.name, schema: WalletHistorySchema },
+      { name: AbsKmHistory.name, schema: AbsKmHistorySchema},
     ]),
     forwardRef(() => UsersModule),
     forwardRef(() => WalletModule),
@@ -44,6 +46,7 @@ import { Users, UsersSchema } from 'src/Schemas/users_schema/Users.schema';
     
     CounterModule,
     NotificationsModule,
+    
   ],
   controllers: [ZemsController],
   providers: [
