@@ -31,7 +31,7 @@ export class ZemsService {
     const now = new Date();
     const fortyFiveDaysLater = new Date(now);
     fortyFiveDaysLater.setDate(now.getDate() + 45);
-
+  
     const zemData = {
       ...createZemDto,
       profile_validation_status: createZemDto.is_temporal
@@ -41,7 +41,7 @@ export class ZemsService {
       validated_at: createZemDto.is_temporal ? now : null,
       expired_at: createZemDto.is_temporal ? fortyFiveDaysLater : null,
     };
-
+  
     const created = new this.zemModel(zemData);
 
     const savedZem = await created.save();
@@ -54,7 +54,7 @@ export class ZemsService {
 
     return savedZem;
   }
-
+  
   async checkTemporalValidation(zemId: string) {
     const zem = await this.zemModel.findById(zemId).exec();
     if (!zem) {
@@ -95,7 +95,7 @@ export class ZemsService {
   }
 
 
-  findAll() {
+ findAll() {
     return this.zemModel.find();
   }
 
@@ -126,7 +126,7 @@ export class ZemsService {
     }
 
     return zem;
-  }
+}
 
   async convertTemporalToValidated(zemId: string) {
     const zem = await this.zemModel.findById(zemId).exec();
@@ -137,7 +137,7 @@ export class ZemsService {
     if (!zem.is_temporal) {
       throw new Error('Not a temporal Zem');
     }
-
+    
     const now = new Date();
 
     await this.zemModel.findByIdAndUpdate(zemId, {

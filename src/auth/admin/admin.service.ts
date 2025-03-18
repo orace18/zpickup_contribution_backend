@@ -65,7 +65,7 @@ export class AdminAuthService {
     const payload = {
       phone: user.phone_number,
       sub: user._id,
-      type: user.user_type,
+      user_type: user.user_type,
       role: user.role
     };
 

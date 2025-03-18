@@ -196,6 +196,33 @@ export class ZemsController {
         return this.zemsService.findOne(id);
     }
 
+
+/*     @Get('check-expiration/:id')
+async checkExpiration(@Param('id') id: string) {
+  try {
+    const zem = await this.zemsService.findOne(id);
+    if (!zem || !zem.is_temporal) {
+      return {
+        is_temporal: false,
+        message: 'Ce n\'est pas un Zem temporaire'
+      };
+    }
+    
+    return {
+      is_temporal: true,
+      remaining_days: zem.remaining_days,
+      expired_at: zem.expired_at,
+      is_expired: zem.remaining_days <= 0
+    };
+  } catch (error) {
+    throw new HttpException(
+      'Erreur lors de la vérification de l\'expiration',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+} */
+
+
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
     async update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
@@ -219,7 +246,7 @@ export class ZemsController {
                 } else {
                     if (updateZemDto.service) {
                         const counter = await this.counterService.findByZem(id);
-                        console.log("counter", counter);
+                        console.log("counter",  counter);
 
                         if (counter == null || counter.balance_km <= 0) {
                             throw new BadRequestException({

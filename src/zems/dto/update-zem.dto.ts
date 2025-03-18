@@ -30,4 +30,7 @@ export class UpdateZemDto extends PartialType(CreateZemDto) {
  
   @IsOptional()
   is_ambassador?: boolean;
+
+  @IsOptional()
+  exprired_at?: Date;
 }
