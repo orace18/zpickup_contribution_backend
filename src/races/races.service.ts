@@ -515,14 +515,16 @@ export class RacesService {
       const zem = zems[i];
       console.log("zem "+i,zem);
       let can_add = false;
-      if (zem.user['race'] == null) {
-        can_add = true;
-      } else {
-        if (zem.user['race'] == undefined) {
+      if(zem.user!=null){
+        if (zem.user['race'] == null) {
           can_add = true;
         } else {
-          if (zem.user['race'].toString() == race._id.toString()) {
+          if (zem.user['race'] == undefined) {
             can_add = true;
+          } else {
+            if (zem.user['race'].toString() == race._id.toString()) {
+              can_add = true;
+            }
           }
         }
       }
