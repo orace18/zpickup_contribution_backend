@@ -179,6 +179,14 @@ export class RacesService {
         body_notification = 'Vous avez arrêté la demande de course';
         break;
 
+      case 'canceled':
+        updateRaceDto.status = CoursesStatus.CANCELED;
+        updateRaceDto.canceled_at = new Date();
+        this.usersService.update(req.user.userId, { race: null });
+        body_notification = 'Vous avez annulé la course';
+        body_notification_zem = 'Vous annulé votre course';
+        break;
+
       case 'accepted':
         updateRaceDto.status = CoursesStatus.ACCEPTED;
         updateRaceDto.accepted_at = new Date();
@@ -463,16 +471,16 @@ export class RacesService {
           // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits, 
           // on lui attribue le bonus complet
           this.walletService.creditWalletUserCustomBalance(
-            zemId, 
-            amount_for_zem, 
-            "Course bonus", 
-            "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", 
+            zemId,
+            amount_for_zem,
+            "Course bonus",
+            "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi",
             TransactionType.BONUS,
             "user"
           );
         }
 
-       // this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
+        // this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
       }
 
     }

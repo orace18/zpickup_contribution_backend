@@ -19,6 +19,11 @@ export class UpdateRaceDto extends PartialType(CreateRaceDto) {
     @IsOptional()
     @IsDate()
     @Type(() => Date)
+    canceled_at?: Date;
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
     accepted_at?: Date;
 
     @IsOptional()

@@ -6,6 +6,7 @@ import {IsOptional} from "class-validator";
 export enum CoursesStatus {
   PENDING = 'pending',
   STOPPED = 'stopped',
+  CANCELED = 'canceled',
   ACCEPTED = 'accepted',
   START = 'start',
   END = 'end',
