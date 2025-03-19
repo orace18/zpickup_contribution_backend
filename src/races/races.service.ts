@@ -468,7 +468,7 @@ export class RacesService {
           }
           // Dans tous les autres cas, pas de bonus car toujours en train d'utiliser les km gratuits
         } else {
-          // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits, 
+          // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits,
           // on lui attribue le bonus complet
           this.walletService.creditWalletUserCustomBalance(
             zemId,
@@ -513,6 +513,7 @@ export class RacesService {
     const available_zems = [];
     for (let i = 0; i < zems.length; i++) {
       const zem = zems[i];
+      console.log("zem "+i,zem);
       let can_add = false;
       if (zem.user['race'] == null) {
         can_add = true;
