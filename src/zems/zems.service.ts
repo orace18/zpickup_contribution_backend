@@ -38,7 +38,7 @@ export class ZemsService {
         ? ProfileValidationStatus.VALIDATED
         : ProfileValidationStatus.IN_PROGRESS,
       temporal_validated_at: createZemDto.is_temporal ? now : null,
-      validated_at: createZemDto.is_temporal ? now : null,
+      validated_at: createZemDto.is_temporal ? null : now,
       expired_at: createZemDto.is_temporal ? fortyFiveDaysLater : null,
     };
 

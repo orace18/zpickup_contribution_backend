@@ -58,16 +58,15 @@ export class UsersService {
     }
   }
 
-
-
   async findByPhone(phone_number: string, checkValidated: boolean = false): Promise<Users> {
     const query: any = {
       phone_number,
-      deleted_at: null // On cherche uniquement les comptes non supprimés
     };
 
+    // Si on vérifie les comptes validés, on ajoute la condition
     if (checkValidated) {
       query.validated_at = { $ne: null };
+      query.deleted_at = null;
     }
 
     const user = await this.userModel
@@ -104,7 +103,7 @@ export class UsersService {
 
   async createTemporary(userData: Partial<Users>): Promise<Users> {
     try {
-      // Vérifier si un compte actif existe avec ce numéro
+      // Vérifier si un compte actif (non supprimé) existe avec ce numéro
       const activeUser = await this.userModel.findOne({
         phone_number: userData.phone_number,
         validated_at: { $ne: null },
@@ -145,7 +144,10 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new Error(`Erreur lors de la création de l'utilisateur: ${error.message}`);
+      throw new HttpException(
+        `Erreur lors de la création de l'utilisateur: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -190,7 +192,6 @@ export class UsersService {
     }
   }
 
-
   async findBySponsorshipCode(sponsorshipCode: string): Promise<Users | null> {
     return this.userModel.findOne({ sponsorship_code: sponsorshipCode }).exec();
   }
@@ -206,7 +207,6 @@ export class UsersService {
   async findAllAdmins() {
     return this.userModel.find({ user_type: 'admin' }).exec();
   }
-
 
   /* Correction de la méthode findOne pour retourner un utilisateur */
   /*  async findOne(id: string): Promise<Users | null> {
