@@ -199,15 +199,6 @@ export class RacesService {
         body_notification_zem = 'Course annulée par le client. Nouvelle recherche lancée';
         more_action_zem = 'available_race_after_canceled_by_customer';
         zem_user = await this.usersService.findOne(race_canceled.zem['user'].toString());
-        console.log("zem_user",zem_user);
-        break;
-
-      case 'canceled':
-        updateRaceDto.status = CoursesStatus.CANCELED;
-        updateRaceDto.canceled_at = new Date();
-        this.usersService.update(req.user.userId, { race: null });
-        body_notification = 'Vous avez annulé la course';
-        body_notification_zem = 'Vous annulé votre course';
         break;
 
       case 'accepted':
