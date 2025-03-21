@@ -114,7 +114,7 @@ export class ZemsService {
       throw new BadRequestException(`Invalid ID format: ${id}`);
     }
 
-    const zem = await this.zemModel.findById(id).exec();
+    const zem = await this.zemModel.findById(id).populate('user').exec();
 
     // Vérifier si le zem existe
     if (!zem) {
@@ -258,8 +258,8 @@ export class ZemsService {
     return `This action removes a #${id} zem`;
   }
 
-  async sendNotificationForAllUserInRay(zem_id) {
-    const zem = await this.findOne(zem_id);
+  async sendNotificationForAllUserInRay(zem_id, old_zem) {
+    let zem = await this.findOne(zem_id);
     const ray = await this.configModel.findOne({ key: 'ray' }).exec();
     const races: Races[] = await this.racesModel
       .find({
@@ -272,7 +272,11 @@ export class ZemsService {
       ])
       .lean()
       .exec();
+    if (zem.service_latitude == null && zem.service_longitude == null) {
+      zem = old_zem;
+    }
     if (zem.service_latitude != null && zem.service_longitude != null) {
+
       const filteredZems = races.filter(service => {
         const distance = calculateDistance(
           service.initial_latitude,

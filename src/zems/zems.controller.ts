@@ -149,7 +149,7 @@ export class ZemsController {
         if (!zem) {
             throw new HttpException('Zem non trouvé', HttpStatus.NOT_FOUND);
         }
-        
+
         files.forEach((file) => {
             switch (file.fieldname) {
                 case 'card_image':
@@ -247,16 +247,20 @@ export class ZemsController {
                                         'Veuillez renseigner tous les champs pour la mise en service',
                                 });
                             }
-                            this.zemsService.sendNotificationForAllUserInRay(id);
-
+                          //  this.usersService.update()
                         }
                     }
+                    const zem = await this.zemsService.findOne(id);
+                    this.usersService.update(zem['user']['_id'].toString(),{race:null});
+                    this.zemsService.update(id, updateZemDto);
+                    this.zemsService.sendNotificationForAllUserInRay(id,zem);
+
                 }
 
                 break;
         }
 
-        return this.zemsService.update(id, updateZemDto);
+        return this.zemsService.findOne(id);
     }
 
     @Delete(':id')
@@ -415,8 +419,8 @@ export class ZemsController {
     @UseGuards(JwtAuthGuard)
   @Get('km-history/:id')
   @ApiOperation({ summary: 'Get km addition history for a Zem' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Returns the history of km additions for the specified Zem'
   })
   async getKmHistory(@Param('id') id: string) {

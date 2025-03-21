@@ -97,6 +97,10 @@ export class UsersService {
             $in: ['pending', 'accepted', 'start'],
           },
         },
+        populate: {
+          path: 'user',
+          select: ['_id', 'phone_number', 'firstname', 'lastname', 'user_profile_image'],
+        },
       })
       .lean()
       .exec();
