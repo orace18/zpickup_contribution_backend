@@ -208,23 +208,6 @@ export class UsersService {
     return this.userModel.find({ user_type: 'admin' }).exec();
   }
 
-  /* Correction de la méthode findOne pour retourner un utilisateur */
-  /*  async findOne(id: string): Promise<Users | null> {
-      return this.userModel
-        .findById(id)
-        .populate('zem')
-        .populate({
-          path: 'race',
-          match: {
-            status: {
-              $in: ['pending', 'accepted', 'start'],
-            },
-          },
-        })
-        .lean()
-        .exec();
-    }*/
-
   async findUserOne(
     id: string,
   ): Promise<Array<HydratedDocument<Users, {}, {}>>> {
