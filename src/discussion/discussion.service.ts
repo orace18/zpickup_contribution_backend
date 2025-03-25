@@ -96,7 +96,9 @@ export class DiscussionService {
     const newMessage = new this.messageModel({
       content: createDiscussionMessageDto.content,
       discussion: createDiscussionMessageDto.discussionId,
-      sender: userId
+      sender: userId,
+      mediaUrl: createDiscussionMessageDto.mediaUrl,
+      mediaType: createDiscussionMessageDto.mediaType
     });
 
     const savedMessage = await newMessage.save();
@@ -156,7 +158,7 @@ export class DiscussionService {
           select: 'user_type _id user'
         }
       })
-     
+
       .lean()
       .exec();
 
