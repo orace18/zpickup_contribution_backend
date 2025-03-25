@@ -2,12 +2,20 @@ import { IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateDiscussionMessageDto {
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     content?: string;
   
     @IsMongoId()
     @IsNotEmpty()
     discussionId: string;
+
+    @IsOptional()
+    @IsString()
+    mediaUrl?: string;
+
+    @IsOptional()
+    @IsString()
+    mediaType?: string;
 
     @IsString()
     @IsOptional()
@@ -20,6 +28,8 @@ export class DiscussionMessageResponseDto {
     discussion: string;
     sender: string;
     imageUrl?: string;
+    mediaUrl?: string;
+    mediaType?: string;
     created_at: Date;
     updated_at: Date;
 }

@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 @Controller('discussions')
 
 export class DiscussionController {
-  constructor(private readonly discussionService: DiscussionService) {}
+  constructor(private readonly discussionService: DiscussionService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -66,6 +66,7 @@ export class DiscussionController {
     return this.discussionService.getUserDiscussions(userId);
   }
 
+
   @Get(':id')
   async getDiscussion(@Param('id') id: string): Promise<DiscussionResponseDto> {
     return this.discussionService.getDiscussion(id);
@@ -76,16 +77,17 @@ export class DiscussionController {
   async getDiscussionMessages(@Param('id') discussionId: string) {
     return this.discussionService.getDiscussionMessages(discussionId);
   }
-
-@Patch('status/:id')
-    @UseGuards(JwtAuthGuard)
-    async updateDiscussionStatus(
-        @Param('id') id: string,
-        @Body() updateStatusDto: UpdateDiscussionStatusDto
-    ): Promise<DiscussionResponseDto> {
-        return this.discussionService.updateDiscussionStatus(id, updateStatusDto.is_open);
-    }
   
+
+  @Patch('status/:id')
+  @UseGuards(JwtAuthGuard)
+  async updateDiscussionStatus(
+    @Param('id') id: string,
+    @Body() updateStatusDto: UpdateDiscussionStatusDto
+  ): Promise<DiscussionResponseDto> {
+    return this.discussionService.updateDiscussionStatus(id, updateStatusDto.is_open);
+  }
+
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)

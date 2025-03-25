@@ -64,11 +64,17 @@ export class ZemsController {
         type: CreateZemDto,
     })
     @Post()
-    create(
+    async create(
         @Body() createZemDto: CreateZemDto,
         @UploadedFiles() files: Array<Express.Multer.File>,
         @Request() req,
     ) {
+
+        const existingZem = await this.zemsService.findByUserId(req.user.userId);
+        if (existingZem) {
+            throw new HttpException('Un Zem existe déjà pour cet utilisateur', HttpStatus.BAD_REQUEST);
+        }
+
         files.forEach((file) => {
             switch (file.fieldname) {
                 case 'card_image':
@@ -138,7 +144,12 @@ export class ZemsController {
         @UploadedFiles() files: Array<Express.Multer.File>,
         @Request() req,
     ) {
-        // Traiter les fichiers
+
+        const zem = await this.zemsService.findOne(id);
+        if (!zem) {
+            throw new HttpException('Zem non trouvé', HttpStatus.NOT_FOUND);
+        }
+
         files.forEach((file) => {
             switch (file.fieldname) {
                 case 'card_image':
@@ -197,32 +208,6 @@ export class ZemsController {
     }
 
 
-/*     @Get('check-expiration/:id')
-async checkExpiration(@Param('id') id: string) {
-  try {
-    const zem = await this.zemsService.findOne(id);
-    if (!zem || !zem.is_temporal) {
-      return {
-        is_temporal: false,
-        message: 'Ce n\'est pas un Zem temporaire'
-      };
-    }
-    
-    return {
-      is_temporal: true,
-      remaining_days: zem.remaining_days,
-      expired_at: zem.expired_at,
-      is_expired: zem.remaining_days <= 0
-    };
-  } catch (error) {
-    throw new HttpException(
-      'Erreur lors de la vérification de l\'expiration',
-      HttpStatus.INTERNAL_SERVER_ERROR
-    );
-  }
-} */
-
-
     @UseGuards(JwtAuthGuard)
     @Patch(':id')
     async update(@Param('id') id: string, @Body() updateZemDto: UpdateZemDto) {
@@ -262,16 +247,20 @@ async checkExpiration(@Param('id') id: string) {
                                         'Veuillez renseigner tous les champs pour la mise en service',
                                 });
                             }
-                            this.zemsService.sendNotificationForAllUserInRay(id);
-
+                          //  this.usersService.update()
                         }
                     }
+                    const zem = await this.zemsService.findOne(id);
+                    this.usersService.update(zem['user']['_id'].toString(),{race:null});
+                    this.zemsService.update(id, updateZemDto);
+                    this.zemsService.sendNotificationForAllUserInRay(id,zem);
+
                 }
 
                 break;
         }
 
-        return this.zemsService.update(id, updateZemDto);
+        return this.zemsService.findOne(id);
     }
 
     @Delete(':id')
@@ -304,6 +293,7 @@ async checkExpiration(@Param('id') id: string) {
         createZemDto.user = user_id;
         createZemDto.validated_at = null;
         createZemDto.is_temporal = true; // Indiquer que c'est une validation temporaire
+        createZemDto.is_temporal = true;
 
         try {
             const zem = await this.zemsService.create(createZemDto);
@@ -431,8 +421,8 @@ async checkExpiration(@Param('id') id: string) {
     @UseGuards(JwtAuthGuard)
   @Get('km-history/:id')
   @ApiOperation({ summary: 'Get km addition history for a Zem' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Returns the history of km additions for the specified Zem'
   })
   async getKmHistory(@Param('id') id: string) {

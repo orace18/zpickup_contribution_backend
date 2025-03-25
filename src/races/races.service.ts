@@ -177,6 +177,28 @@ export class RacesService {
         updateRaceDto.stopped_at = new Date();
         this.usersService.update(req.user.userId, { race: null });
         body_notification = 'Vous avez arrêté la demande de course';
+        const raceSendNotificationForAllZemInRay = await this.findOne(id);
+        this.sendNotificationForAllZemInRay(raceSendNotificationForAllZemInRay);
+        break;
+
+      case 'canceled_by_zem':
+        updateRaceDto.status = CoursesStatus.PENDING;
+        this.usersService.update(req.user.userId, { race: null });
+        body_notification_zem = 'Vous avez annulé la course';
+        body_notification = 'Course annulée par le conducteur. Nouvelle recherche lancée';
+        more_action = 'available_zem_after_canceled_by_zem';
+        break;
+
+      case 'canceled_by_customer':
+        updateRaceDto.status = CoursesStatus.STOPPED;
+        updateRaceDto.stopped_at = new Date();
+        const race_canceled = await this.racesModel.findById(id).populate('zem').lean().exec();
+        this.usersService.update(req.user.userId, { race: null });
+        this.usersService.update(race_canceled.zem['user'].toString(), { race: null });
+        body_notification = 'Vous avez annulé la demande de course';
+        body_notification_zem = 'Course annulée par le client. Nouvelle recherche lancée';
+        more_action_zem = 'available_race_after_canceled_by_customer';
+        zem_user = await this.usersService.findOne(race_canceled.zem['user'].toString());
         break;
 
       case 'accepted':
@@ -460,19 +482,19 @@ export class RacesService {
           }
           // Dans tous les autres cas, pas de bonus car toujours en train d'utiliser les km gratuits
         } else {
-          // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits, 
+          // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits,
           // on lui attribue le bonus complet
           this.walletService.creditWalletUserCustomBalance(
-            zemId, 
-            amount_for_zem, 
-            "Course bonus", 
-            "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", 
+            zemId,
+            amount_for_zem,
+            "Course bonus",
+            "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi",
             TransactionType.BONUS,
             "user"
           );
         }
 
-       // this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
+        // this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
       }
 
     }
@@ -505,15 +527,18 @@ export class RacesService {
     const available_zems = [];
     for (let i = 0; i < zems.length; i++) {
       const zem = zems[i];
+      console.log("zem "+i,zem);
       let can_add = false;
-      if (zem.user['race'] == null) {
-        can_add = true;
-      } else {
-        if (zem.user['race'] == undefined) {
+      if(zem.user!=null){
+        if (zem.user['race'] == null) {
           can_add = true;
         } else {
-          if (zem.user['race'].toString() == race._id.toString()) {
+          if (zem.user['race'] == undefined) {
             can_add = true;
+          } else {
+            if (zem.user['race'].toString() == race._id.toString()) {
+              can_add = true;
+            }
           }
         }
       }
@@ -562,6 +587,7 @@ export class RacesService {
         'phone_number',
         'firstname',
         'lastname',
+        'user_profile_image',
         'race',
       ])
       .lean()

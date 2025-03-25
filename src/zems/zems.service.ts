@@ -31,17 +31,17 @@ export class ZemsService {
     const now = new Date();
     const fortyFiveDaysLater = new Date(now);
     fortyFiveDaysLater.setDate(now.getDate() + 45);
-  
+
     const zemData = {
       ...createZemDto,
       profile_validation_status: createZemDto.is_temporal
         ? ProfileValidationStatus.VALIDATED
         : ProfileValidationStatus.IN_PROGRESS,
       temporal_validated_at: createZemDto.is_temporal ? now : null,
-      validated_at: createZemDto.is_temporal ? now : null,
+      validated_at: createZemDto.is_temporal ? null : now,
       expired_at: createZemDto.is_temporal ? fortyFiveDaysLater : null,
     };
-  
+
     const created = new this.zemModel(zemData);
 
     const savedZem = await created.save();
@@ -54,7 +54,7 @@ export class ZemsService {
 
     return savedZem;
   }
-  
+
   async checkTemporalValidation(zemId: string) {
     const zem = await this.zemModel.findById(zemId).exec();
     if (!zem) {
@@ -95,8 +95,12 @@ export class ZemsService {
   }
 
 
- findAll() {
+  findAll() {
     return this.zemModel.find();
+  }
+
+  async findByUserId(userId: string): Promise<Zems | null> {
+    return this.zemModel.findOne({ user: userId }).exec();
   }
 
   async findOne(id: string) {
@@ -110,7 +114,7 @@ export class ZemsService {
       throw new BadRequestException(`Invalid ID format: ${id}`);
     }
 
-    const zem = await this.zemModel.findById(id).exec();
+    const zem = await this.zemModel.findById(id).populate('user').exec();
 
     // Vérifier si le zem existe
     if (!zem) {
@@ -126,7 +130,7 @@ export class ZemsService {
     }
 
     return zem;
-}
+  }
 
   async convertTemporalToValidated(zemId: string) {
     const zem = await this.zemModel.findById(zemId).exec();
@@ -137,7 +141,7 @@ export class ZemsService {
     if (!zem.is_temporal) {
       throw new Error('Not a temporal Zem');
     }
-    
+
     const now = new Date();
 
     await this.zemModel.findByIdAndUpdate(zemId, {
@@ -254,8 +258,8 @@ export class ZemsService {
     return `This action removes a #${id} zem`;
   }
 
-  async sendNotificationForAllUserInRay(zem_id) {
-    const zem = await this.findOne(zem_id);
+  async sendNotificationForAllUserInRay(zem_id, old_zem) {
+    let zem = await this.findOne(zem_id);
     const ray = await this.configModel.findOne({ key: 'ray' }).exec();
     const races: Races[] = await this.racesModel
       .find({
@@ -268,7 +272,11 @@ export class ZemsService {
       ])
       .lean()
       .exec();
+    if (zem.service_latitude == null && zem.service_longitude == null) {
+      zem = old_zem;
+    }
     if (zem.service_latitude != null && zem.service_longitude != null) {
+
       const filteredZems = races.filter(service => {
         const distance = calculateDistance(
           service.initial_latitude,
@@ -354,7 +362,7 @@ export class ZemsService {
       is_ambassador: zem.is_ambassador,
       history: history
     }
-}
+  }
 
   async addManualKmToAmbassador(zemId: string) {
     // Vérifier si le zem existe et est un ambassadeur
@@ -392,23 +400,23 @@ export class ZemsService {
 
     try {
       const historyEntry = new this.absKmHistoryModel({
-          zem: new Types.ObjectId(zemId),  // Assurez-vous que l'ID est converti en ObjectId
-          kmAdded: kmToAdd,
-          type: 'manual',
-          description: 'Ajout manuel de kilomètres'
+        zem: new Types.ObjectId(zemId),  // Assurez-vous que l'ID est converti en ObjectId
+        kmAdded: kmToAdd,
+        type: 'manual',
+        description: 'Ajout manuel de kilomètres'
       });
-      
+
       await historyEntry.save();
       console.log('Historique créé:', historyEntry);  // Pour le débogage
-  } catch (error) {
+    } catch (error) {
       console.error('Erreur lors de la création de l\'historique:', error);
       throw error;
-  }
+    }
 
-  const verifyHistory = await this.absKmHistoryModel
-        .find({ zem: zemId })
-        .sort({ createdAt: -1 })
-        .exec();
+    const verifyHistory = await this.absKmHistoryModel
+      .find({ zem: zemId })
+      .sort({ createdAt: -1 })
+      .exec();
 
     return {
       success: true,
