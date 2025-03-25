@@ -21,6 +21,9 @@ export class DiscussionMessage {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true })
     sender: Users;
 
+    @Prop({ required: false }) 
+    imageUrl?: string; // Ajout du champ image
+
     @Prop({ type: Date, default: Date.now })
     created_at: Date;
 

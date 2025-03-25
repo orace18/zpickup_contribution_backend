@@ -302,6 +302,7 @@ async checkExpiration(@Param('id') id: string) {
     async createTemporaryZem(@Body() createZemDto: CreateZemDto, @Request() req) {
         const user_id = req.user.userId;
         createZemDto.user = user_id;
+        createZemDto.validated_at = null;
         createZemDto.is_temporal = true; // Indiquer que c'est une validation temporaire
 
         try {

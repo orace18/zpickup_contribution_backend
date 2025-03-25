@@ -28,6 +28,7 @@ export class DiscussionService {
         messages: []
       });
 
+
       const savedDiscussion = await discussion.save();
 
       return {
@@ -76,7 +77,7 @@ export class DiscussionService {
     return discussions.map(discussion => this.toDiscussionDto(discussion));
   }
 
-  async addMessageToDiscussion(
+  /* async addMessageToDiscussion(
     createDiscussionMessageDto: CreateDiscussionMessageDto,
     userId: string,
   ): Promise<DiscussionMessageResponseDto> {
@@ -144,7 +145,33 @@ export class DiscussionService {
     }
 
     return this.toDiscussionMessageDto(savedMessage);
+  } */
+
+    async addMessageToDiscussion(
+      createDiscussionMessageDto: CreateDiscussionMessageDto,
+      userId: string,
+  ): Promise<DiscussionMessageResponseDto> {
+      const discussion = await this.discussionModel.findById(createDiscussionMessageDto.discussionId);
+  
+      if (!discussion) {
+          throw new NotFoundException('Discussion non trouvée');
+      }
+  
+      const newMessage = new this.messageModel({
+          content: createDiscussionMessageDto.content,
+          discussion: createDiscussionMessageDto.discussionId,
+          sender: userId,
+          imageUrl: createDiscussionMessageDto.imageUrl, // Stocke l'URL de l'image si fournie
+      });
+  
+      const savedMessage = await newMessage.save();
+      discussion.messages.push(savedMessage._id.toString());
+      await discussion.save();
+  
+      return this.toDiscussionMessageDto(savedMessage);
   }
+  
+
 
   async getDiscussionMessages(discussionId: string) {
     const discussion = await this.discussionModel
@@ -218,6 +245,7 @@ export class DiscussionService {
       content: discussionMessage.content,
       discussion: discussionMessage.discussion.toString(),
       sender: discussionMessage.sender.toString(),
+      imageUrl: discussionMessage.imageUrl, 
       created_at: discussionMessage.created_at,
       updated_at: discussionMessage.updated_at,
     };
