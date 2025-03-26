@@ -185,7 +185,6 @@ export class DiscussionService {
           select: 'user_type _id user'
         }
       })
-
       .lean()
       .exec();
 
@@ -193,18 +192,31 @@ export class DiscussionService {
       throw new NotFoundException('Discussion non trouvée');
     }
 
-    return discussion.messages.map((message: any) => ({
-      id: message._id.toString(),
-      content: message.content,
-      discussion: message.discussion.toString(),
-      sender: {
-        userId: message.sender._id.toString(),
-        user_type: message.sender.user_type
-      },
-      created_at: message.createdAt,
-      updated_at: message.updatedAt
-    }));
-  }
+    // Ajoutez cette vérification
+    if (!discussion.messages || discussion.messages.length === 0) {
+      return []; // Retourne un tableau vide si pas de messages
+    }
+
+    return discussion.messages.map((message: any) => {
+      // Ajoutez des vérifications supplémentaires
+      if (!message || !message.sender) {
+        console.warn('Message incomplet:', message);
+        return null;
+      }
+
+      return {
+        id: message._id?.toString(),
+        content: message.content,
+        discussion: message.discussion?.toString(),
+        sender: {
+          userId: message.sender?._id?.toString(),
+          user_type: message.sender?.user_type
+        },
+        created_at: message.createdAt,
+        updated_at: message.updatedAt
+      };
+    }).filter(message => message !== null);
+}
 
   async deleteDiscussion(id: string): Promise<void> {
     const discussion = await this.discussionModel.findById(id);
