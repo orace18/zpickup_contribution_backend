@@ -43,6 +43,9 @@ export class RacesService {
   async create(createRaceDto: CreateRaceDto, req) {
     createRaceDto.user = req.user.userId;
     createRaceDto.initial_datetime = new Date();
+    createRaceDto.created_at = new Date();
+    createRaceDto.updated_at = new Date();
+    
     createRaceDto.reference = await generateUniqueString(
       this.racesModel,
       'reference',

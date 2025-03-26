@@ -76,4 +76,14 @@ export class CreateRaceDto {
     @IsOptional()
     locality: string;
 
+    @IsDate()
+    @Type(() => Date)
+    @IsOptional()
+    created_at: Date;
+    
+    @IsDate()
+    @Type(() => Date)
+    @IsOptional()
+    updated_at: Date;
+
 }
