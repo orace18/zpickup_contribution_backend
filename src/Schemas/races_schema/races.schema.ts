@@ -156,7 +156,20 @@ export class Races {
 
   @Prop({ default: null })
   amount_total_bonus?: number;
+  
 
+  @Prop({ default: null })
+  zem_before_started: boolean;
+
+
+  @Prop({ default: new Date() })
+  zem_before_started_at: Date;
+
+  @Prop({ default: null })
+  zem_before_ended: boolean;
+
+  @Prop({ default: new Date() })
+  zem_before_ended_at: Date;
 
 }
 

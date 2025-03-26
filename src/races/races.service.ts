@@ -250,6 +250,13 @@ export class RacesService {
           throw new BadRequestException('Course invalide');
         }
 
+        if(race_before.status !== CoursesStatus.ACCEPTED){
+          throw new BadRequestException('Course déjà en attente de démarrage');
+        }
+
+        race_before.zem_before_started = true;
+        race_before.zem_before_started_at = new Date();
+
         body_notification =
           'Utiliser votre code PIN pour accepter le démarrage';
         more_action = 'zem_before_started';
@@ -280,6 +287,14 @@ export class RacesService {
         updateRaceDto.status = CoursesStatus.START;
         updateRaceDto.started_at = new Date();
 
+        
+        race.zem_before_started = true;
+        race.zem_before_started_at = new Date();
+
+        if(race.status === CoursesStatus.ACCEPTED){
+          throw new BadRequestException('Course déjà démarrée');
+        }
+
         const zem_started = await this.usersService.findOne(
           race.zem['user'].toString(),
         );
@@ -309,6 +324,13 @@ export class RacesService {
           throw new BadRequestException('Course invalide');
         }
 
+        if(race_before_ended.status !== CoursesStatus.START){
+          throw new BadRequestException('Course déjà en cours');
+        }
+
+        race_before_ended.zem_before_ended = true;
+        race_before_ended.zem_before_ended_at = new Date();
+
         body_notification =
           'Utiliser votre code PIN pour accepter la fin de course';
         more_action = 'zem_before_ended';
@@ -335,6 +357,13 @@ export class RacesService {
         if (!race_ended) {
           throw new BadRequestException('Course invalide');
         }
+
+        if(race_ended.status === CoursesStatus.END){
+          throw new BadRequestException('Course en cours');  
+        }
+
+        race_ended.zem_before_ended = false;
+        race_ended.zem_before_ended_at = new Date();
 
         updateRaceDto.distance_traveled = calculateDistance(
           race_ended.latitude_start,
