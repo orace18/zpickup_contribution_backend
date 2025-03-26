@@ -94,6 +94,18 @@ export class ZemsService {
     return diffDays > 0 ? diffDays : 0;
   }
 
+  async unAmbassador(zemId: string): Promise<Partial<Zems>> {
+    const updatedZem = await this.zemModel.findOne({ user: zemId }).exec();
+    
+    if (!updatedZem) {
+      throw new NotFoundException('Zem non trouvé');
+    }
+    
+    updatedZem.is_ambassador = false;
+    await updatedZem.save();
+    
+    return updatedZem;
+}
 
   findAll() {
     return this.zemModel.find();

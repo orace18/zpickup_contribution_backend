@@ -381,6 +381,22 @@ export class ZemsController {
         }
     }
 
+    @Patch('unambassador/:id')
+    async unAmbassador(@Param('id') id: string) {
+        try {
+            const updatedZem = await this.zemsService.unAmbassador(id);
+            return {
+                result: updatedZem,
+                message: 'Zem demoted from ambassador successfully'
+            };
+        }
+        catch (error) {
+            return {
+                error: error.message
+            };
+        }
+    }
+
 
     @UseGuards(JwtAuthGuard)
     @Post('add-manual-km/:id')
