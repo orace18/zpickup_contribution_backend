@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsObject } from 'class-validator';
+import { IsDate, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsObject } from 'class-validator';
 import { Wallet } from '../../Schemas/wallet_schema/wallet.schema';
 import { WalletType } from '../../Schemas/wallet-history_schema/wallet_history.schema';
 
@@ -15,9 +15,10 @@ export class CreateWalletHistoryDto {
   @IsNotEmpty()
   wallet_type: WalletType
 
-  @IsDateString()
+
+  @IsDate()
   created_at: Date;
 
-  @IsDateString()
+  @IsDate()
   updated_at: Date;
 }
