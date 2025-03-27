@@ -158,7 +158,7 @@ export class Races {
   amount_total_bonus?: number;
   
 
-  @Prop({ default: false })
+  @Prop({ default: null })
   zem_before_started: boolean;
 
 

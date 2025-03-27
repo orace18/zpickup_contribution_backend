@@ -227,6 +227,7 @@ export class RacesService {
         );
         updateRaceDto.service_km = km;
         updateRaceDto.service_duration = estimateDuration(km).minutes;
+        race_accepted.zem_before_started = false;
 
         body_notification = 'Course acceptée par un zem';
         more_action = 'fetch_zem';
