@@ -294,7 +294,7 @@ export class RacesService {
         race.zem_before_started = true;
         race.zem_before_started_at = new Date();
 
-        if(race.status !== CoursesStatus.START){
+        if(race.status === CoursesStatus.START){
           throw new BadRequestException('Course déjà démarrée');
         }
 
