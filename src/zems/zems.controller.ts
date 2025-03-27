@@ -291,7 +291,7 @@ export class ZemsController {
     async createTemporaryZem(@Body() createZemDto: CreateZemDto, @Request() req) {
         const user_id = req.user.userId;
         createZemDto.user = user_id;
-        createZemDto.validated_at = null;
+        createZemDto.validated_at = new Date();
         createZemDto.is_temporal = true; // Indiquer que c'est une validation temporaire
         createZemDto.is_temporal = true;
 
