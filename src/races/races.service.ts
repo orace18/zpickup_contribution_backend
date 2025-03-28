@@ -258,8 +258,8 @@ export class RacesService {
           throw new BadRequestException('Course déjà en attente de démarrage');
         }
 
-        race_before.zem_before_started = true;
-        race_before.zem_before_started_at = new Date();
+        updateRaceDto.zem_before_started = true;
+        updateRaceDto.zem_before_started_at = new Date();
 
         body_notification =
           'Utiliser votre code PIN pour accepter le démarrage';
@@ -332,8 +332,8 @@ export class RacesService {
           throw new BadRequestException('Course déjà en cours');
         }
 
-        race_before_ended.zem_before_ended = true;
-        race_before_ended.zem_before_ended_at = new Date();
+        updateRaceDto.zem_before_ended = true;
+        updateRaceDto.zem_before_ended_at = new Date();
 
         body_notification =
           'Utiliser votre code PIN pour accepter la fin de course';
