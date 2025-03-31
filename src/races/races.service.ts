@@ -234,6 +234,8 @@ export class RacesService {
         break;
 
       case 'zem_before_started':
+        // zem_before_started_at , zem_before_started boolean  true
+        // si la course est au statut accepte le code passe sinon informer que la course a deja demarre
         const zem_data_started = await this.zemsModel
           .findOne({ user: req.user.userId })
           .lean()
@@ -256,6 +258,9 @@ export class RacesService {
         break;
 
       case 'started':
+        // zem_before_started  = false
+        // si la course est au statut accepte le code passe sinon informer que la course a deja demarre
+
         const user_started = await this.usersService.findUserOneByPayload({
           user: req.user.userId,
           code_pin: updateRaceDto.code_pin,
@@ -293,6 +298,9 @@ export class RacesService {
         break;
 
       case 'zem_before_ended':
+        // zem_before_ended_at , zem_before_ended boolean  true
+        // si la course est au statut start le code passe sinon informer que la course a deja cloture
+
         const zem_data_ended = await this.zemsModel
           .findOne({ user: req.user.userId })
           .lean()
@@ -315,6 +323,9 @@ export class RacesService {
         break;
 
       case 'ended':
+        //  zem_before_ended false
+        // si la course est au statut start le code passe sinon informer que la course a deja cloture
+
         const user_ended = await this.usersService.findUserOneByPayload({
           user: req.user.userId,
           code_pin: updateRaceDto.code_pin,
