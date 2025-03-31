@@ -43,6 +43,9 @@ export class RacesService {
   async create(createRaceDto: CreateRaceDto, req) {
     createRaceDto.user = req.user.userId;
     createRaceDto.initial_datetime = new Date();
+    createRaceDto.created_at = new Date();
+    createRaceDto.updated_at = new Date();
+    
     createRaceDto.reference = await generateUniqueString(
       this.racesModel,
       'reference',
@@ -224,6 +227,7 @@ export class RacesService {
         );
         updateRaceDto.service_km = km;
         updateRaceDto.service_duration = estimateDuration(km).minutes;
+        race_accepted.zem_before_started = false;
 
         body_notification = 'Course acceptée par un zem';
         more_action = 'fetch_zem';
@@ -251,6 +255,13 @@ export class RacesService {
         if (!race_before) {
           throw new BadRequestException('Course invalide');
         }
+
+        if(race_before.status !== CoursesStatus.ACCEPTED){
+          throw new BadRequestException('Course déjà en attente de démarrage');
+        }
+
+        updateRaceDto.zem_before_started = true;
+        updateRaceDto.zem_before_started_at = new Date();
 
         body_notification =
           'Utiliser votre code PIN pour accepter le démarrage';
@@ -285,6 +296,14 @@ export class RacesService {
         updateRaceDto.status = CoursesStatus.START;
         updateRaceDto.started_at = new Date();
 
+        
+        race.zem_before_started = true;
+        race.zem_before_started_at = new Date();
+
+        if(race.status === CoursesStatus.START){
+          throw new BadRequestException('Course déjà démarrée');
+        }
+
         const zem_started = await this.usersService.findOne(
           race.zem['user'].toString(),
         );
@@ -317,6 +336,13 @@ export class RacesService {
           throw new BadRequestException('Course invalide');
         }
 
+        if(race_before_ended.status !== CoursesStatus.START){
+          throw new BadRequestException('Course déjà en cours');
+        }
+
+        updateRaceDto.zem_before_ended = true;
+        updateRaceDto.zem_before_ended_at = new Date();
+
         body_notification =
           'Utiliser votre code PIN pour accepter la fin de course';
         more_action = 'zem_before_ended';
@@ -346,6 +372,13 @@ export class RacesService {
         if (!race_ended) {
           throw new BadRequestException('Course invalide');
         }
+
+        if(race_ended.status === CoursesStatus.END){
+          throw new BadRequestException('Course en cours');  
+        }
+
+        race_ended.zem_before_ended = false;
+        race_ended.zem_before_ended_at = new Date();
 
         updateRaceDto.distance_traveled = calculateDistance(
           race_ended.latitude_start,

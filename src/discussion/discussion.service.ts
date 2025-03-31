@@ -28,6 +28,7 @@ export class DiscussionService {
         messages: []
       });
 
+
       const savedDiscussion = await discussion.save();
 
       return {
@@ -76,7 +77,7 @@ export class DiscussionService {
     return discussions.map(discussion => this.toDiscussionDto(discussion));
   }
 
-  async addMessageToDiscussion(
+  /* async addMessageToDiscussion(
     createDiscussionMessageDto: CreateDiscussionMessageDto,
     userId: string,
   ): Promise<DiscussionMessageResponseDto> {
@@ -96,7 +97,9 @@ export class DiscussionService {
     const newMessage = new this.messageModel({
       content: createDiscussionMessageDto.content,
       discussion: createDiscussionMessageDto.discussionId,
-      sender: userId
+      sender: userId,
+      mediaUrl: createDiscussionMessageDto.mediaUrl,
+      mediaType: createDiscussionMessageDto.mediaType
     });
 
     const savedMessage = await newMessage.save();
@@ -144,7 +147,33 @@ export class DiscussionService {
     }
 
     return this.toDiscussionMessageDto(savedMessage);
+  } */
+
+    async addMessageToDiscussion(
+      createDiscussionMessageDto: CreateDiscussionMessageDto,
+      userId: string,
+  ): Promise<DiscussionMessageResponseDto> {
+      const discussion = await this.discussionModel.findById(createDiscussionMessageDto.discussionId);
+  
+      if (!discussion) {
+          throw new NotFoundException('Discussion non trouvée');
+      }
+  
+      const newMessage = new this.messageModel({
+          content: createDiscussionMessageDto.content,
+          discussion: createDiscussionMessageDto.discussionId,
+          sender: userId,
+          imageUrl: createDiscussionMessageDto.imageUrl, // Stocke l'URL de l'image si fournie
+      });
+  
+      const savedMessage = await newMessage.save();
+      discussion.messages.push(savedMessage._id.toString());
+      await discussion.save();
+  
+      return this.toDiscussionMessageDto(savedMessage);
   }
+  
+
 
   async getDiscussionMessages(discussionId: string) {
     const discussion = await this.discussionModel
@@ -156,7 +185,6 @@ export class DiscussionService {
           select: 'user_type _id user'
         }
       })
-     
       .lean()
       .exec();
 
@@ -164,18 +192,31 @@ export class DiscussionService {
       throw new NotFoundException('Discussion non trouvée');
     }
 
-    return discussion.messages.map((message: any) => ({
-      id: message._id.toString(),
-      content: message.content,
-      discussion: message.discussion.toString(),
-      sender: {
-        userId: message.sender._id.toString(),
-        user_type: message.sender.user_type
-      },
-      created_at: message.createdAt,
-      updated_at: message.updatedAt
-    }));
-  }
+    // Ajoutez cette vérification
+    if (!discussion.messages || discussion.messages.length === 0) {
+      return []; // Retourne un tableau vide si pas de messages
+    }
+
+    return discussion.messages.map((message: any) => {
+      // Ajoutez des vérifications supplémentaires
+      if (!message || !message.sender) {
+        console.warn('Message incomplet:', message);
+        return null;
+      }
+
+      return {
+        id: message._id?.toString(),
+        content: message.content,
+        discussion: message.discussion?.toString(),
+        sender: {
+          userId: message.sender?._id?.toString(),
+          user_type: message.sender?.user_type
+        },
+        created_at: message.createdAt,
+        updated_at: message.updatedAt
+      };
+    }).filter(message => message !== null);
+}
 
   async deleteDiscussion(id: string): Promise<void> {
     const discussion = await this.discussionModel.findById(id);
@@ -218,6 +259,7 @@ export class DiscussionService {
       content: discussionMessage.content,
       discussion: discussionMessage.discussion.toString(),
       sender: discussionMessage.sender.toString(),
+      imageUrl: discussionMessage.imageUrl, 
       created_at: discussionMessage.created_at,
       updated_at: discussionMessage.updated_at,
     };

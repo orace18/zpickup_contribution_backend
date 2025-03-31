@@ -97,6 +97,7 @@ export class ZemValidationService {
       const updatedZem = await this.zemsService.update(zemId, {
         profile_validation_status: ProfileValidationStatus.VALIDATED,
         validated_at: new Date(),
+        is_temporal: false,
       });
 
       // 2. Créer le compteur

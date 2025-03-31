@@ -46,14 +46,15 @@ import { ScheduleModule } from '@nestjs/schedule';
         'mongodb+srv://zpickupbenin:vkbRRdlXU75t5SVi@cluster0.bk6kf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
         //'mongodb+srv://zpickupbenin:KvhHqBHmEMItQLie@cluster0.vd0hs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
         //'mongodb+srv://zpickupbenin:O4mC43ob549P3d4o@cluster0.bptfu.mongodb.net/',
+
     ),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [notificationConfig],
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'), // Chemin vers le dossier uploads
-      serveRoot: '/uploads', // URL pour accéder aux fichiers
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
     ScheduleModule.forRoot(),
     AuthModule,

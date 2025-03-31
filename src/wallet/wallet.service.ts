@@ -51,6 +51,7 @@ export class WalletService {
 
     wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
     wallet.updated_at = new Date();
+    wallet.created_at = new Date();
     await wallet.save();
 
     console.log("wallet", wallet);
@@ -109,16 +110,22 @@ export class WalletService {
       case TransactionType.BONUS:
       case TransactionType.WITHDRAWAL:
         wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
+        wallet.updated_at = new Date();
+        wallet.created_at = new Date();
         break;
       case TransactionType.DEBIT:
         wallet.wallet_amount = Number(wallet.wallet_amount) - Number(amount);
         mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
         wallet.wallet_amount = mont;
+        wallet.updated_at = new Date();
+        wallet.created_at = new Date();
 
         break;
       case TransactionType.DEBIT:
         mont = parseFloat(wallet.wallet_amount.toString()) - parseFloat(amount.toString());
         wallet.wallet_amount = mont;
+        wallet.updated_at = new Date();
+        wallet.created_at = new Date();
         break;
 
     }

@@ -9,23 +9,32 @@ export type DiscussionMessageDocument = DiscussionMessage & Document;
 @Schema({ timestamps: true })
 export class DiscussionMessage {
 
-    @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn()
   _id: number;
 
-    @Prop({ required: true })
-    content: string;
+  @Prop()
+  content: string;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Discussion', required: true })
-    discussion: Discussion;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Discussion', required: true })
+  discussion: Discussion;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true })
-    sender: Users;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true })
+  sender: Users;
 
-    @Prop({ type: Date, default: Date.now })
-    created_at: Date;
+    @Prop({ required: false }) 
+    imageUrl?: string; // Ajout du champ image
 
-    @Prop({ type: Date, default: Date.now })
-    updated_at: Date;
+  @Prop({ type: String }) // Nouveau champ pour l'URL du média
+  mediaUrl: string;
+
+  @Prop({ type: String }) // 'image', 'video' ou null
+  mediaType: string;
+
+  @Prop({ type: Date, default: Date.now })
+  created_at: Date;
+
+  @Prop({ type: Date, default: Date.now })
+  updated_at: Date;
 }
 
 export const DiscussionMessageSchema = SchemaFactory.createForClass(DiscussionMessage);

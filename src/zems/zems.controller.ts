@@ -291,6 +291,8 @@ export class ZemsController {
     async createTemporaryZem(@Body() createZemDto: CreateZemDto, @Request() req) {
         const user_id = req.user.userId;
         createZemDto.user = user_id;
+        createZemDto.validated_at = new Date();
+        createZemDto.is_temporal = true; // Indiquer que c'est une validation temporaire
         createZemDto.is_temporal = true;
 
         try {
@@ -373,6 +375,22 @@ export class ZemsController {
             if (error instanceof BadRequestException) {
                 throw error;
             }
+            return {
+                error: error.message
+            };
+        }
+    }
+
+    @Patch('unambassador/:id')
+    async unAmbassador(@Param('id') id: string) {
+        try {
+            const updatedZem = await this.zemsService.unAmbassador(id);
+            return {
+                result: updatedZem,
+                message: 'Zem demoted from ambassador successfully'
+            };
+        }
+        catch (error) {
             return {
                 error: error.message
             };

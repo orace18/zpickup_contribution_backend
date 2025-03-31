@@ -36,5 +36,4 @@ export class WalletTransaction {
   updated_at: Date;
 }
 
-export const WalletTransactionSchema =
-  SchemaFactory.createForClass(WalletTransaction);
+export const WalletTransactionSchema = SchemaFactory.createForClass(WalletTransaction);
