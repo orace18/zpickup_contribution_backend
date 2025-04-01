@@ -45,7 +45,7 @@ export class RacesService {
     createRaceDto.initial_datetime = new Date();
     createRaceDto.created_at = new Date();
     createRaceDto.updated_at = new Date();
-    
+
     createRaceDto.reference = await generateUniqueString(
       this.racesModel,
       'reference',
@@ -296,8 +296,8 @@ export class RacesService {
         updateRaceDto.status = CoursesStatus.START;
         updateRaceDto.started_at = new Date();
 
-        
-        race.zem_before_started = true;
+
+        race.zem_before_started = false;
         race.zem_before_started_at = new Date();
 
         if(race.status === CoursesStatus.START){
@@ -374,7 +374,7 @@ export class RacesService {
         }
 
         if(race_ended.status === CoursesStatus.END){
-          throw new BadRequestException('Course en cours');  
+          throw new BadRequestException('Course en cours');
         }
 
         race_ended.zem_before_ended = false;
