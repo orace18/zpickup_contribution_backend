@@ -31,8 +31,6 @@ export class PermissionSeeder {
           description: 'Permet de voir les informations détaillées des utilisateurs',
           group: 'Users'
         },
-
-        // Permissions Rôles
         {
           key: 'view_roles',
           name: 'Voir les rôles',
@@ -76,7 +74,7 @@ export class PermissionSeeder {
           group: 'Courses'
         },
 
-        // Permissions Configuration
+        
         {
           key: 'manage_settings',
           name: 'Gérer les paramètres',
@@ -89,22 +87,48 @@ export class PermissionSeeder {
           description: 'Permet de voir les paramètres du système',
           group: 'Settings'
         },
-
-        
         {
           key: 'view_cgu',
           name: 'Voir les CGU',
           description: 'Permet de voir les condition générales d\'utilisatieon',
           group: 'Settings'
         },
-        
         {
           key: 'view_policy',
           name: 'Voir les politique d\'utilisation',
           description: 'Permet de voir les politique d\'utilisation',
           group: 'Settings'
         },
-        
+        {
+          key: 'view_tickets',
+          name: 'Voir les tickets',
+          description: 'Permet de voir les tickets de support',
+          group: 'Support'
+        },
+        {
+          key: 'view_assureurs',
+          name: 'Voir les assureurs',
+          description: 'Permet de voir la liste des assureurs',
+          group: 'Assurance'
+        },
+        {
+          key: 'view_statistics',
+          name: 'Voir les statistiques',
+          description: 'Permet de voir les statistiques du système',
+          group: 'Analytics'
+        },
+        {
+          key: 'manage_chats',
+          name: 'Gérer les chats',
+          description: 'Permet de gérer les conversations et messages',
+          group: 'Communication'
+        },
+        {
+          key: 'manage_faqs',
+          name: 'Gérer les FAQs',
+          description: 'Permet de créer, modifier et supprimer des FAQs',
+          group: 'Content'
+        },
         {
           key: 'view_configs',
           name: 'Voir les configurations',
