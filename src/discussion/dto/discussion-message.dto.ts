@@ -1,6 +1,12 @@
 import { IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { PrimaryGeneratedColumn } from "typeorm/decorator/columns/PrimaryGeneratedColumn";
 
 export class CreateDiscussionMessageDto {
+
+    /* @PrimaryGeneratedColumn()
+    _id: number; */
+  
+
     @IsString()
     @IsOptional()
     content?: string;
@@ -11,19 +17,19 @@ export class CreateDiscussionMessageDto {
 
     @IsOptional()
     @IsString()
+    imageUrl?: string;
+
+    @IsOptional()
+    @IsString()
     mediaUrl?: string;
 
     @IsOptional()
     @IsString()
-    mediaType?: string;
-
-    @IsString()
-    @IsOptional()
-    imageUrl?: string;
+    mediaType?: string; // 'audio', 'video', etc.
 }
 
 export class DiscussionMessageResponseDto {
-    id: string;
+    //id: string;
     content: string;
     discussion: string;
     sender: string;
