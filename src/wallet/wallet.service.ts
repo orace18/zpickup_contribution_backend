@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service';
 import { sendNotification } from '../services/helpers.service';
 import { CreditWalletDto } from "./dto/credit-wallet.dto";
 import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
+import { create } from 'node:domain';
 
 @Injectable()
 export class WalletService {
@@ -36,6 +37,8 @@ export class WalletService {
         user: new Types.ObjectId(userId),
         type: type,
         wallet_amount: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
     }
     
@@ -92,6 +95,7 @@ export class WalletService {
       message: 'Recharge effectué avec succès',
       transaction,
       new_balance: wallet.wallet_amount,
+      
     };
   }
 
@@ -110,25 +114,21 @@ export class WalletService {
       case TransactionType.BONUS:
       case TransactionType.WITHDRAWAL:
         wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
-        wallet.updated_at = new Date();
-        wallet.created_at = new Date();
         break;
       case TransactionType.DEBIT:
         wallet.wallet_amount = Number(wallet.wallet_amount) - Number(amount);
         mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
         wallet.wallet_amount = mont;
-        wallet.updated_at = new Date();
-        wallet.created_at = new Date();
 
         break;
       case TransactionType.DEBIT:
         mont = parseFloat(wallet.wallet_amount.toString()) - parseFloat(amount.toString());
         wallet.wallet_amount = mont;
-        wallet.updated_at = new Date();
-        wallet.created_at = new Date();
         break;
 
     }
+    
+    wallet.created_at = new Date();
     wallet.updated_at = new Date();
     await wallet.save();
 
@@ -137,7 +137,9 @@ export class WalletService {
       user: new Types.ObjectId(userId),
       amount: amount,
       type: type,
-      wallet_type: wallet_type 
+      wallet_type: wallet_type, 
+      created_at: new Date(),
+      updated_at: new Date(),
     });
 
     await this.notificationService.createNotification(
