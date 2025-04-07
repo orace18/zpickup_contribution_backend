@@ -10,7 +10,6 @@ export class TermsConditions {
 
     @Prop({
         required: true,
-        unique: true,
     })
     title: string;
 

@@ -1,35 +1,38 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDiscussionMessageDto {
-    @IsString()
-    @IsOptional()
-    content?: string;
-  
-    @IsMongoId()
-    @IsNotEmpty()
-    discussionId: string;
+  /* @PrimaryGeneratedColumn()
+    _id: number; */
 
-    @IsOptional()
-    @IsString()
-    mediaUrl?: string;
+  @IsString()
+  @IsOptional()
+  content?: string;
 
-    @IsOptional()
-    @IsString()
-    mediaType?: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  discussionId: string;
 
-    @IsString()
-    @IsOptional()
-    imageUrl?: string;
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  mediaType?: string; // 'audio', 'video', etc.
 }
 
 export class DiscussionMessageResponseDto {
-    id: string;
-    content: string;
-    discussion: string;
-    sender: string;
-    imageUrl?: string;
-    mediaUrl?: string;
-    mediaType?: string;
-    created_at: Date;
-    updated_at: Date;
+  //id: string;
+  content: string;
+  discussion: string;
+  sender: string;
+  imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  created_at: Date;
+  updated_at: Date;
 }
