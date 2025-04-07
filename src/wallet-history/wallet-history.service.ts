@@ -15,7 +15,7 @@ export class WalletHistoryService {
     private creditWalletModel: Model<CreditWallet>,
   ) {}
 
-  async getTransactionHistory(userId: string, type: string = 'user') {
+ /*  async getTransactionHistory(userId: string, type: string = 'user') {
     const withdrawals = await this.walletTransactionModel
       .find({
         user: new Types.ObjectId(userId),
@@ -25,11 +25,42 @@ export class WalletHistoryService {
       .lean()
       .exec();
     return withdrawals;
-  }
+  } */
 
-  create(createWalletHistoryDto: CreateWalletHistoryDto) {
-    return 'This action adds a new walletHistory';
-  }
+
+    async getTransactionHistory(userId: string, type: string = 'user') {
+      const withdrawals = await this.walletTransactionModel.aggregate([
+        { 
+          $match: { 
+            user: new Types.ObjectId(userId),
+            wallet_type: type 
+          } 
+        },
+        {
+          $addFields: {
+            formatted_date: {
+              $dateToString: {
+                format: "%Y-%m-%d %H:%M:%S",
+                date: "$created_at",
+                timezone: "Africa/Porto-Novo"
+              }
+            }
+          }
+        },
+        { $sort: { created_at: -1 } }
+      ]).exec();
+      
+      return withdrawals;
+    }
+
+    async create(createWalletHistoryDto: CreateWalletHistoryDto) {
+      const newWalletHistory = new this.walletTransactionModel({
+        ...createWalletHistoryDto,
+        created_at: new Date() 
+      });
+      
+      return await newWalletHistory.save();
+    }
 
   findAll() {
     return `This action returns all walletHistory`;
