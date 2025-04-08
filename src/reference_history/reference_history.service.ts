@@ -78,6 +78,8 @@ export class ReferenceHistoryService {
       referred: new Types.ObjectId(referredId),
       bonus_amount: parseFloat(ambassadorBonusConfig.value),
       is_ambassador_referral: true,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
 
     await this.walletService.creditWalletUserCustomBalance(
@@ -102,6 +104,8 @@ export class ReferenceHistoryService {
       referred: new Types.ObjectId(referredId),
       bonus_amount: parseFloat(regularBonusConfig.value),
       is_ambassador_referral: false,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
 
     await this.walletService.creditWalletUserCustomBalance(
