@@ -26,8 +26,9 @@ import * as process from 'node:process';
 import { CounterService } from '../counter/counter.service';
 import { CounterType } from '../Schemas/counter-history_schema/counter_history.schema';
 import { TransactionType } from '../Schemas/wallet_schema/wallet_transaction.schema';
-import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 import { Users, UserType } from 'src/Schemas/users_schema/Users.schema';
+import { ReferenceHistory } from '../Schemas/reference_history_schema/reference_history_schema.schema';
+import { ReferenceHistoryService } from '../reference_history/reference_history.service';
 
 @Injectable()
 export class RacesService {
@@ -36,6 +37,8 @@ export class RacesService {
     @InjectModel(Zems.name) private zemsModel: Model<Zems>,
     @InjectModel(Config.name) private configModel: Model<Config>,
     @InjectModel(Users.name) private usersModel: Model<Users>,
+    @InjectModel(ReferenceHistory.name)
+    private referenceHistoryModel: Model<ReferenceHistory>,
     private readonly usersService: UsersService,
     private readonly zemsService: ZemsService,
     private readonly walletService: WalletService,
@@ -483,6 +486,107 @@ export class RacesService {
       return race;
     } catch (e) {}
   }
+
+  /*async checkAndRewardAmbassadorForAffiliate(referredId: string) {
+    try {
+      const referenceHistory = await this.referenceHistoryModel
+        .findOne({
+          referred: new Types.ObjectId(referredId),
+          is_ambassador_referral: true,
+        })
+        .populate('referrer')
+        .exec();
+
+      if (!referenceHistory) {
+        console.log(
+          `Aucun parrainage d'ambassadeur trouvé pour l'utilisateur ${referredId}`,
+        );
+        return;
+      }
+
+      const referredUser = await this.usersModel
+        .findById(referredId)
+        .select('user_type')
+        .lean()
+        .exec();
+
+      if (!referredUser) {
+        console.log(`Utilisateur affilié ${referredId} non trouvé`);
+        return;
+      }
+
+      const completedRacesCount = await this.racesModel.countDocuments({
+        user: new Types.ObjectId(referredId),
+        status: CoursesStatus.END,
+      });
+
+      console.log(
+        `Utilisateur ${referredId} a complété ${completedRacesCount} courses`,
+      );
+
+      const requiredRacesConfig = await this.configModel
+        .findOne({ key: 'ambassador-required-races' })
+        .exec();
+
+      const requiredRaces = parseInt(requiredRacesConfig.value);
+
+      if (completedRacesCount >= requiredRaces) {
+        const bonusAlreadyGiven = await this.referenceHistoryModel.findOne({
+          referred: new Types.ObjectId(referredId),
+          referrer: referenceHistory.referrer._id,
+          race_goal_reached: true,
+        });
+
+        if (bonusAlreadyGiven) {
+          console.log(
+            `Le bonus pour les ${requiredRaces} courses a déjà été attribué`,
+          );
+          return;
+        }
+
+        let bonusKey = '';
+        let bonusDescription = '';
+
+        if (referredUser.user_type === UserType.ZEM) {
+          bonusKey = 'ambassador-zem-races-bonus';
+          bonusDescription = `Bonus pour ${requiredRaces} courses complétées par votre zem affilié`;
+        } else if (referredUser.user_type === UserType.CUSTOMER) {
+          bonusKey = 'ambassador-customer-races-bonus';
+          bonusDescription = `Bonus pour ${requiredRaces} courses complétées par votre client affilié`;
+        }
+
+        const bonusConfig = await this.configModel
+          .findOne({ key: bonusKey })
+          .exec();
+        const bonusAmount = parseFloat(bonusConfig.value);
+
+        await this.walletService.creditWalletUserCustomBalance(
+          referenceHistory.referrer._id.toString(),
+          bonusAmount,
+          'Bonus Programme Ambassadeur',
+          bonusDescription,
+          TransactionType.BONUS,
+          'ambassador',
+        );
+
+        await this.referenceHistoryModel.findByIdAndUpdate(
+          referenceHistory._id,
+          { race_goal_reached: true },
+          { new: true },
+        );
+
+        console.log(
+          `Bonus de ${bonusAmount} XOF attribué à l'ambassadeur pour les ${requiredRaces} courses complétées`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la vérification et attribution du bonus ambassadeur:',
+        error,
+      );
+      throw error;
+    }
+  }*/
 
   async addWalletPercentWinForEndedRace(race_id: string) {
     const customer_race_bonus = await this.configModel

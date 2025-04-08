@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CreateReferenceHistoryDto } from './dto/create-reference_history.dto';
 import { UpdateReferenceHistoryDto } from './dto/update-reference_history.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ReferenceHistory } from 'src/Schemas/reference_history_schema/reference_history_schema.schema';
 import { Model, Types } from 'mongoose';
 import { Config } from 'src/Schemas/config_schema/config.schema';
 import { WalletService } from 'src/wallet/wallet.service';
-import { NotificationService } from 'src/notifications/notification.service';
 import { TransactionType } from 'src/Schemas/wallet_schema/wallet_transaction.schema';
 import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
 import { CoursesStatus, Races } from 'src/Schemas/races_schema/races.schema';
-import { UserType } from 'src/Schemas/users_schema/Users.schema';
+import { Users, UserType } from 'src/Schemas/users_schema/Users.schema';
 
 @Injectable()
 export class ReferenceHistoryService {
@@ -20,6 +18,7 @@ export class ReferenceHistoryService {
     @InjectModel(Config.name) private configModel: Model<Config>,
     @InjectModel(Zems.name) private zemsModel: Model<Zems>,
     @InjectModel(Races.name) private racesModel: Model<Races>,
+    @InjectModel(Users.name) private userModel: Model<Users>,
     private walletService: WalletService,
   ) {}
 
@@ -27,47 +26,47 @@ export class ReferenceHistoryService {
     try {
       console.log('ReferrerId:', referrerId);
 
-      // 1. Rechercher le Zem avec une requête plus flexible
-      const referrerZem = await this.zemsModel
-        .findOne({
-          $or: [
-            { user: referrerId }, // Recherche avec la chaîne
-            { user: new Types.ObjectId(referrerId) }, // Recherche avec ObjectId
-          ],
-        })
+      const referrer = await this.userModel
+        .findById(referrerId)
+        .select('user_type')
         .lean()
         .exec();
 
-      console.log('Zem trouvé:', referrerZem);
+      if (!referrer) {
+        throw new Error(`Parrain avec l'ID ${referrerId} introuvable`);
+      }
 
-      if (!referrerZem) {
-        console.log('Aucun Zem trouvé. Vérification de la collection...');
-        const allZems = await this.zemsModel.find().lean().exec();
-        console.log('Tous les Zems dans la base:', allZems);
+      console.log("Type d'utilisateur du parrain:", referrer.user_type);
 
-        // Utiliser le bonus standard si pas de Zem trouvé
+      if (referrer.user_type === UserType.CUSTOMER) {
         return this.handleRegularBonus(referrerId, referredId);
       }
 
-      const isAmbassador = referrerZem.is_ambassador === true;
-      console.log('Est ambassadeur:', isAmbassador);
+      if (referrer.user_type === UserType.ZEM) {
+        const referrerZem = await this.zemsModel
+          .findOne({ user: new Types.ObjectId(referrerId) })
+          .lean()
+          .exec();
 
-      if (isAmbassador) {
-        return this.handleAmbassadorBonus(referrerId, referredId, referrerZem);
-      } else {
-        return this.handleRegularBonus(referrerId, referredId);
+        if (referrerZem && referrerZem.is_ambassador === true) {
+          console.log('Est ambassadeur: true');
+          return this.handleAmbassadorBonus(referrerId, referredId);
+        } else {
+          console.log('Est ambassadeur: false');
+          return this.handleRegularBonus(referrerId, referredId);
+        }
       }
+
+      throw new Error(
+        `Type d'utilisateur non pris en charge: ${referrer.user_type}`,
+      );
     } catch (error) {
       console.error('Erreur détaillée:', error);
       throw error;
     }
   }
 
-  private async handleAmbassadorBonus(
-    referrerId: string,
-    referredId: string,
-    referrerZem: any,
-  ) {
+  private async handleAmbassadorBonus(referrerId: string, referredId: string) {
     const ambassadorBonusConfig = await this.configModel
       .findOne({ key: 'ambassador-customer-affiliation-bonus' })
       .exec();
@@ -252,7 +251,7 @@ export class ReferenceHistoryService {
     }
   }
 
-  create(createReferenceHistoryDto: CreateReferenceHistoryDto) {
+  create() {
     return 'This action adds a new referenceHistory';
   }
 }

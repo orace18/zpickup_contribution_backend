@@ -38,13 +38,12 @@ export class UsersController {
     private readonly twilioService: TwilioService,
     private readonly referenceHistoryService: ReferenceHistoryService,
     private readonly gsmNumberFormatService: GSMNumberFormatService,
-  ) { }
+  ) {}
 
   @Post('register/phone_number')
   async registerWithPhoneNumber(
     @Body() { phone_number }: { phone_number: string },
   ) {
-
     // Vérification des caractères spéciaux et lettres
     if (!/^\+?\d+$/.test(phone_number)) {
       throw new HttpException(
@@ -54,17 +53,20 @@ export class UsersController {
     }
 
     // Vérification du format GSM béninois
-    const isValidPrefix = await this.gsmNumberFormatService.isValidPrefix(phone_number);
+    const isValidPrefix =
+      await this.gsmNumberFormatService.isValidPrefix(phone_number);
     if (!isValidPrefix) {
       throw new HttpException(
-        'Le format du numéro de téléphone n\'est pas valide',
+        "Le format du numéro de téléphone n'est pas valide",
         HttpStatus.BAD_REQUEST,
       );
     }
 
-
     // on vérifie si le numéro de téléphone existe déjà avec un compte validé
-    const existingUser = await this.usersService.findByPhone(phone_number, true);
+    const existingUser = await this.usersService.findByPhone(
+      phone_number,
+      true,
+    );
     if (existingUser && existingUser.validated_at) {
       throw new HttpException(
         'Ce numéro de téléphone est déjà attribué à un compte',
@@ -166,7 +168,10 @@ export class UsersController {
     console.log('Code reçu:', verification_code);
     console.log('Code stocké:', user.verification_code);
 
-    if (!user.verification_code || user.verification_code !== verification_code) {
+    if (
+      !user.verification_code ||
+      user.verification_code !== verification_code
+    ) {
       throw new HttpException(
         'Code de vérification incorrect',
         HttpStatus.BAD_REQUEST,
@@ -224,23 +229,31 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  
   @Patch('complete-registration/:id')
-  @UseInterceptors(FileInterceptor('user_profile_image', {
-    storage: diskStorage({
-      destination: './uploads/users',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `user_profile_image-${uniqueSuffix}${extname(file.originalname)}`);
+  @UseInterceptors(
+    FileInterceptor('user_profile_image', {
+      storage: diskStorage({
+        destination: './uploads/users',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(
+            null,
+            `user_profile_image-${uniqueSuffix}${extname(file.originalname)}`,
+          );
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+          return cb(
+            new Error('Seuls les fichiers jpg, jpeg et png sont autorisés!'),
+            false,
+          );
+        }
+        cb(null, true);
       },
     }),
-    fileFilter: (req, file, cb) => {
-      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-        return cb(new Error('Seuls les fichiers jpg, jpeg et png sont autorisés!'), false);
-      }
-      cb(null, true);
-    },
-  }))
+  )
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -258,7 +271,10 @@ export class UsersController {
           try {
             await unlink(join(process.cwd(), user.user_profile_image));
           } catch (error) {
-            console.log('Erreur lors de la suppression de l\'ancienne image:', error);
+            console.log(
+              "Erreur lors de la suppression de l'ancienne image:",
+              error,
+            );
           }
         }
         updateUserDto.user_profile_image = file.path.replace(/\\/g, '/');
@@ -273,30 +289,37 @@ export class UsersController {
       // Gérer le code de parrainage si fourni
       if (updateUserDto.referal_code) {
         // Utiliser findBySponsorshipCode au lieu de findOne
-        const referrer = await this.usersService.findBySponsorshipCode(updateUserDto.referal_code);
+        const referrer = await this.usersService.findBySponsorshipCode(
+          updateUserDto.referal_code,
+        );
 
         if (referrer) {
           await this.referenceHistoryService.createReferenceHistory(
             referrer._id.toString(),
-            id
+            id,
           );
         } else {
-          throw new HttpException('Code de parrainage invalide', HttpStatus.BAD_REQUEST);
+          throw new HttpException(
+            'Code de parrainage invalide',
+            HttpStatus.BAD_REQUEST,
+          );
         }
       }
 
-      
       // Mettre à jour l'utilisateur
       await this.usersService.update(id, {
         ...updateUserDto,
         updated_at: new Date(),
-    });
+      });
 
-    // Récupérer l'utilisateur mis à jour avec toutes ses informations
-    const updatedUser = await this.usersService.findOne(id);
-    if (!updatedUser) {
-        throw new HttpException('Erreur lors de la mise à jour', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+      // Récupérer l'utilisateur mis à jour avec toutes ses informations
+      const updatedUser = await this.usersService.findOne(id);
+      if (!updatedUser) {
+        throw new HttpException(
+          'Erreur lors de la mise à jour',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
 
       return updatedUser;
     } catch (error) {

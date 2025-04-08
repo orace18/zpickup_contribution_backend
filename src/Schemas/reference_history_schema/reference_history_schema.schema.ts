@@ -31,4 +31,5 @@ export class ReferenceHistory {
   updated_at: Date;
 }
 
-export const ReferenceHistorySchema = SchemaFactory.createForClass(ReferenceHistory);
+export const ReferenceHistorySchema =
+  SchemaFactory.createForClass(ReferenceHistory);
