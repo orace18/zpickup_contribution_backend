@@ -151,7 +151,7 @@ export class ConfigSeeder {
         key: 'ambassador-required-races',
         value: '50',
         type: "number",
-        description: 'Nombre de courses requises pour le bonus',
+        description: 'Nombre de courses requises pour le bonus ambassadeur',
       },
     ];
     const bulkOps = tabs.map((item) => ({
