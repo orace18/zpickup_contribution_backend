@@ -1,9 +1,15 @@
-import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Users, UserType } from '../Schemas/users_schema/Users.schema';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { WalletService } from "../wallet/wallet.service";
+import { WalletService } from '../wallet/wallet.service';
 import { ReferenceHistoryService } from 'src/reference_history/reference_history.service';
 import { Config } from 'src/Schemas/config_schema/config.schema';
 import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
@@ -18,7 +24,7 @@ export class UsersService {
     private readonly walletService: WalletService,
     @Inject(forwardRef(() => ReferenceHistoryService))
     private readonly referenceHistoryService: ReferenceHistoryService,
-  ) { }
+  ) {}
 
   /* Méthode pour générer un code unique de parrainage */
   async generateUniqueCode(prefix: string = 'ZP'): Promise<string> {
@@ -28,8 +34,9 @@ export class UsersService {
     while (!isUnique) {
       const randomNum = Math.floor(100000 + Math.random() * 900000);
       sponsorship_code = `${prefix}-${randomNum}`;
-      const existingUser = await this.userModel
-        .findOne({ sponsorship_code: sponsorship_code });
+      const existingUser = await this.userModel.findOne({
+        sponsorship_code: sponsorship_code,
+      });
       if (!existingUser) {
         isUnique = true;
       }
@@ -41,24 +48,31 @@ export class UsersService {
   async handleReferralCode(newUserId: string, referalCode: string) {
     try {
       // Recherche le parrain par son sponsorship_code
-      const referrer = await this.userModel.findOne({ sponsorship_code: referalCode });
+      const referrer = await this.userModel.findOne({
+        sponsorship_code: referalCode,
+      });
       if (!referrer) {
-        throw new HttpException('Code de parrainage invalide', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Code de parrainage invalide',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Crée l'historique de parrainage et attribue le bonus
       await this.referenceHistoryService.createReferenceHistory(
         referrer._id.toString(),
-        newUserId
+        newUserId,
       );
-
     } catch (error) {
       console.error('Erreur lors du traitement du code de parrainage:', error);
       throw error;
     }
   }
 
-  async findByPhone(phone_number: string, checkValidated: boolean = false): Promise<Users> {
+  async findByPhone(
+    phone_number: string,
+    checkValidated: boolean = false,
+  ): Promise<Users> {
     const query: any = {
       phone_number,
     };
@@ -98,7 +112,13 @@ export class UsersService {
         },
         populate: {
           path: 'user',
-          select: ['_id', 'phone_number', 'firstname', 'lastname', 'user_profile_image'],
+          select: [
+            '_id',
+            'phone_number',
+            'firstname',
+            'lastname',
+            'user_profile_image',
+          ],
         },
       })
       .lean()
@@ -111,13 +131,13 @@ export class UsersService {
       const activeUser = await this.userModel.findOne({
         phone_number: userData.phone_number,
         validated_at: { $ne: null },
-        deleted_at: null
+        deleted_at: null,
       });
 
       if (activeUser) {
         throw new HttpException(
           'Ce numéro de téléphone est déjà attribué à un compte actif',
-          HttpStatus.BAD_REQUEST
+          HttpStatus.BAD_REQUEST,
         );
       }
 
@@ -140,7 +160,10 @@ export class UsersService {
 
       // Gérer le code de parrainage si fourni
       if (userData.referal_code) {
-        await this.handleReferralCode(savedUser._id.toString(), userData.referal_code);
+        await this.handleReferralCode(
+          savedUser._id.toString(),
+          userData.referal_code,
+        );
       }
 
       return savedUser;
@@ -150,7 +173,7 @@ export class UsersService {
       }
       throw new HttpException(
         `Erreur lors de la création de l'utilisateur: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -159,7 +182,7 @@ export class UsersService {
     const user = await this.findByPhone(phone_number);
     if (user && user.deleted_at) {
       throw new HttpException(
-        'Ce compte n\'existe plus sur notre serveur',
+        "Ce compte n'existe plus sur notre serveur",
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -240,14 +263,16 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string): Promise<Users> {
-    return this.userModel.findByIdAndUpdate(
-      userId,
-      {
-        deleted_at: new Date(),
-        validated_at: null, // Réinitialiser validated_at
-        verification_code: null, // Optionnel: réinitialiser aussi le code de vérification
-      },
-      { new: true }
-    ).exec();
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          deleted_at: new Date(),
+          validated_at: null, // Réinitialiser validated_at
+          verification_code: null, // Optionnel: réinitialiser aussi le code de vérification
+        },
+        { new: true },
+      )
+      .exec();
   }
 }

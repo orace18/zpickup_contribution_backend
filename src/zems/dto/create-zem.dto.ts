@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsNumberString,
 } from 'class-validator';
 import {
   CardType,
@@ -70,4 +71,7 @@ export class CreateZemDto {
   @IsOptional()
   validated_at: Date;
 
+  @IsOptional()
+  @IsNumberString()
+  zem_races_count?: string = null;
 }

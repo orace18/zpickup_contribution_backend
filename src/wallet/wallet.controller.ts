@@ -23,7 +23,10 @@ import { ZemsService } from 'src/zems/zems.service';
 @UseGuards(JwtAuthGuard)
 @Controller('wallet')
 export class WalletController {
-  constructor(private readonly walletService: WalletService,  private readonly zemsService: ZemsService,) {}
+  constructor(
+    private readonly walletService: WalletService,
+    private readonly zemsService: ZemsService,
+  ) {}
 
   @Get('balance/:userId')
   @ApiOperation({ summary: 'Obtenir le solde du portefeuille' })
@@ -64,8 +67,6 @@ export class WalletController {
     );
   }
 
-
-
   @Get('ambassador/balance/:userId')
   @ApiOperation({ summary: 'Obtenir le solde du portefeuille ambassadeur' })
   @ApiResponse({
@@ -78,7 +79,10 @@ export class WalletController {
 
   @Post('ambassador/credit/:userId')
   @ApiOperation({ summary: 'Crediter le portefeuille ambassadeur' })
-  @ApiResponse({ status: 200, description: 'Recharge le portefeuille ambassadeur' })
+  @ApiResponse({
+    status: 200,
+    description: 'Recharge le portefeuille ambassadeur',
+  })
   async creditAmbassador(
     @Param('userId') userId: string,
     @Body() creditWalletDto: CreditWalletDto,
@@ -89,7 +93,7 @@ export class WalletController {
       'Crédit Portefeuille Ambassadeur',
       'Votre portefeuille ambassadeur a été crédité',
       TransactionType.BONUS_AMBASSADOR,
-      'ambassador'
+      'ambassador',
     );
   }
 
@@ -106,14 +110,13 @@ export class WalletController {
       withdrawWalletDto.phone_number,
       TransactionType.WITHDRAWAL,
       10000,
-      'ambassador'
+      'ambassador',
     );
   }
 
-
   @Post()
   create(@Body() createWalletDto: CreateWalletDto) {
-    return "";
+    return '';
   }
 
   @Get()

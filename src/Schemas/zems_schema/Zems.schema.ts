@@ -64,11 +64,11 @@ export class Zems {
   @Prop({ type: Number, required: false })
   service_duration: number;
 
-  @Prop({ type: Number, required: false, default:null })
+  @Prop({ type: Number, required: false, default: null })
   ray: number;
 
   @Prop({ default: null })
-  validated_at: Date;
+  validated_at?: Date;
 
   @Prop({ type: Types.ObjectId, ref: 'Users', required: false })
   user: Types.ObjectId;
@@ -79,12 +79,11 @@ export class Zems {
   @Prop({ default: new Date() })
   updated_at: Date;
 
-  @Prop({ type: Boolean, default: false})
-  is_ambassador: Boolean;
+  @Prop({ type: Boolean, default: false })
+  is_ambassador: boolean;
 
   @Prop()
   contrat_document: string;
-
 
   @Prop({ default: null })
   temporal_validated_at: Date;
@@ -94,8 +93,9 @@ export class Zems {
 
   @Prop({ default: new Date() })
   expired_at: Date;
-  
 
+  @Prop({ default: null })
+  zem_races_count?: string;
 }
 
 export const ZemsSchema = SchemaFactory.createForClass(Zems);

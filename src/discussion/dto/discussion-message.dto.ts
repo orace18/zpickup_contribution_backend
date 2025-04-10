@@ -1,41 +1,38 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { PrimaryGeneratedColumn } from "typeorm/decorator/columns/PrimaryGeneratedColumn";
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDiscussionMessageDto {
-
-    /* @PrimaryGeneratedColumn()
+  /* @PrimaryGeneratedColumn()
     _id: number; */
-  
 
-    @IsString()
-    @IsOptional()
-    content?: string;
-  
-    @IsMongoId()
-    @IsNotEmpty()
-    discussionId: string;
+  @IsString()
+  @IsOptional()
+  content?: string;
 
-    @IsOptional()
-    @IsString()
-    imageUrl?: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  discussionId: string;
 
-    @IsOptional()
-    @IsString()
-    mediaUrl?: string;
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
-    @IsOptional()
-    @IsString()
-    mediaType?: string; // 'audio', 'video', etc.
+  @IsOptional()
+  @IsString()
+  mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  mediaType?: string; // 'audio', 'video', etc.
 }
 
 export class DiscussionMessageResponseDto {
-    //id: string;
-    content: string;
-    discussion: string;
-    sender: string;
-    imageUrl?: string;
-    mediaUrl?: string;
-    mediaType?: string;
-    created_at: Date;
-    updated_at: Date;
+  //id: string;
+  content: string;
+  discussion: string;
+  sender: string;
+  imageUrl?: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  created_at: Date;
+  updated_at: Date;
 }
