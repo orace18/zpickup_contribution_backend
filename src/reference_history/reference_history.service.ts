@@ -8,7 +8,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 import { TransactionType } from 'src/Schemas/wallet_schema/wallet_transaction.schema';
 import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
 import { CoursesStatus, Races } from 'src/Schemas/races_schema/races.schema';
-import { Users, UserType } from 'src/Schemas/users_schema/Users.schema';
+import { Users } from 'src/Schemas/users_schema/Users.schema';
 
 @Injectable()
 export class ReferenceHistoryService {
@@ -25,41 +25,26 @@ export class ReferenceHistoryService {
   async createReferenceHistory(referrerId: string, referredId: string) {
     try {
       console.log('ReferrerId:', referrerId);
-
-      const referrer = await this.userModel
-        .findById(referrerId)
-        .select('user_type')
+      const referrerZem = await this.zemsModel
+        .findOne({
+          $or: [
+            { user: referrerId }, // Recherche avec la chaîne
+            { user: new Types.ObjectId(referrerId) }, // Recherche avec ObjectId
+          ],
+        })
         .lean()
         .exec();
 
-      if (!referrer) {
-        throw new Error(`Parrain avec l'ID ${referrerId} introuvable`);
-      }
+      console.log('Zem trouvé:', referrerZem);
 
-      console.log("Type d'utilisateur du parrain:", referrer.user_type);
+      const isAmbassador = referrerZem?.is_ambassador === true;
+      console.log('Est ambassadeur:', isAmbassador);
 
-      if (referrer.user_type === UserType.CUSTOMER) {
+      if (isAmbassador) {
+        return this.handleAmbassadorBonus(referrerId, referredId);
+      } else {
         return this.handleRegularBonus(referrerId, referredId);
       }
-
-      if (referrer.user_type === UserType.ZEM) {
-        const referrerZem = await this.zemsModel
-          .findOne({ user: new Types.ObjectId(referrerId) })
-          .lean()
-          .exec();
-
-        if (referrerZem && referrerZem.is_ambassador === true) {
-          console.log('Est ambassadeur: true');
-          return this.handleAmbassadorBonus(referrerId, referredId);
-        } else {
-          console.log('Est ambassadeur: false');
-          return this.handleRegularBonus(referrerId, referredId);
-        }
-      }
-
-      throw new Error(
-        `Type d'utilisateur non pris en charge: ${referrer.user_type}`,
-      );
     } catch (error) {
       console.error('Erreur détaillée:', error);
       throw error;
@@ -257,5 +242,128 @@ export class ReferenceHistoryService {
 
   create() {
     return 'This action adds a new referenceHistory';
+  }
+
+  async checkAndRewardAmbassadorForCustomer(user: Users) {
+    console.log('Vérification récompense ambassadeur pour client:', user._id);
+
+    // Vérifier si le client a été affilié par un ambassadeur
+    const referenceHistory = await this.referenceHistoryModel
+      .findOne({
+        referred: user._id,
+        is_ambassador_referral: true,
+      })
+      .populate('referrer')
+      .lean()
+      .exec();
+
+    if (!referenceHistory) {
+      console.log("Pas d'ambassadeur trouvé pour ce client");
+      return; // Pas d'ambassadeur
+    }
+
+    console.log('Ambassadeur trouvé:', referenceHistory.referrer._id);
+
+    // Récupérer les configurations nécessaires
+    const customerRequiredRaces = await this.configModel
+      .findOne({ key: 'ambassador-customer-required-races' })
+      .exec();
+    const customerBonus = await this.configModel
+      .findOne({ key: 'ambassador-customer-races-bonus' })
+      .exec();
+
+    // Récupérer le nombre de courses actuel depuis la base de données
+    const currentUser = await this.userModel.findById(user._id).exec();
+    const userRacesCount = parseInt(currentUser.user_races_count || '0');
+    const requiredRaces = parseInt(customerRequiredRaces.value);
+
+    console.log(
+      `Courses client: ${userRacesCount}, Seuil requis: ${requiredRaces}`,
+    );
+
+    // Vérifier si le nombre de courses est strictement egale au seuil requis
+    if (userRacesCount === requiredRaces) {
+      console.log("Seuil atteint! Attribution du bonus à l'ambassadeur");
+
+      // Octroyer le bonus à l'ambassadeur
+      await this.walletService.creditWalletUserCustomBalance(
+        referenceHistory.referrer._id.toString(),
+        parseFloat(customerBonus.value),
+        'Bonus Course Client Affilié',
+        `Bonus pour ${userRacesCount} courses effectuées par votre client affilié - ${customerBonus.value} XOF`,
+        TransactionType.BONUS_LIMIT_CUSTOMER_RACES,
+        'ambassador',
+      );
+
+      console.log('Bonus attribué avec succès!');
+    }
+  }
+
+  async checkAndRewardAmbassadorForZem(zemUser: Users) {
+    console.log('Vérification récompense ambassadeur pour zem:', zemUser._id);
+
+    // Vérifier si l'utilisateur est un zem
+    if (zemUser.user_type !== 'zem') {
+      console.log("L'utilisateur n'est pas un zem");
+      return;
+    }
+
+    // Vérifier si le zem a été affilié par un ambassadeur
+    const referenceHistory = await this.referenceHistoryModel
+      .findOne({
+        referred: zemUser._id,
+        is_ambassador_referral: true,
+      })
+      .populate('referrer')
+      .lean()
+      .exec();
+
+    if (!referenceHistory) {
+      console.log("Pas d'ambassadeur trouvé pour ce zem");
+      return;
+    }
+
+    console.log('Ambassadeur trouvé:', referenceHistory.referrer._id);
+
+    // Récupérer les configurations nécessaires
+    const zemRequiredRaces = await this.configModel
+      .findOne({ key: 'ambassador-zem-required-races' })
+      .exec();
+    const zemBonus = await this.configModel
+      .findOne({ key: 'ambassador-zem-races-bonus' })
+      .exec();
+
+    // Récupérer le nombre de courses actuel depuis la base de données
+    const zem = await this.zemsModel
+      .findById(zemUser.zem)
+      .select('zem_races_count')
+      .lean()
+      .exec();
+
+    const zemRacesCount = parseInt(zem?.zem_races_count || '0');
+    const requiredRaces = parseInt(zemRequiredRaces.value);
+
+    console.log(
+      `Courses zem: ${zemRacesCount}, Seuil requis: ${requiredRaces}`,
+    );
+
+    // Vérifier si le nombre de courses est strictement égal au seuil requis
+    if (zemRacesCount === requiredRaces) {
+      console.log(
+        "Seuil atteint exactement! Attribution du bonus à l'ambassadeur",
+      );
+
+      // Octroyer le bonus à l'ambassadeur
+      await this.walletService.creditWalletUserCustomBalance(
+        referenceHistory.referrer._id.toString(),
+        parseFloat(zemBonus.value),
+        'Bonus Course Zem Affilié',
+        `Bonus pour ${zemRacesCount} courses effectuées par votre zem affilié - ${zemBonus.value} XOF`,
+        TransactionType.BONUS_LIMIT_ZEM_RACES,
+        'ambassador',
+      );
+
+      console.log('Bonus attribué avec succès!');
+    }
   }
 }

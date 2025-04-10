@@ -109,29 +109,24 @@ export class WalletService {
     wallet_type: string = 'user'
   ) {
     const wallet = await this.getWalletBalance(userId, wallet_type);
-    let mont = 0;
+    
     switch (type) {
       case TransactionType.BONUS:
       case TransactionType.WITHDRAWAL:
+      case TransactionType.BONUS_AMBASSADOR:
+      case TransactionType.BONUS_LIMIT_CUSTOMER_RACES:
+      case TransactionType.BONUS_LIMIT_ZEM_RACES:
         wallet.wallet_amount = Number(wallet.wallet_amount) + Number(amount);
         break;
       case TransactionType.DEBIT:
         wallet.wallet_amount = Number(wallet.wallet_amount) - Number(amount);
-        mont = parseFloat(wallet.wallet_amount.toString()) + parseFloat(amount.toString());
-        wallet.wallet_amount = mont;
-
         break;
-      case TransactionType.DEBIT:
-        mont = parseFloat(wallet.wallet_amount.toString()) - parseFloat(amount.toString());
-        wallet.wallet_amount = mont;
-        break;
-
+      default:
+        throw new BadRequestException('Type de transaction non supporté');
     }
     
-    wallet.created_at = new Date();
     wallet.updated_at = new Date();
     await wallet.save();
-
 
     const transaction = await this.walletTransactionModel.create({
       user: new Types.ObjectId(userId),

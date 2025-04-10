@@ -94,4 +94,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsMongoId()
   role?: Types.ObjectId;
+
+  @IsOptional()
+  @IsNumberString()
+  user_races_count?: string = null;
 }

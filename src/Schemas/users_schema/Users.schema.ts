@@ -86,6 +86,9 @@ export class Users {
   @Prop({ type: Types.ObjectId, ref: 'Role' })
   role: Types.ObjectId;
 
+  @Prop({ default: null })
+  user_races_count?: string;
+
 }
 
 export const UsersSchema = SchemaFactory.createForClass(Users);

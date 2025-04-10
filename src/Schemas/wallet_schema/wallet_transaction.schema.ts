@@ -4,6 +4,8 @@ import { Races } from '../races_schema/races.schema';
 
 export enum TransactionType {
   BONUS = 'bonus',
+  BONUS_LIMIT_CUSTOMER_RACES = 'Bonus 50 courses client',
+  BONUS_LIMIT_ZEM_RACES = 'Bonus 50 courses transporteur',
   BONUS_AMBASSADOR = "Bonus d'affiliation",
   WITHDRAWAL = 'withdrawal',
   DEBIT = 'debit',
@@ -36,4 +38,5 @@ export class WalletTransaction {
   updated_at: Date;
 }
 
-export const WalletTransactionSchema = SchemaFactory.createForClass(WalletTransaction);
+export const WalletTransactionSchema =
+  SchemaFactory.createForClass(WalletTransaction);

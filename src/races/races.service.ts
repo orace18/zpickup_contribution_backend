@@ -487,107 +487,6 @@ export class RacesService {
     } catch (e) {}
   }
 
-  /*async checkAndRewardAmbassadorForAffiliate(referredId: string) {
-    try {
-      const referenceHistory = await this.referenceHistoryModel
-        .findOne({
-          referred: new Types.ObjectId(referredId),
-          is_ambassador_referral: true,
-        })
-        .populate('referrer')
-        .exec();
-
-      if (!referenceHistory) {
-        console.log(
-          `Aucun parrainage d'ambassadeur trouvé pour l'utilisateur ${referredId}`,
-        );
-        return;
-      }
-
-      const referredUser = await this.usersModel
-        .findById(referredId)
-        .select('user_type')
-        .lean()
-        .exec();
-
-      if (!referredUser) {
-        console.log(`Utilisateur affilié ${referredId} non trouvé`);
-        return;
-      }
-
-      const completedRacesCount = await this.racesModel.countDocuments({
-        user: new Types.ObjectId(referredId),
-        status: CoursesStatus.END,
-      });
-
-      console.log(
-        `Utilisateur ${referredId} a complété ${completedRacesCount} courses`,
-      );
-
-      const requiredRacesConfig = await this.configModel
-        .findOne({ key: 'ambassador-required-races' })
-        .exec();
-
-      const requiredRaces = parseInt(requiredRacesConfig.value);
-
-      if (completedRacesCount >= requiredRaces) {
-        const bonusAlreadyGiven = await this.referenceHistoryModel.findOne({
-          referred: new Types.ObjectId(referredId),
-          referrer: referenceHistory.referrer._id,
-          race_goal_reached: true,
-        });
-
-        if (bonusAlreadyGiven) {
-          console.log(
-            `Le bonus pour les ${requiredRaces} courses a déjà été attribué`,
-          );
-          return;
-        }
-
-        let bonusKey = '';
-        let bonusDescription = '';
-
-        if (referredUser.user_type === UserType.ZEM) {
-          bonusKey = 'ambassador-zem-races-bonus';
-          bonusDescription = `Bonus pour ${requiredRaces} courses complétées par votre zem affilié`;
-        } else if (referredUser.user_type === UserType.CUSTOMER) {
-          bonusKey = 'ambassador-customer-races-bonus';
-          bonusDescription = `Bonus pour ${requiredRaces} courses complétées par votre client affilié`;
-        }
-
-        const bonusConfig = await this.configModel
-          .findOne({ key: bonusKey })
-          .exec();
-        const bonusAmount = parseFloat(bonusConfig.value);
-
-        await this.walletService.creditWalletUserCustomBalance(
-          referenceHistory.referrer._id.toString(),
-          bonusAmount,
-          'Bonus Programme Ambassadeur',
-          bonusDescription,
-          TransactionType.BONUS,
-          'ambassador',
-        );
-
-        await this.referenceHistoryModel.findByIdAndUpdate(
-          referenceHistory._id,
-          { race_goal_reached: true },
-          { new: true },
-        );
-
-        console.log(
-          `Bonus de ${bonusAmount} XOF attribué à l'ambassadeur pour les ${requiredRaces} courses complétées`,
-        );
-      }
-    } catch (error) {
-      console.error(
-        'Erreur lors de la vérification et attribution du bonus ambassadeur:',
-        error,
-      );
-      throw error;
-    }
-  }*/
-
   async addWalletPercentWinForEndedRace(race_id: string) {
     const customer_race_bonus = await this.configModel
       .findOne({ key: 'percent-share-customer' })
@@ -646,6 +545,20 @@ export class RacesService {
 
       // Attribution du bonus client
       if (race_user.length > 0) {
+        // Mise à jour du compteur de courses du client
+        const currentUserRacesCount = parseInt(
+          race_user[0].user_races_count || '0',
+        );
+
+        await this.usersService.update(race_user[0]['_id'].toString(), {
+          user_races_count: (currentUserRacesCount + 1).toString(),
+        });
+
+        // Vérification du bonus ambassadeur pour le client
+        await this.referenceHistoryService.checkAndRewardAmbassadorForCustomer(
+          race_user[0],
+        );
+
         this.walletService.creditWalletUserCustomBalance(
           race_user[0]['_id'].toString(),
           amount_for_user,
@@ -663,6 +576,24 @@ export class RacesService {
       // Nouvelle logique pour l'attribution du bonus au Zem
       if (zem_user.length > 0) {
         const zemId = zem_user[0]['_id'].toString();
+
+        // Mise à jour du compteur de courses du zem
+        const zem = await this.zemsModel.findOne({ user: zemId }).exec();
+        if (zem) {
+          const currentZemRacesCount = parseInt(zem.zem_races_count || '0');
+          await this.zemsModel.findByIdAndUpdate(zem._id, {
+            zem_races_count: (currentZemRacesCount + 1).toString(),
+          });
+
+          console.log('Avant verif');
+
+          // Vérification du bonus ambassadeur pour le zem
+          await this.referenceHistoryService.checkAndRewardAmbassadorForZem(
+            zem_user[0],
+          );
+
+          console.log('Apres verif');
+        }
 
         // On récupère le compteur du zem pour verifier si il est ambassadeur
         const zemCounter = await this.counterService.findCounterByUser(zemId);
@@ -723,8 +654,6 @@ export class RacesService {
             'user',
           );
         }
-
-        // this.walletService.creditWalletUserCustomBalance(zem_user[0]["_id"].toString(), amount_for_zem, "Course bonus", "Vous avez obtenu un gain de " + amount_for_zem + " XOF suite à votre course " + race["reference"] + ". ZPickup vous remercie de nous avoir choisi", TransactionType.BONUS);
       }
     }
   }

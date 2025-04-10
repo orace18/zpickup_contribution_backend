@@ -155,8 +155,14 @@ export class ConfigSeeder {
           'Bonus quand un transporteur affilié atteint le nombre de courses requis',
       },
       {
-        key: 'ambassador-required-races',
-        value: '50',
+        key: 'ambassador-customer-required-races',
+        value: '3',
+        type: 'number',
+        description: 'Nombre de courses requises pour le bonus',
+      },
+      {
+        key: 'ambassador-zem-required-races',
+        value: '3',
         type: 'number',
         description: 'Nombre de courses requises pour le bonus',
       },
