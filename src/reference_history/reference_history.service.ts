@@ -199,10 +199,15 @@ export class ReferenceHistoryService {
     try {
       const referrals = await this.referenceHistoryModel
         .find({ referrer: new Types.ObjectId(referrerId) })
-        .populate(
-          'referred',
-          'firstname lastname phone_number user_profile_image created_at user_type',
-        )
+        .populate({
+          path: 'referred',
+          select:
+            'firstname lastname phone_number user_profile_image created_at user_type user_races_count zem',
+          populate: {
+            path: 'zem',
+            select: 'zem_races_count',
+          },
+        })
         .sort({ created_at: -1 })
         .exec();
 
