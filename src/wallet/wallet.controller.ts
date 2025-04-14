@@ -92,7 +92,7 @@ export class WalletController {
       creditWalletDto.amount,
       'Crédit Portefeuille Ambassadeur',
       'Votre portefeuille ambassadeur a été crédité',
-      TransactionType.BONUS_AMBASSADOR,
+      TransactionType.CREDIT_AMBASSADOR,
       'ambassador',
     );
   }

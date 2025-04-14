@@ -15,7 +15,7 @@ export class WalletHistoryService {
     private creditWalletModel: Model<CreditWallet>,
   ) {}
 
- /*  async getTransactionHistory(userId: string, type: string = 'user') {
+  /*  async getTransactionHistory(userId: string, type: string = 'user') {
     const withdrawals = await this.walletTransactionModel
       .find({
         user: new Types.ObjectId(userId),
@@ -27,40 +27,37 @@ export class WalletHistoryService {
     return withdrawals;
   } */
 
+  async getTransactionHistory(userId: string, type: string = 'user') {
+    const withdrawals = await this.walletTransactionModel
+      .find({
+        user: new Types.ObjectId(userId),
+        wallet_type: type,
+      })
+      .populate({
+        path: 'referred',
+        select: 'firstname lastname user_type created_at',
+        model: 'Users'
+      })
+      .sort({ created_at: -1 })
+      .lean()
+      .exec();
 
-    async getTransactionHistory(userId: string, type: string = 'user') {
-      const withdrawals = await this.walletTransactionModel.aggregate([
-        { 
-          $match: { 
-            user: new Types.ObjectId(userId),
-            wallet_type: type 
-          } 
-        },
-        {
-          $addFields: {
-            formatted_date: {
-              $dateToString: {
-                format: "%Y-%m-%d %H:%M:%S",
-                date: "$created_at",
-                timezone: "Africa/Porto-Novo"
-              }
-            }
-          }
-        },
-        { $sort: { created_at: -1 } }
-      ]).exec();
-      
-      return withdrawals;
-    }
+    return withdrawals.map(transaction => ({
+      ...transaction,
+      formatted_date: new Date(transaction.created_at).toLocaleString('fr-FR', {
+        timeZone: 'Africa/Porto-Novo'
+      })
+    }));
+  }
 
-    async create(createWalletHistoryDto: CreateWalletHistoryDto) {
-      const newWalletHistory = new this.walletTransactionModel({
-        ...createWalletHistoryDto,
-        created_at: new Date() 
-      });
-      
-      return await newWalletHistory.save();
-    }
+  async create(createWalletHistoryDto: CreateWalletHistoryDto) {
+    const newWalletHistory = new this.walletTransactionModel({
+      ...createWalletHistoryDto,
+      created_at: new Date(),
+    });
+
+    return await newWalletHistory.save();
+  }
 
   findAll() {
     return `This action returns all walletHistory`;

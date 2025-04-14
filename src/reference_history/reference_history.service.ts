@@ -72,8 +72,9 @@ export class ReferenceHistoryService {
       parseFloat(ambassadorBonusConfig.value),
       'Bonus Affiliation Ambassadeur',
       `Bonus d'affiliation client - ${ambassadorBonusConfig.value} XOF`,
-      TransactionType.BONUS,
+      TransactionType.BONUS_AMBASSADOR_CLIENT,
       'ambassador',
+      referredId,
     );
 
     return referenceHistory;
@@ -100,6 +101,7 @@ export class ReferenceHistoryService {
       `Bonus de parrainage standard - ${regularBonusConfig.value} XOF`,
       TransactionType.BONUS,
       'user',
+      referredId,
     );
 
     return referenceHistory;

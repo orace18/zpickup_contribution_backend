@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { WalletHistoryService } from './wallet-history.service';
 import { CreateWalletHistoryDto } from './dto/create-wallet-history.dto';
 import { UpdateWalletHistoryDto } from './dto/update-wallet-history.dto';
@@ -6,7 +14,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('wallet-history')
 export class WalletHistoryController {
-  constructor(private readonly walletHistoryService: WalletHistoryService, ) {}
+  constructor(private readonly walletHistoryService: WalletHistoryService) {}
 
   @Get(':userId')
   @ApiOperation({ summary: 'Historique des bonus reçus' })
@@ -19,13 +27,19 @@ export class WalletHistoryController {
   }
 
   @Get('ambassador/:userId')
-  @ApiOperation({ summary: 'Historique des transactions du portefeuille ambassadeur' })
+  @ApiOperation({
+    summary: 'Historique des transactions du portefeuille ambassadeur',
+  })
   @ApiResponse({
     status: 200,
-    description: "Retourne l'historique des transactions du portefeuille ambassadeur",
+    description:
+      "Retourne l'historique des transactions du portefeuille ambassadeur",
   })
   async getAmbassadorHistory(@Param('userId') userId: string) {
-    return this.walletHistoryService.getTransactionHistory(userId, 'ambassador');
+    return this.walletHistoryService.getTransactionHistory(
+      userId,
+      'ambassador',
+    );
   }
 
   @Post()
@@ -44,7 +58,10 @@ export class WalletHistoryController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWalletHistoryDto: UpdateWalletHistoryDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateWalletHistoryDto: UpdateWalletHistoryDto,
+  ) {
     return this.walletHistoryService.update(+id, updateWalletHistoryDto);
   }
 
