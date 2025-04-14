@@ -81,7 +81,7 @@ export class ZemValidationService {
         bonusAmount,
         'Bonus Validation Zem',
         `Bonus pour la validation du compte Zem de votre filleul - ${bonusAmount} XOF`,
-        TransactionType.BONUS,
+        TransactionType.BONUS_AMBASSADOR_ZEM,
         'ambassador'
       );
 
