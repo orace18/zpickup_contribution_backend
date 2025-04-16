@@ -408,9 +408,10 @@ export class ZemsController {
         message: 'Zem demoted from ambassador successfully',
       };
     } catch (error) {
-      return {
+      // Utilisez le décorateur HttpException pour renvoyer un code d'erreur approprié
+      throw new HttpException({
         error: error.message,
-      };
+      }, HttpStatus.NOT_FOUND);
     }
   }
 

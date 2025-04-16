@@ -110,7 +110,7 @@ export class ZemsService {
   }
 
   async unAmbassador(zemId: string): Promise<Partial<Zems>> {
-    const updatedZem = await this.zemModel.findOne({ user: zemId }).exec();
+    const updatedZem = await this.zemModel.findOne({ _id: zemId }).exec();
 
     if (!updatedZem) {
       throw new NotFoundException('Zem non trouvé');
