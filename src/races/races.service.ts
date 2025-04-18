@@ -26,9 +26,10 @@ import * as process from 'node:process';
 import { CounterService } from '../counter/counter.service';
 import { CounterType } from '../Schemas/counter-history_schema/counter_history.schema';
 import { TransactionType } from '../Schemas/wallet_schema/wallet_transaction.schema';
-import { Users, UserType } from 'src/Schemas/users_schema/Users.schema';
+import { Users } from 'src/Schemas/users_schema/Users.schema';
 import { ReferenceHistory } from '../Schemas/reference_history_schema/reference_history_schema.schema';
 import { ReferenceHistoryService } from '../reference_history/reference_history.service';
+import { Counter } from '../Schemas/counter_schema/counter.schema';
 
 @Injectable()
 export class RacesService {
@@ -37,6 +38,7 @@ export class RacesService {
     @InjectModel(Zems.name) private zemsModel: Model<Zems>,
     @InjectModel(Config.name) private configModel: Model<Config>,
     @InjectModel(Users.name) private usersModel: Model<Users>,
+    @InjectModel(Counter.name) private readonly counterModel: Model<Counter>,
     @InjectModel(ReferenceHistory.name)
     private referenceHistoryModel: Model<ReferenceHistory>,
     private readonly usersService: UsersService,
@@ -497,6 +499,7 @@ export class RacesService {
     const km_price = await this.configModel.findOne({ key: 'km-price' }).exec();
 
     const race = await this.findOne(race_id);
+    console.log('Traitement de la course:', race_id, 'statut:', race['status']);
 
     if (race['status'] == 'end') {
       const zem_user = await this.usersService.findUserOneByPayload({
@@ -505,6 +508,8 @@ export class RacesService {
       const race_user = await this.usersService.findUserOneByPayload({
         _id: race['user'].toString(),
       });
+
+      // Calcul des montants
       let amount_for_admin =
         parseFloat(race['distance_traveled'].toFixed(2)) *
         parseFloat(km_price['value']);
@@ -516,6 +521,7 @@ export class RacesService {
         parseFloat(race['distance_traveled'].toFixed(2)) *
         (parseFloat(km_price['value']) *
           (parseFloat(customer_race_bonus['value']) / 100));
+
       amount_for_zem = parseFloat(amount_for_zem.toFixed(2));
       amount_for_user = parseFloat(amount_for_user.toFixed(2));
       amount_for_admin = parseFloat(amount_for_admin.toFixed(2));
@@ -527,7 +533,7 @@ export class RacesService {
         ).toFixed(2),
       );
 
-      this.racesModel
+      await this.racesModel
         .findByIdAndUpdate(race['_id'].toString(), {
           zem_bonus: amount_for_zem,
           customer_bonus: amount_for_user,
@@ -544,7 +550,7 @@ export class RacesService {
         .exec();
 
       // Attribution du bonus client
-      if (race_user.length > 0) {
+      if (race_user && race_user.length > 0) {
         // Mise à jour du compteur de courses du client
         const currentUserRacesCount = parseInt(
           race_user[0].user_races_count || '0',
@@ -573,86 +579,100 @@ export class RacesService {
         );
       }
 
-      // Nouvelle logique pour l'attribution du bonus au Zem
-      if (zem_user.length > 0) {
-        const zemId = zem_user[0]['_id'].toString();
+      // Attribution du bonus au Zem
+      if (zem_user && zem_user.length > 0) {
+        try {
+          const zemId = zem_user[0]['_id'].toString();
+          const zem = await this.zemsModel.findOne({ user: zemId }).exec();
 
-        // Mise à jour du compteur de courses du zem
-        const zem = await this.zemsModel.findOne({ user: zemId }).exec();
-        if (zem) {
-          const currentZemRacesCount = parseInt(zem.zem_races_count || '0');
-          await this.zemsModel.findByIdAndUpdate(zem._id, {
-            zem_races_count: (currentZemRacesCount + 1).toString(),
-          });
+          if (zem) {
+            // Mise à jour du compteur de courses
+            const currentZemRacesCount = parseInt(zem.zem_races_count || '0');
+            await this.zemsModel.findByIdAndUpdate(zem._id, {
+              zem_races_count: (currentZemRacesCount + 1).toString(),
+            });
 
-          console.log('Avant verif');
+            // Vérification du bonus ambassadeur
+            await this.referenceHistoryService.checkAndRewardAmbassadorForZem(
+              zem_user[0],
+            );
 
-          // Vérification du bonus ambassadeur pour le zem
-          await this.referenceHistoryService.checkAndRewardAmbassadorForZem(
-            zem_user[0],
-          );
+            // Déduire les kilomètres et traiter le bonus
+            const kmTraveled = parseFloat(race['distance_traveled'].toFixed(2));
 
-          console.log('Apres verif');
-        }
+            // Correction importante : utiliser un ObjectId pour la recherche du compteur
+            const objectIdZemId = new Types.ObjectId(zem._id);
+            console.log(
+              'Recherche du compteur avec ObjectId pour zemId:',
+              objectIdZemId,
+            );
 
-        // On récupère le compteur du zem pour verifier si il est ambassadeur
-        const zemCounter = await this.counterService.findCounterByUser(zemId);
+            const zemCounterDoc = await this.counterModel
+              .findOne({
+                zem: objectIdZemId,
+              })
+              .exec();
 
-        // On verifie si le zem est ambassadeur
-        if (zemCounter && zemCounter.balance_abs_km > 0) {
-          // Le Zem est ambassadeur, on vérifie si balance_abs_km sera réduit à 0 après cette course
-          const kmTraveled = parseFloat(race['distance_traveled'].toFixed(2));
-          const newBalanceAbsKm = zemCounter.balance_abs_km - kmTraveled;
+            console.log(
+              'Résultat de recherche compteur directs:',
+              zemCounterDoc ? 'trouvé' : 'non trouvé',
+            );
 
-          if (newBalanceAbsKm <= 0) {
-            // Si après cette course balance_abs_km sera <= 0, on attribue le bonus sur la partie qui dépasse 0
-            // Car cette partie n'est plus couverte par les km gratuits
-            const bonusKm = Math.abs(Math.min(0, newBalanceAbsKm));
-
-            if (bonusKm > 0) {
-              // Calculer le bonus seulement sur les km qui dépassent balance_abs_km
-              const partialBonus = parseFloat(
-                (
-                  bonusKm *
-                  parseFloat(km_price['value']) *
-                  (parseFloat(zem_race_bonus['value']) / 100)
-                ).toFixed(2),
-              );
-
-              if (partialBonus > 0) {
-                this.walletService.creditWalletUserCustomBalance(
+            if (zemCounterDoc) {
+              if (zem.is_ambassador !== true) {
+                await this.walletService.creditWalletUserCustomBalance(
                   zemId,
-                  partialBonus,
-                  'Course bonus partiel',
-                  'Vous avez obtenu un gain de ' +
-                    partialBonus +
-                    ' XOF suite à votre course ' +
-                    race['reference'] +
-                    ' pour ' +
-                    bonusKm.toFixed(2) +
-                    ' km. ZPickup vous remercie de nous avoir choisi',
+                  amount_for_zem,
+                  'Course bonus',
+                  `Vous avez obtenu un gain de ${amount_for_zem} XOF suite à votre course ${race['reference']}. ZPickup vous remercie de nous avoir choisi`,
                   TransactionType.BONUS,
                   'user',
                 );
+                console.log(
+                  'Bonus attribué au Zem non-ambassadeur avec son compteur',
+                );
+              } else {
+                console.log('Pas de bonus pour ambassadeur sans compteur');
+              }
+            } else {
+              // Le compteur existe, procéder normalement
+              if (
+                zem.is_ambassador === true &&
+                zemCounterDoc.balance_abs_km > 0
+              ) {
+                // Ambassadeur avec km gratuits
+                zemCounterDoc.balance_abs_km -= kmTraveled;
+                if (zemCounterDoc.balance_abs_km < 0) {
+                  zemCounterDoc.balance_abs_km = 0;
+                }
+                // Déduire les kilomètres de balance_km
+                zemCounterDoc.balance_km -= kmTraveled;
+                await zemCounterDoc.save();
+              } else {
+                // Zem non-ambassadeur ou ambassadeur sans km gratuits
+                zemCounterDoc.balance_km -= kmTraveled;
+                await zemCounterDoc.save();
+
+                // Attribuer le bonus uniquement si ce n'est pas un ambassadeur avec des km gratuits
+                if (
+                  zem.is_ambassador !== true ||
+                  zemCounterDoc.balance_abs_km === 0
+                ) {
+                  await this.walletService.creditWalletUserCustomBalance(
+                    zemId,
+                    amount_for_zem,
+                    'Course bonus',
+                    `Vous avez obtenu un gain de ${amount_for_zem} XOF suite à votre course ${race['reference']}. ZPickup vous remercie de nous avoir choisi`,
+                    TransactionType.BONUS,
+                    'user',
+                  );
+                  console.log('Bonus attribué au Zem');
+                }
               }
             }
           }
-          // Dans tous les autres cas, pas de bonus car toujours en train d'utiliser les km gratuits
-        } else {
-          // Le Zem n'est pas ambassadeur ou a déjà utilisé tous ses km gratuits,
-          // on lui attribue le bonus complet
-          this.walletService.creditWalletUserCustomBalance(
-            zemId,
-            amount_for_zem,
-            'Course bonus',
-            'Vous avez obtenu un gain de ' +
-              amount_for_zem +
-              ' XOF suite à votre course ' +
-              race['reference'] +
-              '. ZPickup vous remercie de nous avoir choisi',
-            TransactionType.BONUS,
-            'user',
-          );
+        } catch (error) {
+          console.error('Erreur lors du traitement du bonus Zem:', error);
         }
       }
     }

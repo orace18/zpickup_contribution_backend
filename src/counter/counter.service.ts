@@ -1,20 +1,24 @@
-import {BadRequestException, Injectable, NotFoundException,} from '@nestjs/common';
-import {UpdateCounterDto} from './dto/update-counter.dto';
-import {InjectModel} from '@nestjs/mongoose';
-import {Counter} from '../Schemas/counter_schema/counter.schema';
-import {HydratedDocument, Model, Types} from 'mongoose';
-import {Payment, PaymentStatus} from '../Schemas/payment/payment.schema';
-import {Zems} from '../Schemas/zems_schema/Zems.schema';
-import {CoursesStatus, Races} from '../Schemas/races_schema/races.schema';
-import {NotificationService} from '../notifications/notification.service';
-import {CreatePaymentDto} from '../payment/dto/create-payment.dto';
-import {DeductKilometersDto} from '../payment/dto/deduct-kilometers.dto';
-import {Config} from '../Schemas/config_schema/config.schema';
-import {UsersService} from '../users/users.service';
-import {sendNotification} from '../services/helpers.service';
-import {CounterType} from "../Schemas/counter-history_schema/counter_history.schema";
-import {CounterHistoryService} from "../counter-history/counter-history.service";
-import {Users} from "../Schemas/users_schema/Users.schema";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { UpdateCounterDto } from './dto/update-counter.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Counter } from '../Schemas/counter_schema/counter.schema';
+import { HydratedDocument, Model, Types } from 'mongoose';
+import { Payment, PaymentStatus } from '../Schemas/payment/payment.schema';
+import { Zems } from '../Schemas/zems_schema/Zems.schema';
+import { CoursesStatus, Races } from '../Schemas/races_schema/races.schema';
+import { NotificationService } from '../notifications/notification.service';
+import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
+import { DeductKilometersDto } from '../payment/dto/deduct-kilometers.dto';
+import { Config } from '../Schemas/config_schema/config.schema';
+import { UsersService } from '../users/users.service';
+import { sendNotification } from '../services/helpers.service';
+import { CounterType } from '../Schemas/counter-history_schema/counter_history.schema';
+import { CounterHistoryService } from '../counter-history/counter-history.service';
+import { Users } from '../Schemas/users_schema/Users.schema';
 
 @Injectable()
 export class CounterService {
@@ -45,10 +49,11 @@ export class CounterService {
       zem: new Types.ObjectId(zemId),
     });
     const free_km = await this.configModel.findOne({ key: 'free-km' }).exec();
-    const km_kdo_for_zem = await this.configModel.findOne({ key: 'km-kdo-for-zem' }).exec();
+    const km_kdo_for_zem = await this.configModel
+      .findOne({ key: 'km-kdo-for-zem' })
+      .exec();
 
     if (!existingCounter) {
-
       const counter = new this.counterModel({
         zem: new Types.ObjectId(zemId),
         balance_km: parseFloat(free_km.value),
@@ -59,10 +64,14 @@ export class CounterService {
       existingCounter = await counter.save();
     }
 
-    if(existingCounter && parseInt(km_kdo_for_zem.value)==1){
-      await this.counterHistoryService.create({counter: existingCounter._id, counter_type:CounterType.INPUT,value:parseFloat(free_km.value), reference: `Km kdo de bienvenu`});
+    if (existingCounter && parseInt(km_kdo_for_zem.value) == 1) {
+      await this.counterHistoryService.create({
+        counter: existingCounter._id,
+        counter_type: CounterType.INPUT,
+        value: parseFloat(free_km.value),
+        reference: `Km kdo de bienvenu`,
+      });
     }
-
 
     return zem;
   }
@@ -119,6 +128,8 @@ export class CounterService {
       zem_info: counter.zem,
 
       current_balance_km: counter.balance_km,
+
+      current_balance_abs_km: counter.balance_abs_km,
 
       total_km_traveled: counter.total_km_traveled,
 
@@ -246,8 +257,12 @@ export class CounterService {
       counter.is_low_balance =
         new_balance < parseFloat(counter_min_km.value); /* seuil en km */
       await counter.save();
-      await this.counterHistoryService.create({counter: counter._id, counter_type:CounterType.INPUT,value:km_amount, reference: `Recharge #${transactionId}`});
-
+      await this.counterHistoryService.create({
+        counter: counter._id,
+        counter_type: CounterType.INPUT,
+        value: km_amount,
+        reference: `Recharge #${transactionId}`,
+      });
 
       await this.notificationService.createNotification(
         zem.user.toString(),
@@ -311,10 +326,12 @@ export class CounterService {
     counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
 
     if (counter.is_low_balance) {
-      const title = "Kilométrage faible";
-      const msg = "Veuillez recharger votre compteur pour continuer à rouler.";
+      const title = 'Kilométrage faible';
+      const msg = 'Veuillez recharger votre compteur pour continuer à rouler.';
       await this.notificationService.createNotification(
-        zem.user.toString(), title, msg,
+        zem.user.toString(),
+        title,
+        msg,
         'low_balance',
         { balance: counter.balance_km },
       );
@@ -325,22 +342,17 @@ export class CounterService {
           _id: zem_user._id.toString(),
           more_action: 'Alerte',
         };
-        await sendNotification(
-          title,
-          msg,
-          zem_user.fcm_token,
-          send_data,
-        );
+        await sendNotification(title, msg, zem_user.fcm_token, send_data);
       }
     }
 
     if (counter.balance_km < 0) {
-      const title = "Kilométrage faible";
+      const title = 'Kilométrage faible';
       const msg = `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`;
       await this.notificationService.createNotification(
         zem.user.toString(),
-          title,
-          msg,
+        title,
+        msg,
         'negative_balance',
         { balance: counter.balance_km },
       );
@@ -351,10 +363,7 @@ export class CounterService {
           _id: zem_user._id.toString(),
           more_action: 'Alerte',
         };
-        await sendNotification(
-            title, msg, zem_user.fcm_token,
-          send_data,
-        );
+        await sendNotification(title, msg, zem_user.fcm_token, send_data);
       }
     }
 
@@ -388,12 +397,11 @@ export class CounterService {
     };
   }
 
-
   async debitOrCreditCounter(
     zemId: string,
-    kilometers:number,
-    reference:string,
-    type:CounterType,
+    kilometers: number,
+    reference: string,
+    type: CounterType,
   ) {
     const counter = await this.counterModel.findOne({
       zem: new Types.ObjectId(zemId),
@@ -404,24 +412,40 @@ export class CounterService {
 
     const zem = await this.zemsModel.findById(zemId);
 
-    switch (type){
-      case CounterType.OUTPUT:
-        counter.balance_km -= kilometers;
-        counter.total_km_traveled += kilometers;
-        break;
-      case CounterType.INPUT:
-        counter.balance_km += kilometers;
-        break;
+    // Vérifier si le zem est ambassadeur et a des km gratuits
+    if (zem.is_ambassador && counter.balance_abs_km > 0 && type === CounterType.OUTPUT) {
+      // Déduire les kilomètres de balance_abs_km
+      counter.balance_abs_km -= kilometers;
+      if (counter.balance_abs_km < 0) {
+        counter.balance_abs_km = 0;
+      }
+      // Déduire aussi de balance_km pour l'expérience utilisateur
+      counter.balance_km -= kilometers;
+      counter.total_km_traveled += kilometers;
+    } else {
+      // Gérer balance_km normalement
+      switch (type) {
+        case CounterType.OUTPUT:
+          counter.balance_km -= kilometers;
+          counter.total_km_traveled += kilometers;
+          break;
+        case CounterType.INPUT:
+          counter.balance_km += kilometers;
+          break;
+      }
     }
 
     const kmMin = await this.configModel.findOne({ key: 'min-km' }).exec();
     counter.is_low_balance = counter.balance_km < parseFloat(kmMin.value);
 
     if (counter.is_low_balance) {
-      const title = "Kilométrage faible";
-      const msg = "Veuillez recharger votre compteur afin d'éffectuer d'autres courses";
+      const title = 'Kilométrage faible';
+      const msg =
+        "Veuillez recharger votre compteur afin d'éffectuer d'autres courses";
       await this.notificationService.createNotification(
-        zem.user.toString(), title, msg,
+        zem.user.toString(),
+        title,
+        msg,
         'low_balance',
         { balance: counter.balance_km },
       );
@@ -432,22 +456,17 @@ export class CounterService {
           _id: zem_user._id.toString(),
           more_action: 'Alerte',
         };
-        await sendNotification(
-          title,
-          msg,
-          zem_user.fcm_token,
-          send_data,
-        );
+        await sendNotification(title, msg, zem_user.fcm_token, send_data);
       }
     }
 
     if (counter.balance_km < 0) {
-      const title = "Kilométrage faible";
+      const title = 'Kilométrage faible';
       const msg = `Attention! Votre solde est négatif: ${counter.balance_km} km. Vous devrez rembourser ce montant lors de votre prochaine recharge`;
       await this.notificationService.createNotification(
         zem.user.toString(),
-          title,
-          msg,
+        title,
+        msg,
         'negative_balance',
         { balance: counter.balance_km },
       );
@@ -458,22 +477,26 @@ export class CounterService {
           _id: zem_user._id.toString(),
           more_action: 'Alerte',
         };
-        await sendNotification(
-            title, msg, zem_user.fcm_token,
-          send_data,
-        );
+        await sendNotification(title, msg, zem_user.fcm_token, send_data);
       }
     }
 
     await counter.save();
 
-    await this.counterHistoryService.create({counter: counter._id, counter_type:type,value:kilometers, reference: reference});
+    await this.counterHistoryService.create({
+      counter: counter._id,
+      counter_type: type,
+      value: kilometers,
+      reference: reference,
+    });
 
     return counter;
   }
 
   async findByZem(zem_id: string): Promise<Counter | null> {
-    return this.counterModel.findOne({ zem: new Types.ObjectId(zem_id), }).exec();
+    return this.counterModel
+      .findOne({ zem: new Types.ObjectId(zem_id) })
+      .exec();
   }
 
   async getTotalKilometers(zemId: string) {
@@ -504,7 +527,9 @@ export class CounterService {
   }
 
   async findCounterByUser(userId: string) {
-    return this.counterModel.findOne({ user: userId }).exec();
+    const userObjectId =
+      typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
+    return this.counterModel.findOne({ user: userObjectId }).exec();
   }
 
   findAll() {
