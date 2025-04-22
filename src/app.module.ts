@@ -37,6 +37,8 @@ import { PrivacyPolicyModule } from './privacy_policy/privacy_policy.module';
 import { TermsConditionsModule } from './terms_conditions/terms_conditions.module';
 import { DiscussionModule } from './discussion/discussion.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ResetPasswordModule } from './reset-password/reset-password.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -86,6 +88,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     PrivacyPolicyModule,
     TermsConditionsModule,
     DiscussionModule,
+    ResetPasswordModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

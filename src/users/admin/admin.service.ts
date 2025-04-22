@@ -99,4 +99,17 @@ export class AdminService {
   async deleteUser(id: string): Promise<Users | null> {
     return this.userModel.findByIdAndDelete(id).exec();
   }
+
+  async findOneByEmail(email: string): Promise<Users | null> {
+    return this.userModel.findOne({ email_address: email }).exec();
+  }
+
+
+  async updatePassword(email: string, hashedPassword: string): Promise<Users> {
+    return this.userModel.findOneAndUpdate(
+      { email_address: email },
+      { password: hashedPassword },
+      { new: true }
+    ).exec();
+  }
 }
