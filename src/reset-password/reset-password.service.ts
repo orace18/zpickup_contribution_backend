@@ -54,6 +54,7 @@ export class ResetPasswordService {
         message: 'Code de vérification envoyé avec succès',
       };
     } catch (error) {
+      console.log("L'erreur:",error);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -67,12 +68,14 @@ export class ResetPasswordService {
   async verifyCode(email: string, code: string): Promise<{ success: boolean; message: string }> {
     try {
       // Trouver le code de vérification pour l'email spécifié
+      console.log(`Tentative de vérification pour: Email=${email}, Code=${code}`);
       const verificationCode = await this.verificationCodeModel.findOne({
         email,
         code,
         used: false,
       });
 
+      console.log('Code récupéré:', verificationCode);
       if (!verificationCode) {
         throw new BadRequestException('Code de vérification invalide ou expiré');
       }
@@ -82,6 +85,7 @@ export class ResetPasswordService {
         message: 'Code de vérification valide',
       };
     } catch (error) {
+      console.log("L'erreur:",error);
       throw new BadRequestException('Erreur lors de la vérification du code');
     }
   }
@@ -89,7 +93,7 @@ export class ResetPasswordService {
   /**
    * Réinitialise le mot de passe de l'utilisateur après avoir vérifié le code
    */
-  async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  /* async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     try {
       // Vérifier le code
       const verificationResult = await this.verifyCode(email, code);
@@ -113,8 +117,43 @@ export class ResetPasswordService {
         message: 'Mot de passe réinitialisé avec succès',
       };
     } catch (error) {
+      console.log("L'erreur:",error);
       throw new BadRequestException('Erreur lors de la réinitialisation du mot de passe');
     }
-  }
+  } */
 
+    async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+      try {
+        console.log(`Tentative de réinitialisation: Email=${email}, Code=${code}, Password=***`);
+        
+        // Vérifier directement si le code existe dans la base de données sans appeler verifyCode()
+        const verificationCode = await this.verificationCodeModel.findOne({
+          email,
+          code,
+          used: false,
+        });
+    
+        if (!verificationCode) {
+          throw new BadRequestException('Code de vérification invalide ou expiré');
+        }
+    
+        // Mettre à jour le mot de passe de l'utilisateur
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.userService.updatePassword(email, hashedPassword);
+    
+        // Marquer le code comme utilisé
+        await this.verificationCodeModel.updateOne(
+          { email, code },
+          { used: true }
+        );
+    
+        return {
+          success: true,
+          message:  'Mot de passe réinitialisé avec succès',
+        };
+      } catch (error) {
+        console.log("L'erreur:", error);
+        throw new BadRequestException('Erreur lors de la réinitialisation du mot de passe');
+      }
+    }
 }
