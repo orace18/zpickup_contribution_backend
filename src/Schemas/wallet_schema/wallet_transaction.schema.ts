@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { Races } from '../races_schema/races.schema';
+import { WithdrawStatus } from './withdraw-status.enum';
 
 export enum TransactionType {
   BONUS = 'bonus',
@@ -35,6 +36,9 @@ export class WalletTransaction {
 
   @Prop({ required: false })
   phone_number?: string;
+
+  @Prop({ default: WithdrawStatus.ACCEPTED })
+  status: WithdrawStatus;
 
   @Prop({ default: new Date() })
   created_at: Date;

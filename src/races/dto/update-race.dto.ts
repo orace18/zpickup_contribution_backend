@@ -1,15 +1,19 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateRaceDto } from './create-race.dto';
-import { IsBoolean, IsDate, IsNotEmpty, IsOptional } from "class-validator";
+import { IsBoolean, IsDate, IsNotEmpty, IsOptional, IsMongoId, IsString } from "class-validator";
 import { Type } from "class-transformer";
 import { Types } from "mongoose";
 import { Prop } from "@nestjs/mongoose";
 
 export class UpdateRaceDto extends PartialType(CreateRaceDto) {
 
-    @IsNotEmpty()
-    type_action: string;
+    @IsOptional()
+    @IsMongoId()
+    discussion_id?: Types.ObjectId;
 
+    @IsOptional()
+    @IsString()
+    type_action?: string;
 
     @IsOptional()
     @IsDate()
@@ -64,7 +68,8 @@ export class UpdateRaceDto extends PartialType(CreateRaceDto) {
 
 
     @IsOptional()
-    code_pin: string;
+    @IsString()
+    code_pin?: string;
 
     @IsOptional()
     service_km: number;

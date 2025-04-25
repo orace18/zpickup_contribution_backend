@@ -30,6 +30,7 @@ import {
   ReferenceHistory,
   ReferenceHistorySchema,
 } from '../Schemas/reference_history_schema/reference_history_schema.schema';
+import { DiscussionZemClientModule } from '../discussion-zem-client/discussion-zem-client.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import {
     NotificationsModule,
     CounterModule,
     WebsocketModule,
+    DiscussionZemClientModule,
   ],
   controllers: [RacesController],
   providers: [RacesService],

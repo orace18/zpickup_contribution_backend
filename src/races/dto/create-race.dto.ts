@@ -1,4 +1,4 @@
-import {IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
+import {IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsMongoId} from "class-validator";
 import {Types} from "mongoose";
 import {Type} from "class-transformer";
 import {CoursesStatus} from "../../Schemas/races_schema/races.schema";

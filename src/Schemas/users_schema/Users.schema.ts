@@ -6,7 +6,7 @@ import { PrimaryGeneratedColumn } from 'typeorm/typeorm-model-shim.js';
 export enum UserType {
   CUSTOMER = 'customer',
   ZEM = 'zem',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
 }
 
 @Schema()
@@ -34,7 +34,7 @@ export class Users {
 
   @Prop({ default: null })
   referal_code?: string;
-  
+
   @Prop({ default: null })
   password?: string;
 
@@ -88,7 +88,6 @@ export class Users {
 
   @Prop({ default: null })
   user_races_count?: string;
-
 }
 
 export const UsersSchema = SchemaFactory.createForClass(Users);
@@ -100,11 +99,11 @@ UsersSchema.pre('save', async function (next) {
   }
 
   try {
- /*    console.log('Hachage du mot de passe dans le middleware pre-save');
-    console.log('Mot de passe avant hachage:', this.password); */
+    /*    console.log('Hachage du mot de passe dans le middleware pre-save');
+       console.log('Mot de passe avant hachage:', this.password); */
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
-   /*  console.log('Mot de passe après hachage:', this.password); */
+    /*  console.log('Mot de passe après hachage:', this.password); */
     next();
   } catch (error) {
     next(error);
@@ -116,16 +115,16 @@ UsersSchema.index({ phone_number: 1 }, { unique: false });
 
 // Créer un nouvel index composé
 UsersSchema.index(
-  { 
+  {
     phone_number: 1,
     validated_at: 1,
-    deleted_at: 1
+    deleted_at: 1,
   },
-  { 
+  {
     unique: true,
-    partialFilterExpression: { 
+    partialFilterExpression: {
       validated_at: { $ne: null },
-      deleted_at: null
-    }
-  }
+      deleted_at: null,
+    },
+  },
 );

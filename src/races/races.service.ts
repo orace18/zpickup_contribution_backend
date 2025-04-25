@@ -30,6 +30,8 @@ import { Users } from 'src/Schemas/users_schema/Users.schema';
 import { ReferenceHistory } from '../Schemas/reference_history_schema/reference_history_schema.schema';
 import { ReferenceHistoryService } from '../reference_history/reference_history.service';
 import { Counter } from '../Schemas/counter_schema/counter.schema';
+import { DiscussionZemClientService } from 'src/discussion-zem-client/discussion-zem-client.service';
+//import { DiscussionService } from '../discussion/discussion.service';
 
 @Injectable()
 export class RacesService {
@@ -47,6 +49,7 @@ export class RacesService {
     private readonly notificationService: NotificationService,
     private readonly counterService: CounterService,
     private readonly referenceHistoryService: ReferenceHistoryService,
+    private readonly discussionZemClientService: DiscussionZemClientService,
   ) {}
 
   async create(createRaceDto: CreateRaceDto, req) {
@@ -254,6 +257,16 @@ export class RacesService {
         updateRaceDto.service_km = km;
         updateRaceDto.service_duration = estimateDuration(km).minutes;
         race_accepted.zem_before_started = false;
+
+        // Créer la discussion entre le zem et le client
+        await this.discussionZemClientService.createDiscussion({
+          title: 'Course ' + race_accepted.reference,
+          race: race_accepted._id,
+          creators: {
+            zem: req.user.userId,
+            customer: race_accepted.user,
+          },
+        });
 
         body_notification = 'Course acceptée par un zem';
         more_action = 'fetch_zem';

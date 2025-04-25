@@ -37,6 +37,7 @@ import { PrivacyPolicyModule } from './privacy_policy/privacy_policy.module';
 import { TermsConditionsModule } from './terms_conditions/terms_conditions.module';
 import { DiscussionModule } from './discussion/discussion.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { DiscussionZemClientModule } from './discussion-zem-client/discussion-zem-client.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     PrivacyPolicyModule,
     TermsConditionsModule,
     DiscussionModule,
+    DiscussionZemClientModule,
   ],
   controllers: [AppController],
   providers: [AppService],

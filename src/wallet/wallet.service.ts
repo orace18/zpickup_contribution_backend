@@ -18,6 +18,7 @@ import { sendNotification } from '../services/helpers.service';
 import { CreditWalletDto } from './dto/credit-wallet.dto';
 import { Zems } from 'src/Schemas/zems_schema/Zems.schema';
 import { create } from 'node:domain';
+import { WithdrawStatus } from '../Schemas/wallet_schema/withdraw-status.enum';
 
 @Injectable()
 export class WalletService {
@@ -188,11 +189,13 @@ export class WalletService {
     amount: number,
     phone_number: string,
     type: TransactionType.WITHDRAWAL,
-    minWithdrawalAmount = 10000,
+    minWithdrawalAmount = 500,
     wallet_type: string = 'user',
+    status: WithdrawStatus = WithdrawStatus.ACCEPTED,
   ): Promise<{ newBalance: number; transaction: any }> {
     const wallet = await this.getWalletBalance(userId, wallet_type);
 
+    // Vérifications initiales du solde
     if (wallet.wallet_amount < amount) {
       throw new BadRequestException('Solde insuffisant');
     }
@@ -209,28 +212,63 @@ export class WalletService {
       );
     }
 
-    wallet.wallet_amount -= amount;
-    wallet.updated_at = new Date();
-    await wallet.save();
-
+    // Création de la transaction avec le statut
     const transaction = await this.walletTransactionModel.create({
       user: new Types.ObjectId(userId),
       amount,
       type,
       phone_number,
       wallet_type: wallet_type,
+      status,
     });
 
+    let notificationTitle = '';
+    let notificationMessage = '';
+    let shouldWithdraw = false;
+
+    // Gestion des différents statuts
+    switch (status) {
+      case WithdrawStatus.ACCEPTED:
+        notificationTitle = 'Demande de retrait reçue';
+        notificationMessage = `Votre demande de retrait de ${amount} XOF a été bien reçue et est en cours de traitement.`;
+        break;
+
+      case WithdrawStatus.PENDING:
+        notificationTitle = 'Demande de retrait en cours';
+        notificationMessage = `Votre demande de retrait de ${amount} XOF est en cours de traitement.`;
+        break;
+
+      case WithdrawStatus.REJECTED:
+        notificationTitle = 'Demande de retrait rejetée';
+        notificationMessage = `Votre demande de retrait de ${amount} XOF a été rejetée.`;
+        break;
+
+      case WithdrawStatus.VALIDATED:
+        notificationTitle = 'Retrait effectué';
+        notificationMessage = `Votre retrait de ${amount} XOF a été effectué avec succès. Nouveau solde: ${wallet.wallet_amount - amount} XOF`;
+        shouldWithdraw = true;
+        break;
+    }
+
+    // Si le statut est VALIDATED, on effectue le retrait
+    if (shouldWithdraw) {
+      wallet.wallet_amount -= amount;
+      wallet.updated_at = new Date();
+      await wallet.save();
+    }
+
+    // Envoi de la notification
     await this.notificationService.createNotification(
       userId,
-      'Retrait effectué avec succès',
-      `Votre avez retiré avec succès un montant de ${amount} XOF. Nouveau solde: ${wallet.wallet_amount} XOF`,
+      notificationTitle,
+      notificationMessage,
       'payment_confirmation',
       {
         transactionId: transaction._id,
         amount: amount,
         newBalance: wallet.wallet_amount,
         wallet_type: wallet_type,
+        status: status,
       },
     );
 
@@ -240,10 +278,11 @@ export class WalletService {
         _id: user._id.toString(),
         more_action: 'withdraw',
         wallet_type: wallet_type,
+        status: status,
       };
       sendNotification(
-        'Retrait effectué',
-        "Vous venez de retirer de l'argent de votre portefeuille avec succès",
+        notificationTitle,
+        notificationMessage,
         user.fcm_token,
         send_data,
       );

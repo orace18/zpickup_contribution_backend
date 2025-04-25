@@ -1,7 +1,18 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { WithdrawStatus } from '../../Schemas/wallet_schema/withdraw-status.enum';
+import { Types } from 'mongoose';
 
 export class WithdrawWalletDto {
+  @IsOptional()
+  user?: Types.ObjectId;
+
   @ApiProperty({ description: 'Montant à retirer' })
   @IsNotEmpty()
   @IsNumber()
@@ -11,4 +22,12 @@ export class WithdrawWalletDto {
   @IsNotEmpty()
   @IsString()
   phone_number: string;
+
+  @ApiProperty({
+    description: 'Statut du retrait',
+    enum: WithdrawStatus,
+    default: WithdrawStatus.ACCEPTED,
+  })
+  @IsEnum(WithdrawStatus)
+  status: WithdrawStatus = WithdrawStatus.ACCEPTED;
 }
