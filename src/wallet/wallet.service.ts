@@ -191,7 +191,7 @@ export class WalletService {
     type: TransactionType.WITHDRAWAL,
     minWithdrawalAmount = 500,
     wallet_type: string = 'user',
-    status: WithdrawStatus = WithdrawStatus.ACCEPTED,
+    status: WithdrawStatus = WithdrawStatus.PENDING,
   ): Promise<{ newBalance: number; transaction: any }> {
     const wallet = await this.getWalletBalance(userId, wallet_type);
 
@@ -244,7 +244,7 @@ export class WalletService {
         break;
 
       case WithdrawStatus.VALIDATED:
-        notificationTitle = 'Retrait effectué';
+        notificationTitle = 'Demande de retrait approuvé';
         notificationMessage = `Votre retrait de ${amount} XOF a été effectué avec succès. Nouveau solde: ${wallet.wallet_amount - amount} XOF`;
         shouldWithdraw = true;
         break;
@@ -292,10 +292,6 @@ export class WalletService {
       newBalance: wallet.wallet_amount,
       transaction,
     };
-  }
-
-  create(createWalletDto: CreditWalletDto) {
-    return '';
   }
 
   findAll() {
