@@ -294,6 +294,19 @@ export class WalletService {
     };
   }
 
+  async getWalletTransactions(userId: string, wallet_type: string = 'user') {
+    const transactions = await this.walletTransactionModel
+      .find({
+        user: new Types.ObjectId(userId),
+        wallet_type: wallet_type,
+      })
+      .sort({ created_at: -1 })
+      .select('amount phone_number status type created_at')
+      .exec();
+
+    return transactions;
+  }
+
   findAll() {
     return `This action returns all wallet`;
   }
