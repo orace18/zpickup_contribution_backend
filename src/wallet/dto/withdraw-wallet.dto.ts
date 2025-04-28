@@ -26,8 +26,8 @@ export class WithdrawWalletDto {
   @ApiProperty({
     description: 'Statut du retrait',
     enum: WithdrawStatus,
-    default: WithdrawStatus.ACCEPTED,
+    default: WithdrawStatus.PENDING,
   })
   @IsEnum(WithdrawStatus)
-  status: WithdrawStatus = WithdrawStatus.ACCEPTED;
+  status: WithdrawStatus = WithdrawStatus.PENDING;
 }
