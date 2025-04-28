@@ -114,6 +114,26 @@ export class WalletController {
     );
   }
 
+  @Get('transactions/:userId')
+  @ApiOperation({ summary: 'Obtenir les transactions du portefeuille' })
+  @ApiResponse({
+    status: 200,
+    description: 'Retourne la liste des transactions du portefeuille',
+  })
+  async getTransactions(@Param('userId') userId: string) {
+    return this.walletService.getWalletTransactions(userId);
+  }
+
+  @Get('ambassador/transactions/:userId')
+  @ApiOperation({ summary: 'Obtenir les transactions du portefeuille ambassadeur' })
+  @ApiResponse({
+    status: 200,
+    description: 'Retourne la liste des transactions du portefeuille ambassadeur',
+  })
+  async getAmbassadorTransactions(@Param('userId') userId: string) {
+    return this.walletService.getWalletTransactions(userId, 'ambassador');
+  }
+
   @Post()
   create(@Body() createWalletDto: CreateWalletDto) {
     return '';
