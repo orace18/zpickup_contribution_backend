@@ -106,10 +106,15 @@ export class AdminService {
 
 
   async updatePassword(email: string, hashedPassword: string): Promise<Users> {
-    return this.userModel.findOneAndUpdate(
+    console.log(`Tentative de mise à jour du mot de passe pour email: ${email}`);
+    
+    const result = await this.userModel.findOneAndUpdate(
       { email_address: email },
-      { password: hashedPassword },
+      { password: hashedPassword, updated_at: new Date() },
       { new: true }
     ).exec();
+    
+    console.log('Résultat de la mise à jour:', result);
+    return result;
   }
 }
