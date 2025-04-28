@@ -39,6 +39,8 @@ import { DiscussionModule } from './discussion/discussion.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ResetPasswordModule } from './reset-password/reset-password.module';
 import { MailModule } from './mail/mail.module';
+import { DiscussionZemClientModule } from './discussion-zem-client/discussion-zem-client.module';
+
 
 @Module({
   imports: [
@@ -90,6 +92,7 @@ import { MailModule } from './mail/mail.module';
     DiscussionModule,
     ResetPasswordModule,
     MailModule,
+    DiscussionZemClientModule,
   ],
   controllers: [AppController],
   providers: [AppService],
